@@ -15,10 +15,10 @@ import java.time.Duration;
 public class CreditRateDataModel {
     @NotNull
     @Size(min = 1, max = 100, message = "Длина наименование процентной ставки должна содержать от 1 до 100 символов")
-    private final String name = "Базовый";
+    private String name;
     @Min(value = 0, message = "Минимальный допустимый процент - 0%")
     @Max(value = 100, message = "Максимальный допустимый процент - 100%")
-    private final int percent = 10;
+    private int percent;
     @DurationMin(minutes = 1, message = "Минимальный период списания - 1 минута")
     @JsonDeserialize(using = DurationDeserializer.class)
     private Duration writeOffPeriod;
