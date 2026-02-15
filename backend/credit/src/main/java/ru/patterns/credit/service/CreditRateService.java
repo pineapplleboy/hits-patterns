@@ -2,7 +2,10 @@ package ru.patterns.credit.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.patterns.credit.domain.request.CreditRateCreateModel;
 import ru.patterns.credit.domain.response.CreditRateModel;
+import ru.patterns.credit.domain.response.UuidResponseModel;
+import ru.patterns.credit.entity.CreditRate;
 import ru.patterns.credit.mapper.CreditRateMapper;
 import ru.patterns.credit.repository.CreditRateRepository;
 
@@ -17,5 +20,12 @@ public class CreditRateService {
         return creditRateRepository.findByIsActiveTrue().stream()
                 .map(CreditRateMapper::toModel)
                 .toList();
+    }
+
+    public UuidResponseModel createCreditRate(CreditRateCreateModel request) {
+        CreditRate newCreditRate = new CreditRate(request.getName(), request.getPercent(), request.getWriteOffPeriod());
+        creditRateRepository.save(newCreditRate);
+
+        return new UuidResponseModel(newCreditRate.getRateId());
     }
 }
