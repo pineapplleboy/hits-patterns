@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class DurationDeserializer extends JsonDeserializer<Duration> {
 
-    private static final Pattern PATTERN = Pattern.compile("(?i)^(?=.*\\d)(\\d+d)?(\\d+h)?(\\d+m)?(\\d+s)?$");
+    private static final Pattern PATTERN = Pattern.compile("(?i)^(?=.*\\d)(\\d+d)?(\\d+h)?(\\d+m)?$");
 
     @Override
     public Duration deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
@@ -31,13 +31,11 @@ public class DurationDeserializer extends JsonDeserializer<Duration> {
         long days = parseDateTimePart(matcher.group(1));
         long hours = parseDateTimePart(matcher.group(2));
         long minutes = parseDateTimePart(matcher.group(3));
-        long seconds = parseDateTimePart(matcher.group(4));
 
         Duration duration = Duration.ZERO
                 .plusDays(days)
                 .plusHours(hours)
-                .plusMinutes(minutes)
-                .plusSeconds(seconds);
+                .plusMinutes(minutes);
 
         if (duration.isZero() || duration.isNegative()) {
             throw new BadRequestException(ErrorMessages.NEGATIVE_WRITE_OFF_DATE);
