@@ -29,15 +29,15 @@ public class DurationSerializer extends JsonSerializer<Duration> {
 
         StringBuilder result = new StringBuilder();
 
-        if (days > 0) result.append(days).append("d");
-        if (hours > 0) result.append(hours).append("h");
-        if (minutes > 0) result.append(minutes).append("m");
-        if (seconds > 0) result.append(seconds).append("s");
+        if (days > 0) result.append(days).append(" дней ");
+        if (hours > 0) result.append(hours).append(" часов ");
+        if (minutes > 0) result.append(minutes).append(" минут ");
+        if (seconds > 0) result.append(seconds).append(" секунд ");
 
         if (result.isEmpty()) {
-            result.append("0s");
+            result.append("0 секунд");
         }
 
-        jsonGenerator.writeString(result.toString());
+        jsonGenerator.writeString(result.toString().trim());
     }
 }
