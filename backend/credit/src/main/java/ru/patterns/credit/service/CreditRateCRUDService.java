@@ -12,6 +12,7 @@ import ru.patterns.credit.entity.CreditRate;
 import ru.patterns.credit.mapper.CreditRateMapper;
 import ru.patterns.credit.repository.CreditRateRepository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,6 +53,7 @@ public class CreditRateCRUDService {
         creditRate.setName(creditRateDataModel.getName());
         creditRate.setPercent(creditRateDataModel.getPercent());
         creditRate.setWriteOffPeriod(creditRateDataModel.getWriteOffPeriod());
+        creditRate.setUpdateTime(Instant.now());
 
         creditRateRepository.save(creditRate);
     }
