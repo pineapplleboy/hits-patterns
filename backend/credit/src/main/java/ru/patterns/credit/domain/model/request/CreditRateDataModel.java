@@ -10,7 +10,7 @@ import org.hibernate.validator.constraints.time.DurationMin;
 import java.time.Duration;
 
 @Getter
-public class CreditRateCreateModel {
+public class CreditRateDataModel {
     @NotNull
     @Size(min = 1, max = 100, message = "Длина наименование процентной ставки должна содержать от 1 до 100 символов")
     private String name;
