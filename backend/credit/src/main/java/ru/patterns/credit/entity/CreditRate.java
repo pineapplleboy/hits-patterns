@@ -1,6 +1,5 @@
 package ru.patterns.credit.entity;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +17,6 @@ public class CreditRate {
     @Id
     private UUID rateId = UUID.randomUUID();
     @NotNull
-    @Column(unique = true)
     private String name;
     private int percent = 10; // значение от 0 до 100 включительно
     private Duration writeOffPeriod = Duration.ofDays(1);
