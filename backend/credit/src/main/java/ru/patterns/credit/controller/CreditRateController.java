@@ -38,6 +38,6 @@ public class CreditRateController {
 
     @DeleteMapping("/{id}")
     public void deleteCreateRate(@PathVariable UUID id) {
-        creditRateService.deleteCreditRateById(id);
+        creditRateService.deactivateCreditRateById(id);
     }
 }

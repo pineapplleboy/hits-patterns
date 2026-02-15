@@ -48,12 +48,16 @@ public class CreditRateService {
         creditRateRepository.save(creditRate);
     }
 
-    public void deleteCreditRateById(UUID id) {
-        creditRateRepository.delete(findCreditByIdOrThrowException(id));
+    public void deactivateCreditRateById(UUID id) {
+        CreditRate creditRate = findCreditByIdOrThrowException(id);
+
+        creditRate.setActive(false);
+
+        creditRateRepository.save(creditRate);
     }
 
     private CreditRate findCreditByIdOrThrowException(UUID id) {
-        return creditRateRepository.findById(id)
+        return creditRateRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.CREDIT_RATE_NOT_FOUND + id));
     }
 }
