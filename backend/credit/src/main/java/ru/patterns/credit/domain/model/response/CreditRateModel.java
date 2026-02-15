@@ -1,4 +1,4 @@
-package ru.patterns.credit.domain.response;
+package ru.patterns.credit.domain.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

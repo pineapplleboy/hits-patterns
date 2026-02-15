@@ -1,4 +1,4 @@
-package ru.patterns.credit.domain.request;
+package ru.patterns.credit.domain.model.request;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

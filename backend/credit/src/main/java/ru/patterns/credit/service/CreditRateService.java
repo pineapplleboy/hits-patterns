@@ -2,9 +2,9 @@ package ru.patterns.credit.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.patterns.credit.domain.request.CreditRateCreateModel;
-import ru.patterns.credit.domain.response.CreditRateModel;
-import ru.patterns.credit.domain.response.UuidResponseModel;
+import ru.patterns.credit.domain.model.request.CreditRateCreateModel;
+import ru.patterns.credit.domain.model.response.CreditRateModel;
+import ru.patterns.credit.domain.model.response.UuidResponseModel;
 import ru.patterns.credit.entity.CreditRate;
 import ru.patterns.credit.mapper.CreditRateMapper;
 import ru.patterns.credit.repository.CreditRateRepository;
