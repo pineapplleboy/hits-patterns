@@ -67,7 +67,7 @@ public class CreditRateCRUDService {
     }
 
     private CreditRate findCreditByIdOrThrowException(UUID id) {
-        return creditRateRepository.findByIdAndIsActiveTrue(id)
+        return creditRateRepository.findByRateIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.CREDIT_RATE_NOT_FOUND + id));
     }
 }

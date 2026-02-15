@@ -1,0 +1,12 @@
+[
+  {
+    "name": "СТАНДАРТНЫЙ",
+    "percent": 10,
+    "writeOffPeriod": "1d"
+  },
+  {
+    "name": "ПРЕМИУМ",
+    "percent": 7,
+    "writeOffPeriod": "7d"
+  }
+]
