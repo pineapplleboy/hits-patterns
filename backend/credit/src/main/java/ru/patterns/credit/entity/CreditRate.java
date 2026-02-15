@@ -18,8 +18,9 @@ public class CreditRate {
     private UUID rateId = UUID.randomUUID();
     @NotNull
     private String name;
-    private int percent = 10;
+    private int percent = 10; // значение от 0 до 100 включительно
     private Duration writeOffPeriod = Duration.ofDays(1);
+    private boolean isActive = true;
     private Instant createTime = Instant.now();
     private Instant updateTime = Instant.now();
 
