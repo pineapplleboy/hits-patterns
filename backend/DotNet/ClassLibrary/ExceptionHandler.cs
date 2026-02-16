@@ -1,9 +1,11 @@
 ﻿
+using ClassLibrary.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using patternsAuth.Exceptions;
 
-namespace patternsAuth
+
+namespace ClassLibrary
 {
     public class ExceptionHandler : IExceptionHandler
     {

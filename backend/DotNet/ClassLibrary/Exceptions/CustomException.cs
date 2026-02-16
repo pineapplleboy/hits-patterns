@@ -1,4 +1,4 @@
-﻿namespace patternsAuth.Exceptions
+﻿namespace ClassLibrary.Exceptions
 {
     public class CustomException : Exception
     {

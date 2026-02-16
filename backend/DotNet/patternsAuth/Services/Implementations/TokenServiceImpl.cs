@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using ClassLibrary.BaseSetup;
+using Microsoft.IdentityModel.Tokens;
 using patternsAuth.Setup;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

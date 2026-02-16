@@ -1,4 +1,6 @@
-﻿namespace patternsAuth.Exceptions
+﻿using Microsoft.AspNetCore.Http;
+
+namespace ClassLibrary.Exceptions
 {
     public class NotFoundException : CustomException
     {

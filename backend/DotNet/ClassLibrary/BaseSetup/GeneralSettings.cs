@@ -1,4 +1,4 @@
-﻿namespace patternsAuth.Setup
+﻿namespace ClassLibrary.BaseSetup
 {
     public class GeneralSettings
     {

@@ -1,7 +1,7 @@
 ﻿using ClassLibrary;
 using Microsoft.EntityFrameworkCore;
-using patternsAuth.Constants;
-using patternsAuth.Exceptions;
+using ClassLibrary.Constants;
+using ClassLibrary.Exceptions;
 
 namespace patternsAuth.Services.Implementations
 {

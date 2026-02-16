@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ClassLibrary;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json.Serialization;
 
-namespace patternsAuth.Setup
+namespace ClassLibrary.BaseSetup
 {
     public class SetupAspNet
     {

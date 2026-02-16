@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace patternsAuth
+namespace ClassLibrary
 {
     public class UserDescriptor
     {

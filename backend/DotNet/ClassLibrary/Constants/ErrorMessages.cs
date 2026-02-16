@@ -1,4 +1,4 @@
-﻿namespace patternsAuth.Constants
+﻿namespace ClassLibrary.Constants
 {
     public class ErrorMessages
     {
