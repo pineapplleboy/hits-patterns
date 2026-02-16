@@ -1,0 +1,19 @@
+package com.example.g_bankforemployees.common.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.example.g_bankforemployees.feature.authorization.presentation.AuthorizationScreen
+
+@Composable
+fun AppNavGraph(navController: NavHostController) {
+    NavHost(
+        navController = navController,
+        startDestination = ScreenRoute.Authorization.route,
+    ) {
+        composable(ScreenRoute.Authorization.route) {
+            AuthorizationScreen()
+        }
+    }
+}

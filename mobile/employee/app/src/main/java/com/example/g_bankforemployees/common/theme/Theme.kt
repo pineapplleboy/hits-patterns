@@ -1,15 +1,14 @@
-package com.example.app.ui.theme
+package com.example.g_bankforemployees.common.theme
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = PurplePrimary,
-    onPrimary = Color.White,
+    primary = Black,
+    onPrimary = White,
 
-    secondary = PurplePrimaryLight,
-    onSecondary = Color.White,
+    secondary = DarkGray,
+    onSecondary = White,
 
     background = Background,
     onBackground = OnBackground,
@@ -21,7 +20,7 @@ private val LightColorScheme = lightColorScheme(
     outline = Outline,
 
     error = ErrorRed,
-    onError = Color.White
+    onError = White
 )
 
 @Composable
