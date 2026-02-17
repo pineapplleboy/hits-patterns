@@ -7,10 +7,10 @@ import ru.patterns.credit.application.common.exception.BadRequestException;
 import ru.patterns.credit.application.common.exception.NotFoundException;
 import ru.patterns.credit.application.common.model.request.CreditRateDataModel;
 import ru.patterns.credit.application.common.model.response.CreditRateModel;
-import ru.patterns.credit.application.common.model.response.UuidResponseModel;
 import ru.patterns.credit.domain.entity.CreditRate;
 import ru.patterns.credit.domain.mapper.CreditRateMapper;
 import ru.patterns.credit.domain.repository.CreditRateRepository;
+import ru.patterns.shared.model.response.UuidResponseModel;
 
 import java.time.Instant;
 import java.util.List;

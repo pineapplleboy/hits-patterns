@@ -1,4 +1,4 @@
-package ru.patterns.credit.application.common.model.response;
+package ru.patterns.shared.model.response;
 
 import jakarta.validation.constraints.NotNull;
 

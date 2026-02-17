@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.patterns.credit.application.common.exception.NotFoundException;
-import ru.patterns.credit.application.common.model.response.ErrorResponse;
+import ru.patterns.shared.model.response.ErrorResponse;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
