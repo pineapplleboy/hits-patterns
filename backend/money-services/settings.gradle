@@ -2,3 +2,4 @@ rootProject.name = 'money-service'
 
 include 'credit'
 include 'account'
+include 'shared'
