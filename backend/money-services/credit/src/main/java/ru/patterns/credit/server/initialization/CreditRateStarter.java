@@ -25,7 +25,7 @@ import java.util.Optional;
 public class CreditRateStarter implements ApplicationRunner {
     private final ObjectMapper mapper = new ObjectMapper();
     private final CreditRateRepository creditRateRepository;
-    private static final Path PATH = Path.of("config/credit-rates-init.json");
+    private static final Path PATH = Path.of("credit/config/credit-rates-init.json");
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -49,14 +49,26 @@ public class CreditRateStarter implements ApplicationRunner {
 
             if (existingCreditRate.isPresent()) {
                 var existingRate = existingCreditRate.get();
+                boolean updated = false;
 
-                existingRate.setPercent(creditRate.getPercent());
-                existingRate.setWriteOffPeriod(creditRate.getWriteOffPeriod());
-                existingRate.setUpdateTime(Instant.now());
+                if (creditRate.getPercent() != existingRate.getPercent()) {
+                    existingRate.setPercent(creditRate.getPercent());
+                    updated = true;
+                }
+                if (!creditRate.getWriteOffPeriod().equals(existingRate.getWriteOffPeriod())) {
+                    existingRate.setWriteOffPeriod(creditRate.getWriteOffPeriod());
+                    updated = true;
+                }
 
-                log.info("Тариф {} обновлён", existingRate.getName());
+                if (updated) {
+                    existingRate.setUpdateTime(Instant.now());
+                    log.info("Тариф {} обновлён", existingRate.getName());
+                    creditRateRepository.save(existingRate);
+                }
+                else {
+                    log.info("Тариф {} остался без изменений", existingRate.getName());
+                }
 
-                creditRateRepository.save(existingRate);
             } else {
                 var newRate = new CreditRate(creditRate.getName(), creditRate.getPercent(), creditRate.getWriteOffPeriod());
 

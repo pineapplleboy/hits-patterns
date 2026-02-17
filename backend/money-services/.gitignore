@@ -1,0 +1,39 @@
+# Gradle
+.gradle/
+**/.gradle/
+build/
+**/build/
+
+# IDE
+.idea/
+**/.idea/
+*.iml
+*.ipr
+*.iws
+out/
+**/out/
+
+# Eclipse / STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+**/bin/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
