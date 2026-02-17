@@ -1,4 +1,4 @@
-package ru.patterns.credit.domain.exception;
+package ru.patterns.credit.application.common.exception;
 
 public class NotFoundException extends RuntimeException {
     public NotFoundException(String message) {

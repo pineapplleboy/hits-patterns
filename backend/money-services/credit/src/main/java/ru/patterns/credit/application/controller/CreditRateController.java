@@ -1,11 +1,11 @@
-package ru.patterns.credit.controller;
+package ru.patterns.credit.application.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.patterns.credit.domain.model.request.CreditRateDataModel;
-import ru.patterns.credit.domain.model.response.CreditRateModel;
-import ru.patterns.credit.domain.model.response.UuidResponseModel;
-import ru.patterns.credit.service.CreditRateCRUDService;
+import ru.patterns.credit.application.common.model.request.CreditRateDataModel;
+import ru.patterns.credit.application.common.model.response.CreditRateModel;
+import ru.patterns.credit.application.common.model.response.UuidResponseModel;
+import ru.patterns.credit.application.service.CreditRateCRUDService;
 
 import java.util.List;
 import java.util.UUID;

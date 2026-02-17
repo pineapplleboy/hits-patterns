@@ -1,7 +1,7 @@
-package ru.patterns.credit.mapper;
+package ru.patterns.credit.domain.mapper;
 
-import ru.patterns.credit.domain.model.response.CreditRateModel;
-import ru.patterns.credit.entity.CreditRate;
+import ru.patterns.credit.application.common.model.response.CreditRateModel;
+import ru.patterns.credit.domain.entity.CreditRate;
 
 public class CreditRateMapper {
 

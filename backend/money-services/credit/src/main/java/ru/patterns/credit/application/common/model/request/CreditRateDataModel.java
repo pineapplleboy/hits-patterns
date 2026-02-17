@@ -1,4 +1,4 @@
-package ru.patterns.credit.domain.model.request;
+package ru.patterns.credit.application.common.model.request;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.Max;

@@ -1,8 +1,8 @@
-package ru.patterns.credit.repository;
+package ru.patterns.credit.domain.repository;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
-import ru.patterns.credit.entity.CreditRate;
+import ru.patterns.credit.domain.entity.CreditRate;
 
 import java.util.List;
 import java.util.Optional;

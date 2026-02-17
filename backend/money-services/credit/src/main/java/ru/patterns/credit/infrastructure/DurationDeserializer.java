@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import org.apache.coyote.BadRequestException;
-import ru.patterns.credit.domain.constants.ErrorMessages;
+import ru.patterns.credit.application.common.constants.ErrorMessages;
 
 import java.io.IOException;
 import java.time.Duration;

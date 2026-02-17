@@ -1,16 +1,16 @@
-package ru.patterns.credit.service;
+package ru.patterns.credit.application.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.patterns.credit.domain.constants.ErrorMessages;
-import ru.patterns.credit.domain.exception.BadRequestException;
-import ru.patterns.credit.domain.exception.NotFoundException;
-import ru.patterns.credit.domain.model.request.CreditRateDataModel;
-import ru.patterns.credit.domain.model.response.CreditRateModel;
-import ru.patterns.credit.domain.model.response.UuidResponseModel;
-import ru.patterns.credit.entity.CreditRate;
-import ru.patterns.credit.mapper.CreditRateMapper;
-import ru.patterns.credit.repository.CreditRateRepository;
+import ru.patterns.credit.application.common.constants.ErrorMessages;
+import ru.patterns.credit.application.common.exception.BadRequestException;
+import ru.patterns.credit.application.common.exception.NotFoundException;
+import ru.patterns.credit.application.common.model.request.CreditRateDataModel;
+import ru.patterns.credit.application.common.model.response.CreditRateModel;
+import ru.patterns.credit.application.common.model.response.UuidResponseModel;
+import ru.patterns.credit.domain.entity.CreditRate;
+import ru.patterns.credit.domain.mapper.CreditRateMapper;
+import ru.patterns.credit.domain.repository.CreditRateRepository;
 
 import java.time.Instant;
 import java.util.List;

@@ -1,4 +1,4 @@
-package ru.patterns.credit.domain.initialization;
+package ru.patterns.credit.application.common.initialization;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;

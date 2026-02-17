@@ -1,4 +1,4 @@
-package ru.patterns.credit.domain.model.response;
+package ru.patterns.credit.application.common.model.response;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;

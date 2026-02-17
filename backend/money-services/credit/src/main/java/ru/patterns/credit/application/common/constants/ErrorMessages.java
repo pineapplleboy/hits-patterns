@@ -1,4 +1,4 @@
-package ru.patterns.credit.domain.constants;
+package ru.patterns.credit.application.common.constants;
 
 import lombok.experimental.UtilityClass;
 

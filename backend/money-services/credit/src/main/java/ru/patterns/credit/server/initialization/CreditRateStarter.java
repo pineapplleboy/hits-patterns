@@ -8,9 +8,9 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import ru.patterns.credit.domain.initialization.CreditRateInitDto;
-import ru.patterns.credit.entity.CreditRate;
-import ru.patterns.credit.repository.CreditRateRepository;
+import ru.patterns.credit.application.common.initialization.CreditRateInitDto;
+import ru.patterns.credit.domain.entity.CreditRate;
+import ru.patterns.credit.domain.repository.CreditRateRepository;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
