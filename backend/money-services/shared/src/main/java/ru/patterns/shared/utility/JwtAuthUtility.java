@@ -11,6 +11,7 @@ import ru.patterns.shared.model.external.Role;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.UUID;
 
 import static ru.patterns.shared.model.constants.ErrorMessages.UNAUTHORIZED;
@@ -38,6 +39,11 @@ public class JwtAuthUtility {
 
         UUID userId = UUID.fromString(getClaim(claims, "nameid"));
         Role role = mapRole(getClaim(claims, "role"));
+
+        Instant expiresTime = claims.getExpiration() != null ? claims.getExpiration().toInstant() : null;
+        if (expiresTime == null || expiresTime.isBefore(Instant.now())) {
+            throw new UnauthorizedException(UNAUTHORIZED);
+        }
 
         return new AuthUser(userId, role);
     }
