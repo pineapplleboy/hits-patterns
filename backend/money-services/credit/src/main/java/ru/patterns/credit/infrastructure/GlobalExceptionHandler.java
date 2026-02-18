@@ -4,7 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import ru.patterns.credit.application.common.exception.NotFoundException;
+import ru.patterns.shared.exception.NotFoundException;
+import ru.patterns.shared.exception.UnauthorizedException;
 import ru.patterns.shared.model.response.ErrorResponse;
 
 @ControllerAdvice
@@ -13,6 +14,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> catchNotFoundException(NotFoundException exception) {
         return new ResponseEntity<>(new ErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage()),
                 HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchUnauthorizedException(UnauthorizedException exception) {
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), exception.getMessage()),
+                HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler
