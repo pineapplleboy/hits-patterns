@@ -3,11 +3,11 @@ using ClassLibrary;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 
-namespace patternsAuth
+namespace patternsAuth.Setup
 {
-    public static class DataSeeder
+    public static class AuthDataSeeder
     {
-        public async static Task Seed(DataContext context)
+        public async static Task Seed(AuthDataContext context)
         {
 
             var employeeId = new Guid("6a541e68-cd4c-45bc-94fb-97634ef8a3ef");

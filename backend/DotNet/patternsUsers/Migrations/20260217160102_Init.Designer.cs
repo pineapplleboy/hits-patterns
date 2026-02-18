@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using patternsAuth.Setup;
+using patternsUsers.UsersSetup;
 
 #nullable disable
 
-namespace patternsAuth.Migrations
+namespace patternsUsers.Migrations
 {
-    [DbContext(typeof(AuthDataContext))]
-    [Migration("20260216120602_Init")]
+    [DbContext(typeof(UserDataContext))]
+    [Migration("20260217160102_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -25,16 +25,19 @@ namespace patternsAuth.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ClassLibrary.AuthUserDB", b =>
+            modelBuilder.Entity("ClassLibrary.UserDB", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("Author")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("Ban")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -47,7 +50,7 @@ namespace patternsAuth.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuthUsers");
+                    b.ToTable("users");
                 });
 #pragma warning restore 612, 618
         }

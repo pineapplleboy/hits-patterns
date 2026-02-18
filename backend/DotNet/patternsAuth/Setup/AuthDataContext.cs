@@ -2,9 +2,9 @@
 using ClassLibrary;
 using Microsoft.EntityFrameworkCore;
 
-namespace patternsAuth
+namespace patternsAuth.Setup
 {
-    public class DataContext(DbContextOptions<DataContext> options) : DbContext(options)
+    public class AuthDataContext(DbContextOptions<AuthDataContext> options) : DbContext(options)
     {
         public DbSet<AuthUserDB> AuthUsers { get; set; }
 

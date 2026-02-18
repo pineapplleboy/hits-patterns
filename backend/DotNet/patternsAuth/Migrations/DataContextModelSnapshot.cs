@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using patternsAuth;
+using patternsAuth.Setup;
 
 #nullable disable
 
 namespace patternsAuth.Migrations
 {
-    [DbContext(typeof(DataContext))]
+    [DbContext(typeof(AuthDataContext))]
     partial class DataContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

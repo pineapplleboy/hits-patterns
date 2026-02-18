@@ -3,15 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using ClassLibrary.Constants;
 using ClassLibrary.Exceptions;
 using System.Numerics;
+using patternsAuth.Setup;
 
 namespace patternsAuth.Services.Implementations
 {
     public class AuthServiceImpl : IAuthService
     {
-        private readonly DataContext _context;
+        private readonly AuthDataContext _context;
         private readonly ITokenService _tokenService;
         private readonly IUserRepository _userRepository;
-        public AuthServiceImpl(DataContext context, ITokenService tokenService, IUserRepository userRepository)
+        public AuthServiceImpl(AuthDataContext context, ITokenService tokenService, IUserRepository userRepository)
         {
             _context = context;
             _tokenService = tokenService;
@@ -39,6 +40,7 @@ namespace patternsAuth.Services.Implementations
         {
             var foundUser = await _userRepository.GetUserByPhone(user.Phone);
             if (foundUser.UserRole == UserRole.CLIENT) { throw new BadRequestException(ErrorMessages.YOU_ARE_NOT_EMPLOYEE); }
+            if(foundUser.Ban == true) { throw new BadRequestException(ErrorMessages.YOU_HAVE_BAN); }
 
             if (Hasher.CheckPassword(foundUser.Password, user.Password))
             {
@@ -52,7 +54,8 @@ namespace patternsAuth.Services.Implementations
         {
             var foundUser = await _userRepository.GetUserByPhone(user.Phone); 
             if(foundUser.UserRole == UserRole.EMPLOYEE) { throw new BadRequestException(ErrorMessages.YOU_ARE_NOT_CLIENT); }
-            
+            if (foundUser.Ban == true) { throw new BadRequestException(ErrorMessages.YOU_HAVE_BAN); }
+
             if (Hasher.CheckPassword(foundUser.Password, user.Password))
             {
                 List<string> roles = new List<string> { "Сlient" };

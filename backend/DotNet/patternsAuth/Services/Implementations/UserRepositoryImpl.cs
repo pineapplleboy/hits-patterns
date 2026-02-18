@@ -2,13 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using ClassLibrary.Constants;
 using ClassLibrary.Exceptions;
+using patternsAuth.Setup;
 
 namespace patternsAuth.Services.Implementations
 {
     public class UserRepositoryImpl : IUserRepository
     {
-        private readonly DataContext _context;
-        public UserRepositoryImpl(DataContext context)
+        private readonly AuthDataContext _context;
+        public UserRepositoryImpl(AuthDataContext context)
         {
             _context = context;
         }
