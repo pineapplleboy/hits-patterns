@@ -15,6 +15,8 @@ builder.Services.AddTransient<IUserService, UserServiceImpl>();
 
 //репозитории
 
+//Консьюмер
+builder.Services.AddHostedService<UserConsumer>();
 
 ClassLibrary.BaseSetup.SetupAuth.AddAuth(builder);
 

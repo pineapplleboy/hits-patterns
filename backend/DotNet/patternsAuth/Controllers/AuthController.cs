@@ -21,7 +21,7 @@ namespace patternsAuth.Controllers
         [HttpPost("employee-register-user")]
         public async Task<IActionResult> EmployeeRegisterUser(RegisterUserDTO user)
         {
-            await _authService.EmployeeRegisterUser(user);
+            await _authService.EmployeeRegisterUser(UserDescriptor.GetUserId(User),user);
             return Ok();
         }
 

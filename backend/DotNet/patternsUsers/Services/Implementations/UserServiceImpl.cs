@@ -1,8 +1,12 @@
 ﻿using ClassLibrary;
+using ClassLibrary.BaseSetup;
 using ClassLibrary.Constants;
 using ClassLibrary.Exceptions;
+using Confluent.Kafka;
 using Microsoft.EntityFrameworkCore;
 using patternsUsers.UsersSetup;
+using System.Text;
+using System.Text.Json;
 
 namespace patternsUsers.Services.Implementations
 {
@@ -17,9 +21,12 @@ namespace patternsUsers.Services.Implementations
         {
             if(userId == userIdToBan) { throw new BadRequestException(ErrorMessages.YOU_CANT_BAN_THIS_USER); }
             
-            var user = await GetUserById(userIdToBan);
-            if(user.Ban == true) {throw new BadRequestException(ErrorMessages.USER_ALREADY_HAS_BAN);}
-            user.Ban = true;
+            var userToBun = await GetUserById(userIdToBan);
+            if(userToBun.Ban == true) {throw new BadRequestException(ErrorMessages.USER_ALREADY_HAS_BAN);}
+            userToBun.Ban = true;
+
+            await SendBunMessage(new UserBanDTO { Id = userToBun.Id, Ban = true });
+
             await _context.SaveChangesAsync();
         }
 
@@ -28,6 +35,8 @@ namespace patternsUsers.Services.Implementations
             var user = await GetUserById(userId);
             if (user.Ban == false) { throw new BadRequestException(ErrorMessages.USER_HAS_NO_BAN); }
             user.Ban = false;
+
+            await SendBunMessage(new UserBanDTO { Id = userId, Ban = false });
             await _context.SaveChangesAsync();
         }
 
@@ -63,6 +72,39 @@ namespace patternsUsers.Services.Implementations
             return res;
         }
 
+
+        private async Task SendBunMessage(UserBanDTO userBan)
+        {
+            await SendBunMessageToAuth(userBan);
+            await SendBunMessageToBank(userBan);
+        }
+
+        private async Task SendBunMessageToAuth(UserBanDTO userBan)
+        {
+
+            var config = new ProducerConfig { BootstrapServers = KafkaOptions.bootstrapServer};
+            using (var p = new ProducerBuilder<Null, string>(config).Build())
+            {
+                var dr = await p.ProduceAsync(KafkaOptions.ban_user_auth, new Message<Null, string>
+                {
+                    Value = JsonSerializer.Serialize(userBan)
+                });
+            }
+        }
+
+
+        private async Task SendBunMessageToBank(UserBanDTO userBan)
+        {
+
+            var config = new ProducerConfig { BootstrapServers = KafkaOptions.bootstrapServer };
+            using (var p = new ProducerBuilder<Null, string>(config).Build())
+            {
+                var dr = await p.ProduceAsync(KafkaOptions.ban_user_bank_accounts, new Message<Null, string>
+                {
+                    Value = JsonSerializer.Serialize(userBan)
+                });
+            }
+        }
 
     }
 }

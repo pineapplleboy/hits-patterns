@@ -6,6 +6,6 @@ namespace patternsAuth.Services
     {
         public Task<string> LoginСlient(UserLoginDTO user);
         public Task<string> LoginEmployee(UserLoginDTO user);
-        public Task EmployeeRegisterUser(RegisterUserDTO user);
+        public Task EmployeeRegisterUser(Guid employeeId, RegisterUserDTO user);
     }
 }

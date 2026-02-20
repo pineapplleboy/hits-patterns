@@ -19,5 +19,12 @@ namespace patternsAuth.Services.Implementations
             if(foundUser == null) { throw new NotFoundException(ErrorMessages.USER_NOT_FOUND); }
             return foundUser;
         }
+
+        public async Task<AuthUserDB> GetUserById(Guid id)
+        {
+            var foundUser = await _context.AuthUsers.FirstOrDefaultAsync(u => u.Id == id);
+            if (foundUser == null) { throw new NotFoundException(ErrorMessages.USER_NOT_FOUND); }
+            return foundUser;
+        }
     }
 }
