@@ -1,0 +1,41 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="002-create-credit-account" author="aleksey.z">
+        <createTable tableName="credit_account">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="user_id" type="UUID"/>
+
+            <column name="dept" type="DECIMAL(19,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="credit_rate_name" type="VARCHAR(255)"/>
+
+            <column name="credit_rate_percent" type="INT"/>
+
+            <!-- Duration: храним, например, в миллисекундах -->
+            <column name="write_off_period" type="BIGINT"/>
+
+            <column name="next_write_off_date" type="TIMESTAMP"/>
+
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="create_time" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="update_time" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

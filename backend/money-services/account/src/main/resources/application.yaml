@@ -2,5 +2,15 @@ spring:
   application:
     name: account
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/patterns_core_account
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
 server:
   port: 8082
