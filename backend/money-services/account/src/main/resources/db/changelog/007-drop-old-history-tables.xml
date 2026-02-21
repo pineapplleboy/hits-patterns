@@ -1,0 +1,58 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="007-drop-old-history-fk-bank-account-from" author="aleksey.z">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="bank_account_operation_history"/>
+                <foreignKeyConstraintExists foreignKeyName="fk_ba_operation_from"/>
+            </and>
+        </preConditions>
+        <dropForeignKeyConstraint
+                baseTableName="bank_account_operation_history"
+                constraintName="fk_ba_operation_from"/>
+    </changeSet>
+
+    <changeSet id="007-drop-old-history-fk-bank-account-to" author="aleksey.z">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="bank_account_operation_history"/>
+                <foreignKeyConstraintExists foreignKeyName="fk_ba_operation_to"/>
+            </and>
+        </preConditions>
+        <dropForeignKeyConstraint
+                baseTableName="bank_account_operation_history"
+                constraintName="fk_ba_operation_to"/>
+    </changeSet>
+
+    <changeSet id="007-drop-old-history-fk-credit-account" author="aleksey.z">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="credit_operation_history"/>
+                <foreignKeyConstraintExists foreignKeyName="fk_credit_operation_account"/>
+            </and>
+        </preConditions>
+        <dropForeignKeyConstraint
+                baseTableName="credit_operation_history"
+                constraintName="fk_credit_operation_account"/>
+    </changeSet>
+
+    <changeSet id="007-drop-old-history-bank-account-table" author="aleksey.z">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="bank_account_operation_history"/>
+        </preConditions>
+        <dropTable tableName="bank_account_operation_history"/>
+    </changeSet>
+
+    <changeSet id="007-drop-old-history-credit-account-table" author="aleksey.z">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="credit_operation_history"/>
+        </preConditions>
+        <dropTable tableName="credit_operation_history"/>
+    </changeSet>
+
+</databaseChangeLog>

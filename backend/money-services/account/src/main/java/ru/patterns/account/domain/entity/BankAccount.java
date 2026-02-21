@@ -8,8 +8,6 @@ import ru.patterns.account.application.common.enums.BankAccountType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -38,12 +36,4 @@ public class BankAccount {
     private Instant createTime = Instant.now();
 
     private Instant updateTime = Instant.now();
-
-    @OneToMany(mappedBy = "bankAccountFrom", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("operationTime DESC")
-    private List<BankAccountOperationHistory> outgoingOperations = new ArrayList<>();
-
-    @OneToMany(mappedBy = "bankAccountTo")
-    @OrderBy("operationTime DESC")
-    private List<BankAccountOperationHistory> incomingOperations = new ArrayList<>();
 }
