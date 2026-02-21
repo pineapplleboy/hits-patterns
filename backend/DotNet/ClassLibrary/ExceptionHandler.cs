@@ -20,21 +20,19 @@ namespace ClassLibrary
                 problemDetails = new ProblemDetails
                 {
                     Status = customException.Code,
-                    Title = customException.Error,
                     Detail = customException.Message
                 };
             else if (exception is UnauthorizedAccessException)
                 problemDetails = new ProblemDetails
                 {
                     Status = 401,
-                    Title = "Unauthorized!",
                     Detail = "Refresh or access token is not valid"
                 };
             else
                 problemDetails = new ProblemDetails
                 {
                     Status = StatusCodes.Status500InternalServerError,
-                    Title = "Internal server error"
+                    Detail = "Internal server error"
                 };
 
             httpContext.Response.StatusCode = problemDetails.Status.Value;

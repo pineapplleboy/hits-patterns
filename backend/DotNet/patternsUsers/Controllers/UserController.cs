@@ -17,6 +17,7 @@ namespace patternsUsers.Controllers
 
         [Authorize]
         [HttpGet("get-my-profile")]
+        [ProducesResponseType(typeof(UserDB), 200)]
         public async Task<IActionResult> GetMyProfile()
         {
             return Ok(await _userService.GetUserById(UserDescriptor.GetUserId(User)));
@@ -31,6 +32,7 @@ namespace patternsUsers.Controllers
 
         [Authorize(Roles = "Employee")]
         [HttpGet("get-users")]
+        [ProducesResponseType(typeof(List<UserDTO>), 200)]
         public async Task<IActionResult> GetUsers([FromQuery] bool? isClient)
         {
             return Ok(await _userService.GetUsers(UserDescriptor.GetUserId(User), isClient));
