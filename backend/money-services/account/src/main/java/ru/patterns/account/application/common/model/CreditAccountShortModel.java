@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Data
 @Accessors(chain=true)
-public class CreditAccountModel {
+public class CreditAccountShortModel {
 
     private UUID id;
 

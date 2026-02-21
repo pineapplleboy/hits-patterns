@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Data
 @Accessors(chain=true)
-public class BankAccountModel {
+public class BankAccountShortModel {
 
     private UUID id;
 
