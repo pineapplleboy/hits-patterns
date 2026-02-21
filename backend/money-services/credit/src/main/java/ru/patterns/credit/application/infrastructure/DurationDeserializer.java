@@ -1,4 +1,4 @@
-package ru.patterns.credit.infrastructure;
+package ru.patterns.credit.application.infrastructure;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

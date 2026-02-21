@@ -1,4 +1,4 @@
-package ru.patterns.credit.infrastructure;
+package ru.patterns.credit.application.infrastructure;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

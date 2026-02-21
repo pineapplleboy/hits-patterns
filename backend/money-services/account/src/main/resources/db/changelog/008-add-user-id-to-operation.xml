@@ -1,0 +1,19 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="008-add-user-id-to-operation" author="aleksey.z">
+
+        <addColumn tableName="operation">
+            <column name="user_id_from" type="UUID" defaultValueComputed="gen_random_uuid()"/>
+        </addColumn>
+
+        <createIndex tableName="operation" indexName="idx_operation_user_id_from">
+            <column name="user_id_from"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
