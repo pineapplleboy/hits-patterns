@@ -14,3 +14,8 @@ spring:
 
 server:
   port: 8082
+
+master-bank:
+  account-number: 0000-0000-0000-0000
+  money: 1000000000
+  user-id: 00000000-0000-0000-0000-000000000000

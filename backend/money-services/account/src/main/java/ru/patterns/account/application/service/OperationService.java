@@ -32,7 +32,7 @@ public class OperationService {
                 .toList();
     }
 
-    public List<OperationModel> getOperations(AuthUser userAuth, UUID userId, String accountNumber) {
+    public List<OperationModel> getAccountOperations(AuthUser userAuth, UUID userId, String accountNumber) {
         if (!(userAuth.userId().equals(userId) || userAuth.role() != Role.EMPLOYEE)) {
             throw new ForbiddenException(ErrorMessages.FORBIDDEN);
         }

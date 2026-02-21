@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import ru.patterns.account.application.common.enums.BankAccountType;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@Accessors(chain = true)
 public class BankAccount {
     @Id
     private UUID id = UUID.randomUUID();
@@ -30,7 +32,7 @@ public class BankAccount {
     @Column(nullable = false, scale = 2)
     private BigDecimal balance;
 
-    private boolean active;
+    private boolean active = true;
 
     @Column(nullable = false, updatable = false)
     private Instant createTime = Instant.now();

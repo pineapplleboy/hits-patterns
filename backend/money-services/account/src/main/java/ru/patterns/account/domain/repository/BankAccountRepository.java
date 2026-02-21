@@ -4,8 +4,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import ru.patterns.account.domain.entity.BankAccount;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> {
-    List<BankAccount> getBankAccountByUserId(UUID userId);
+    List<BankAccount> getBankAccountsByUserId(UUID userId);
+    Optional<BankAccount> getBankAccountByAccountNumber(String accountNumber);
 }
