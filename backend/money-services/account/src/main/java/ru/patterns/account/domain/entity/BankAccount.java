@@ -22,6 +22,9 @@ public class BankAccount {
 
     private UUID userId;
 
+    @Column(unique = true, nullable = false)
+    private String accountNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BankAccountType accountType; // мастер-счёт или счёт клиента

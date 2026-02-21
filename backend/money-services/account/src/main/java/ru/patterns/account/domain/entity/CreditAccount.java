@@ -22,6 +22,9 @@ public class CreditAccount {
 
     private UUID userId;
 
+    @Column(unique = true, nullable = false)
+    private String accountNumber;
+
     @Column(nullable = false, scale = 2)
     private BigDecimal dept = BigDecimal.valueOf(0);
 

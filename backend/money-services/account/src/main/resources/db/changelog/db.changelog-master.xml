@@ -11,5 +11,6 @@
     <include file="/db/changelog/002-create-credit-account.xml"/>
     <include file="/db/changelog/003-create-bank-account-operation-history.xml"/>
     <include file="/db/changelog/004-create-credit-operation-history.xml"/>
+    <include file="/db/changelog/005-add-account-number.xml"/>
 
 </databaseChangeLog>
