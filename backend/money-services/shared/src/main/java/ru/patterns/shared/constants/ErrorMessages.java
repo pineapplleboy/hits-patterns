@@ -6,4 +6,5 @@ import lombok.experimental.UtilityClass;
 public class ErrorMessages {
     public String USER_NOT_FOUND = "User not found";
     public String FORBIDDEN = "Forbidden";
+    public String ACCOUNT_NOT_FOUND = "Account not found";
 }

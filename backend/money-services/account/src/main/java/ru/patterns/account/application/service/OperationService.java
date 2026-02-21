@@ -3,8 +3,8 @@ package ru.patterns.account.application.service;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
+import ru.patterns.account.application.common.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.OperationModel;
-import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.mapper.OperationMapper;
 import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.constants.ErrorMessages;
@@ -32,12 +32,13 @@ public class OperationService {
                 .toList();
     }
 
-    public List<OperationModel> getAccountOperations(AuthUser userAuth, UUID userId, String accountNumber) {
+    public List<OperationModel> getAccountOperations(AuthUser userAuth, UUID userId,
+                                                     String accountNumber, TransferAccountType transferAccountType) {
         if (!(userAuth.userId().equals(userId) || userAuth.role() != Role.EMPLOYEE)) {
             throw new ForbiddenException(ErrorMessages.FORBIDDEN);
         }
 
-        return operationRepository.findByAccountNumberFrom(accountNumber)
+        return operationRepository.findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType)
                 .stream()
                 .map(operation -> operation.toModel())
                 .toList();
