@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface OperationRepository extends JpaRepository<Operation, UUID> {
     List<Operation> findByUserIdFrom(UUID userId);
+    List<Operation> findByAccountNumberFrom(String accountNumberFrom);
 }

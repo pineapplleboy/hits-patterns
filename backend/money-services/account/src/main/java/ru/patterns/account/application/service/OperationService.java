@@ -10,6 +10,7 @@ import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.model.external.AuthUser;
+import ru.patterns.shared.model.external.Role;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,9 +27,18 @@ public class OperationService {
             throw new ForbiddenException(ErrorMessages.FORBIDDEN);
         }
 
-        List<Operation> operations = operationRepository.findByUserIdFrom(userId);
+        return operationRepository.findByUserIdFrom(userId).stream()
+                .map(operation -> operation.toModel())
+                .toList();
+    }
 
-        return operations.stream()
+    public List<OperationModel> getOperations(AuthUser userAuth, UUID userId, String accountNumber) {
+        if (!(userAuth.userId().equals(userId) || userAuth.role() != Role.EMPLOYEE)) {
+            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
+        }
+
+        return operationRepository.findByAccountNumberFrom(accountNumber)
+                .stream()
                 .map(operation -> operation.toModel())
                 .toList();
     }
