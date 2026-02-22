@@ -1,8 +1,8 @@
 package ru.patterns.account.domain.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.patterns.account.application.common.model.CreditAccountFullModel;
-import ru.patterns.account.application.common.model.CreditAccountShortModel;
+import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
+import ru.patterns.account.application.common.model.credit.CreditAccountShortModel;
 import ru.patterns.account.domain.entity.CreditAccount;
 
 @UtilityClass

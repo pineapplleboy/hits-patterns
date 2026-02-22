@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.TransferAccountType;
-import ru.patterns.account.application.common.model.BankAccountFullModel;
-import ru.patterns.account.application.common.model.BankAccountShortModel;
+import ru.patterns.account.application.common.model.AccountNumberResponseModel;
+import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
+import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
 import ru.patterns.account.domain.entity.BankAccount;
+import ru.patterns.account.domain.factory.BankAccountFactory;
 import ru.patterns.account.domain.mapper.BankAccountMapper;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
@@ -26,6 +28,17 @@ public class BankAccountService {
 
     private final BankAccountRepository bankAccountRepository;
     private final OperationService operationService;
+
+    public AccountNumberResponseModel createBankAccount(AuthUser authUser, UUID userId) {
+        if (!authUser.userId().equals(userId)) {
+            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
+        }
+
+        BankAccount bankAccount = BankAccountFactory.createBankAccount(userId);
+        bankAccountRepository.save(bankAccount);
+
+        return new AccountNumberResponseModel(bankAccount.getAccountNumber());
+    }
 
     public List<BankAccountShortModel> getAllBankAccounts(AuthUser authUser) {
         if (authUser.role() != Role.EMPLOYEE) {

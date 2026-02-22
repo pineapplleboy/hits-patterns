@@ -1,7 +1,8 @@
-package ru.patterns.account.application.common.model;
+package ru.patterns.account.application.common.model.credit;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
+import ru.patterns.account.application.common.model.OperationModel;
 
 import java.math.BigDecimal;
 import java.time.Duration;
