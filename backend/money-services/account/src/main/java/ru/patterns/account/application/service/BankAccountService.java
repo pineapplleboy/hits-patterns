@@ -14,6 +14,7 @@ import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.external.Role;
+import ru.patterns.shared.utility.AuthUtility;
 
 import java.util.List;
 import java.util.UUID;
@@ -39,9 +40,7 @@ public class BankAccountService {
     }
 
     public List<BankAccountShortModel> getAllUserBankAccounts(AuthUser authUser, UUID userId) {
-        if (authUser.role() != Role.EMPLOYEE || !authUser.userId().equals(userId)) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
-        }
+        AuthUtility.checkUserRights(authUser, userId);
 
         return bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true)
                 .stream()
@@ -49,12 +48,10 @@ public class BankAccountService {
                 .toList();
     }
 
-    public BankAccountFullModel getBankAccountFullModel(AuthUser authUser, String accountNumber) {
-        if (authUser.role() != Role.EMPLOYEE) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
-        }
+    public BankAccountFullModel getBankAccountFullModel(AuthUser authUser, UUID userId, String accountNumber) {
+        AuthUtility.checkUserRights(authUser, userId);
 
-        var account = bankAccountRepository.getBankAccountByAccountNumberAndActive(accountNumber, true)
+        var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         var accountFullModel = account.toFullModelWithoutComments();

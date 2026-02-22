@@ -11,6 +11,7 @@ import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.external.Role;
+import ru.patterns.shared.utility.AuthUtility;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,21 +23,17 @@ public class OperationService {
 
     private final OperationRepository operationRepository;
 
-    public List<OperationModel> getUserOperations(AuthUser userAuth, UUID userId) {
-        if (!userAuth.userId().equals(userId)) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
-        }
+    public List<OperationModel> getUserOperations(AuthUser authUser, UUID userId) {
+        AuthUtility.checkUserRights(authUser, userId);
 
         return operationRepository.findByUserIdFrom(userId).stream()
                 .map(operation -> operation.toModel())
                 .toList();
     }
 
-    public List<OperationModel> getAccountOperations(AuthUser userAuth, UUID userId,
+    public List<OperationModel> getAccountOperations(AuthUser authUser, UUID userId,
                                                      String accountNumber, TransferAccountType transferAccountType) {
-        if (!(userAuth.userId().equals(userId) || userAuth.role() != Role.EMPLOYEE)) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
-        }
+        AuthUtility.checkUserRights(authUser, userId);
 
         return operationRepository.findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType)
                 .stream()

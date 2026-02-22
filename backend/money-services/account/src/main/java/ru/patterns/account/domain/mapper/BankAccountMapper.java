@@ -7,6 +7,7 @@ import ru.patterns.account.domain.entity.BankAccount;
 
 @UtilityClass
 public class BankAccountMapper {
+
     public BankAccountShortModel toShortModel(BankAccount bankAccount) {
         return new BankAccountShortModel()
                 .setAccountNumber(bankAccount.getAccountNumber())

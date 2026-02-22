@@ -10,5 +10,5 @@ import java.util.UUID;
 public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> {
     List<BankAccount> getBankAccountsByUserId(UUID userId);
     List<BankAccount> getBankAccountsByUserIdAndActive(UUID userId, boolean active);
-    Optional<BankAccount> getBankAccountByAccountNumberAndActive(String accountNumber, boolean active);
+    Optional<BankAccount> getBankAccountByAccountNumberAndActiveAndUserId(String accountNumber, boolean active, UUID userId);
 }

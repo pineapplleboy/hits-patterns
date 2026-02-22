@@ -32,7 +32,8 @@ public class MasterBankAccountStarter implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        Optional<BankAccount> masterAccount = bankAccountRepository.getBankAccountByAccountNumberAndActive(masterAccountNumber, true);
+        Optional<BankAccount> masterAccount = bankAccountRepository
+                .getBankAccountByAccountNumberAndActiveAndUserId(masterAccountNumber, true, UUID.fromString(masterAccountUserId));
 
         if (masterAccount.isPresent()) {
             log.info("Мастер-счёт уже зарегистрирован!");
