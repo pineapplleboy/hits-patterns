@@ -21,7 +21,6 @@
 
             <column name="credit_rate_percent" type="INT"/>
 
-            <!-- Duration: храним, например, в миллисекундах -->
             <column name="write_off_period" type="BIGINT"/>
 
             <column name="next_write_off_date" type="TIMESTAMP"/>

@@ -36,6 +36,8 @@ public class CreditAccount {
 
     private boolean active;
 
+    private boolean closed;
+
     @Column(nullable = false, updatable = false)
     private Instant createTime = Instant.now();
 
