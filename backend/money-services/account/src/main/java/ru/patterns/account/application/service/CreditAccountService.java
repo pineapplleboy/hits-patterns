@@ -3,6 +3,7 @@ package ru.patterns.account.application.service;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
+import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
 import ru.patterns.account.application.common.model.credit.CreditAccountShortModel;
@@ -12,6 +13,7 @@ import ru.patterns.account.domain.mapper.CreditAccountMapper;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
+import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
 import ru.patterns.shared.utility.AuthUtility;
@@ -34,8 +36,11 @@ public class CreditAccountService {
 
         creditAccountRepository.save(creditAccount);
 
-        operationHistoryService.createAndSaveOperationAccountCreation(takeCreditMessage.getUserId(),
-                TransferAccountType.BANK_ACCOUNT, takeCreditMessage.getCreditAmount());
+        operationHistoryService.createAndSaveOperation(takeCreditMessage.getUserId(),
+                TransferAccountType.BANK_ACCOUNT,
+                takeCreditMessage.getCreditAmount(),
+                AccountActionType.OPEN_ACCOUNT,
+                OperationStatus.SUCCESS);
     }
 
     public List<CreditAccountShortModel> getUsersCreditsHistory(AuthUser authUser, UUID userId) {

@@ -3,6 +3,7 @@ package ru.patterns.account.application.service;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
+import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.AccountNumberResponseModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
@@ -14,6 +15,7 @@ import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.exception.NotFoundException;
+import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.external.Role;
 import ru.patterns.shared.utility.AuthUtility;
@@ -39,7 +41,11 @@ public class BankAccountService {
         BankAccount bankAccount = BankAccountFactory.createBankAccount(userId);
         bankAccountRepository.save(bankAccount);
 
-        operationHistoryService.createAndSaveOperationAccountCreation(userId, TransferAccountType.BANK_ACCOUNT, BigDecimal.valueOf(0));
+        operationHistoryService.createAndSaveOperation(userId,
+                TransferAccountType.BANK_ACCOUNT,
+                BigDecimal.valueOf(0),
+                AccountActionType.OPEN_ACCOUNT,
+                OperationStatus.SUCCESS);
 
         return new AccountNumberResponseModel(bankAccount.getAccountNumber());
     }

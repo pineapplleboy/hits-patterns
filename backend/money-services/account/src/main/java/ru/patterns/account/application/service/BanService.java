@@ -18,7 +18,9 @@ public class BanService {
         var userBankAccounts = bankAccountRepository.getBankAccountsByUserId(userId);
         var userCreditAccounts = creditAccountRepository.getCreditAccountByUserId(userId);
 
-        userBankAccounts.forEach(bankAccount -> bankAccount.setActive(!ban));
+        userBankAccounts.forEach(bankAccount -> {
+            bankAccount.setActive(!ban);
+        });
         userCreditAccounts.forEach(creditAccount -> creditAccount.setActive(!ban));
 
         bankAccountRepository.saveAll(userBankAccounts);
