@@ -14,3 +14,7 @@ spring:
 
 server:
   port: 8081
+
+app:
+  kafka:
+    take-credit-topic: 00_take_credit
