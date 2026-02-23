@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/credit-rate")
+@RequestMapping("/patterns/api/v1/credit-rate")
 public class CreditRateController {
     private final CreditRateCRUDService creditRateCRUDService;
 
