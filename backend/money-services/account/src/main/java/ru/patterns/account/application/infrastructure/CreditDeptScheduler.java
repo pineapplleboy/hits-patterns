@@ -8,6 +8,6 @@ public class CreditDeptScheduler {
 
     @Scheduled(fixedRate = 60000)
     public void performCreditDeptCalculation() {
-
+        // todo
     }
 }

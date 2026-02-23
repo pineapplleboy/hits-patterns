@@ -5,12 +5,12 @@ import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.OperationModel;
+import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.mapper.OperationMapper;
 import ru.patterns.account.domain.repository.OperationRepository;
-import ru.patterns.shared.constants.ErrorMessages;
-import ru.patterns.shared.exception.ForbiddenException;
+import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.external.AuthUser;
-import ru.patterns.shared.model.external.Role;
+import ru.patterns.shared.model.response.OperationStatusResponseModel;
 import ru.patterns.shared.utility.AuthUtility;
 
 import java.util.List;
@@ -39,5 +39,18 @@ public class OperationService {
                 .stream()
                 .map(operation -> operation.toModel())
                 .toList();
+    }
+
+    public OperationModel getOperationInfo(UUID operationId) {
+        return getOperationById(operationId).toModel();
+    }
+
+    public OperationStatusResponseModel getOperationStatus(UUID operationId) {
+        return new OperationStatusResponseModel(getOperationById(operationId).getStatus());
+    }
+
+    private Operation getOperationById(UUID operationId) {
+        return operationRepository.findById(operationId)
+                .orElseThrow(() -> new NotFoundException("Operation not found!"));
     }
 }
