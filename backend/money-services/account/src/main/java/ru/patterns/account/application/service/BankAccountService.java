@@ -18,6 +18,7 @@ import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.external.Role;
 import ru.patterns.shared.utility.AuthUtility;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +29,7 @@ public class BankAccountService {
 
     private final BankAccountRepository bankAccountRepository;
     private final OperationService operationService;
+    private final OperationHistoryService operationHistoryService;
 
     public AccountNumberResponseModel createBankAccount(AuthUser authUser, UUID userId) {
         if (!authUser.userId().equals(userId)) {
@@ -36,6 +38,8 @@ public class BankAccountService {
 
         BankAccount bankAccount = BankAccountFactory.createBankAccount(userId);
         bankAccountRepository.save(bankAccount);
+
+        operationHistoryService.createAndSaveOperationAccountCreation(userId, TransferAccountType.BANK_ACCOUNT, BigDecimal.valueOf(0));
 
         return new AccountNumberResponseModel(bankAccount.getAccountNumber());
     }

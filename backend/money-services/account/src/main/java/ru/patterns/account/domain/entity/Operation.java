@@ -19,7 +19,7 @@ import java.util.UUID;
 public class Operation {
 
     @Id
-    private UUID operationId;
+    private UUID operationId = UUID.randomUUID();
 
     @Column(nullable = false)
     private String accountNumberFrom;

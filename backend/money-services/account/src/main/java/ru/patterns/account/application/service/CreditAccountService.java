@@ -27,11 +27,15 @@ public class CreditAccountService {
 
     private final CreditAccountRepository creditAccountRepository;
     private final OperationService operationService;
+    private final OperationHistoryService operationHistoryService;
 
     public void TakeCredit(TakeCreditMessage takeCreditMessage) {
         CreditAccount creditAccount = CreditAccountFactory.createCreditAccount(takeCreditMessage);
 
         creditAccountRepository.save(creditAccount);
+
+        operationHistoryService.createAndSaveOperationAccountCreation(takeCreditMessage.getUserId(),
+                TransferAccountType.BANK_ACCOUNT, takeCreditMessage.getCreditAmount());
     }
 
     public List<CreditAccountShortModel> getUsersCreditsHistory(AuthUser authUser, UUID userId) {
