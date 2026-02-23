@@ -7,11 +7,13 @@ import ru.patterns.account.application.common.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
 import ru.patterns.account.application.common.model.credit.CreditAccountShortModel;
 import ru.patterns.account.domain.entity.CreditAccount;
+import ru.patterns.account.domain.factory.CreditAccountFactory;
 import ru.patterns.account.domain.mapper.CreditAccountMapper;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.external.AuthUser;
+import ru.patterns.shared.model.kafka.TakeCreditMessage;
 import ru.patterns.shared.utility.AuthUtility;
 
 import java.util.Comparator;
@@ -25,6 +27,12 @@ public class CreditAccountService {
 
     private final CreditAccountRepository creditAccountRepository;
     private final OperationService operationService;
+
+    public void TakeCredit(TakeCreditMessage takeCreditMessage) {
+        CreditAccount creditAccount = CreditAccountFactory.createCreditAccount(takeCreditMessage);
+
+        creditAccountRepository.save(creditAccount);
+    }
 
     public List<CreditAccountShortModel> getUsersCreditsHistory(AuthUser authUser, UUID userId) {
         AuthUtility.checkUserRights(authUser, userId);

@@ -3,6 +3,7 @@ package ru.patterns.shared.model.kafka;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -19,4 +20,6 @@ public class TakeCreditMessage {
     private int creditRatePercent;
 
     private Duration writeOffPeriod;
+
+    private BigDecimal creditAmount;
 }
