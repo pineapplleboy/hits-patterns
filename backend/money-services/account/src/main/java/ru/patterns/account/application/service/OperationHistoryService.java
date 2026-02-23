@@ -18,10 +18,10 @@ public class OperationHistoryService {
     private final OperationRepository operationRepository;
 
     public void createAndSaveOperation(UUID userId,
-                                                      TransferAccountType transferAccountType,
-                                                      BigDecimal sum,
-                                                      AccountActionType actionType,
-                                                      OperationStatus operationStatus) {
+                                       TransferAccountType transferAccountType,
+                                       BigDecimal sum,
+                                       AccountActionType actionType,
+                                       OperationStatus operationStatus) {
         Operation operation = new Operation()
                 .setAccountNumberFrom(null)
                 .setUserIdFrom(userId)
