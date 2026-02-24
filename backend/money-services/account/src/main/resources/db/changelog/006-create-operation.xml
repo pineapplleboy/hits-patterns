@@ -1,0 +1,66 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="006-create-operation" author="aleksey.z">
+        <createTable tableName="operation">
+            <column name="operation_id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="account_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="account_number" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="action_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="operation_status" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="transfer_to_account_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="amount" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="recipient_account_number" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="recipient_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="operation_create_time" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="update_time" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="operation" indexName="idx_operation_account_id">
+            <column name="account_id"/>
+        </createIndex>
+
+        <createIndex tableName="operation" indexName="idx_operation_recipient_account_number">
+            <column name="recipient_account_number"/>
+        </createIndex>
+
+        <createIndex tableName="operation" indexName="idx_operation_operation_create_time">
+            <column name="operation_create_time"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

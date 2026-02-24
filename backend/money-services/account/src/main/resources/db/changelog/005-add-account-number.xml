@@ -1,0 +1,36 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="005-add-account-number" author="aleksey.z">
+        <addColumn tableName="bank_account">
+            <column name="account_number" type="VARCHAR(64)"/>
+        </addColumn>
+
+        <addUniqueConstraint
+                tableName="bank_account"
+                columnNames="account_number"
+                constraintName="uq_bank_account_account_number"/>
+
+        <createIndex tableName="bank_account" indexName="idx_bank_account_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <addColumn tableName="credit_account">
+            <column name="account_number" type="VARCHAR(64)"/>
+        </addColumn>
+
+        <addUniqueConstraint
+                tableName="credit_account"
+                columnNames="account_number"
+                constraintName="uq_credit_account_account_number"/>
+
+        <createIndex tableName="credit_account" indexName="idx_credit_account_user_id">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

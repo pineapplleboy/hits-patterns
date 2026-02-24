@@ -1,0 +1,37 @@
+package ru.patterns.account.application.infrastructure;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import ru.patterns.shared.exception.ForbiddenException;
+import ru.patterns.shared.exception.NotFoundException;
+import ru.patterns.shared.exception.UnauthorizedException;
+import ru.patterns.shared.model.response.ErrorResponse;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchNotFoundException(NotFoundException exception) {
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage()),
+                HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchUnauthorizedException(UnauthorizedException exception) {
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), exception.getMessage()),
+                HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchForbiddenException(ForbiddenException exception) {
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.FORBIDDEN.value(), exception.getMessage()),
+                HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchUnknownException(Exception exception) {
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Произошла непредвиденная ошибка"),
+                HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}

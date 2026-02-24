@@ -4,23 +4,26 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import ru.patterns.account.application.common.enums.BankAccountType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Accessors(chain = true)
 public class BankAccount {
     @Id
     private UUID id = UUID.randomUUID();
 
     private UUID userId;
+
+    @Column(unique = true, nullable = false)
+    private String accountNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -29,18 +32,10 @@ public class BankAccount {
     @Column(nullable = false, scale = 2)
     private BigDecimal balance;
 
-    private boolean active;
+    private boolean active = true;
 
     @Column(nullable = false, updatable = false)
     private Instant createTime = Instant.now();
 
     private Instant updateTime = Instant.now();
-
-    @OneToMany(mappedBy = "bankAccountFrom", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("operationTime DESC")
-    private List<BankAccountOperationHistory> outgoingOperations = new ArrayList<>();
-
-    @OneToMany(mappedBy = "bankAccountTo")
-    @OrderBy("operationTime DESC")
-    private List<BankAccountOperationHistory> incomingOperations = new ArrayList<>();
 }

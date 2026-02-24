@@ -8,8 +8,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -21,6 +19,9 @@ public class CreditAccount {
     private UUID id = UUID.randomUUID();
 
     private UUID userId;
+
+    @Column(unique = true, nullable = false)
+    private String accountNumber;
 
     @Column(nullable = false, scale = 2)
     private BigDecimal dept = BigDecimal.valueOf(0);
@@ -35,12 +36,10 @@ public class CreditAccount {
 
     private boolean active;
 
+    private boolean closed;
+
     @Column(nullable = false, updatable = false)
     private Instant createTime = Instant.now();
 
     private Instant updateTime = Instant.now();
-
-    @OneToMany(mappedBy = "creditAccount", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("operationTime DESC")
-    private List<CreditOperationHistory> operations = new ArrayList<>();
 }

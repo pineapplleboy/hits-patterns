@@ -3,7 +3,7 @@ package ru.patterns.credit.application.common.model.response;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import ru.patterns.credit.infrastructure.DurationSerializer;
+import ru.patterns.credit.application.infrastructure.DurationSerializer;
 
 import java.time.Duration;
 import java.util.UUID;
