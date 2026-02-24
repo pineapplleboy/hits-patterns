@@ -13,12 +13,8 @@ import ru.patterns.account.domain.factory.BankAccountFactory;
 import ru.patterns.account.domain.mapper.BankAccountMapper;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
-import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
-import ru.patterns.shared.model.external.AuthUser;
-import ru.patterns.shared.model.external.Role;
-import ru.patterns.shared.utility.AuthUtility;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -33,11 +29,7 @@ public class BankAccountService {
     private final OperationService operationService;
     private final OperationHistoryService operationHistoryService;
 
-    public AccountNumberResponseModel createBankAccount(AuthUser authUser, UUID userId) {
-        if (!authUser.userId().equals(userId)) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
-        }
-
+    public AccountNumberResponseModel createBankAccount(UUID userId) {
         BankAccount bankAccount = BankAccountFactory.createBankAccount(userId);
         bankAccountRepository.save(bankAccount);
 
@@ -50,11 +42,7 @@ public class BankAccountService {
         return new AccountNumberResponseModel(bankAccount.getAccountNumber());
     }
 
-    public List<BankAccountShortModel> getAllBankAccounts(AuthUser authUser) {
-        if (authUser.role() != Role.EMPLOYEE) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
-        }
-
+    public List<BankAccountShortModel> getAllBankAccounts() {
         return bankAccountRepository.findAll()
                 .stream()
                 .filter(BankAccount::isActive)
@@ -62,23 +50,19 @@ public class BankAccountService {
                 .toList();
     }
 
-    public List<BankAccountShortModel> getAllUserBankAccounts(AuthUser authUser, UUID userId) {
-        AuthUtility.checkUserRights(authUser, userId);
-
+    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId) {
         return bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true)
                 .stream()
                 .map(account -> account.toShortModel())
                 .toList();
     }
 
-    public BankAccountFullModel getBankAccountFullModel(AuthUser authUser, UUID userId, String accountNumber) {
-        AuthUtility.checkUserRights(authUser, userId);
-
+    public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber) {
         var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         var accountFullModel = account.toFullModelWithoutComments();
-        var operations = operationService.getAccountOperations(authUser, authUser.userId(), accountNumber, TransferAccountType.BANK_ACCOUNT);
+        var operations = operationService.getAccountOperations(userId, accountNumber, TransferAccountType.BANK_ACCOUNT);
 
         accountFullModel.setOperations(operations);
 

@@ -14,9 +14,7 @@ import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
-import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
-import ru.patterns.shared.utility.AuthUtility;
 
 import java.util.Comparator;
 import java.util.List;
@@ -43,9 +41,7 @@ public class CreditAccountService {
                 OperationStatus.SUCCESS);
     }
 
-    public List<CreditAccountShortModel> getUsersCreditsHistory(AuthUser authUser, UUID userId) {
-        AuthUtility.checkUserRights(authUser, userId);
-
+    public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {
         return creditAccountRepository.getCreditAccountByUserIdAndActive(userId, true)
                 .stream()
                 .sorted(Comparator.comparing(CreditAccount::isClosed))
@@ -53,14 +49,12 @@ public class CreditAccountService {
                 .toList();
     }
 
-    public CreditAccountFullModel getUserCreditFullInfo(AuthUser authUser, UUID userId, String accountNumber) {
-        AuthUtility.checkUserRights(authUser, userId);
-
+    public CreditAccountFullModel getUserCreditFullInfo(UUID userId, String accountNumber) {
         var account = creditAccountRepository.getByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         var accountFullModel = account.toFullModel();
-        var operations = operationService.getAccountOperations(authUser, authUser.userId(), accountNumber, TransferAccountType.CREDIT_ACCOUNT);
+        var operations = operationService.getAccountOperations(userId, accountNumber, TransferAccountType.CREDIT_ACCOUNT);
 
         accountFullModel.setOperations(operations);
 

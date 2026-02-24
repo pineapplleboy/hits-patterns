@@ -9,9 +9,7 @@ import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.mapper.OperationMapper;
 import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.exception.NotFoundException;
-import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
-import ru.patterns.shared.utility.AuthUtility;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,18 +21,14 @@ public class OperationService {
 
     private final OperationRepository operationRepository;
 
-    public List<OperationModel> getUserOperations(AuthUser authUser, UUID userId) {
-        AuthUtility.checkUserRights(authUser, userId);
-
+    public List<OperationModel> getUserOperations(UUID userId) {
         return operationRepository.findByUserIdFrom(userId).stream()
                 .map(operation -> operation.toModel())
                 .toList();
     }
 
-    public List<OperationModel> getAccountOperations(AuthUser authUser, UUID userId,
+    public List<OperationModel> getAccountOperations(UUID userId,
                                                      String accountNumber, TransferAccountType transferAccountType) {
-        AuthUtility.checkUserRights(authUser, userId);
-
         return operationRepository.findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType)
                 .stream()
                 .map(operation -> operation.toModel())
