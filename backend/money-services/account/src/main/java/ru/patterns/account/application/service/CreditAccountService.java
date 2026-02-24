@@ -29,7 +29,7 @@ public class CreditAccountService {
     private final OperationService operationService;
     private final OperationHistoryService operationHistoryService;
 
-    public void TakeCredit(TakeCreditMessage takeCreditMessage) {
+    public void takeCredit(TakeCreditMessage takeCreditMessage) {
         CreditAccount creditAccount = CreditAccountFactory.createCreditAccount(takeCreditMessage);
 
         creditAccountRepository.save(creditAccount);

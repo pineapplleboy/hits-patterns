@@ -5,22 +5,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import ru.patterns.account.application.service.BanService;
-import ru.patterns.shared.model.kafka.BanUserMessage;
+import ru.patterns.account.application.service.CreditAccountService;
+import ru.patterns.shared.model.kafka.TakeCreditMessage;
 
 @Component
 @RequiredArgsConstructor
-public class KafkaBanUsersListener {
+public class KafkaTakeCreditConsumer {
 
-    private final BanService banService;
+    private final CreditAccountService creditAccountService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "${kafka.consumer.ban-users}", groupId = "${kafka.group}")
+    @KafkaListener(topics = "${kafka.consumer.take-credit}", groupId = "${kafka.group}")
     public void listen(String message, Acknowledgment ack) {
         try {
-            BanUserMessage msg = objectMapper.readValue(message, BanUserMessage.class);
+            TakeCreditMessage msg = objectMapper.readValue(message, TakeCreditMessage.class);
 
-            banService.banUserAccounts(msg.getId(), msg.isBan());
+            creditAccountService.takeCredit(msg);
 
             ack.acknowledge();
         } catch (Exception ignored) {

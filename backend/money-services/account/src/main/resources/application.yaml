@@ -26,3 +26,4 @@ kafka:
 
   consumer:
     ban-users: 00_ban_user_bank_accounts
+    take-credit: 00_take_credit
