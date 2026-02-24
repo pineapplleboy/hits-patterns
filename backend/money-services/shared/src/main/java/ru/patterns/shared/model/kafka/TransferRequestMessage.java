@@ -1,13 +1,17 @@
 package ru.patterns.shared.model.kafka;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 import ru.patterns.shared.model.enums.TransferAccountType;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
+@Accessors(chain=true)
 public class TransferRequestMessage {
+
+    private UUID operationId;
 
     private UUID userIdFrom;
 
@@ -16,8 +20,6 @@ public class TransferRequestMessage {
     private UUID userIdTo;
 
     private String accountNumberTo;
-
-    private String recipientName;
 
     private BigDecimal amount;
 

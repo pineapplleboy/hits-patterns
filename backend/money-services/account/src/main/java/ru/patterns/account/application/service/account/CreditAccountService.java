@@ -1,9 +1,11 @@
-package ru.patterns.account.application.service;
+package ru.patterns.account.application.service.account;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
+import ru.patterns.account.application.service.operation.OperationHistoryService;
+import ru.patterns.account.application.service.operation.OperationService;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
 import ru.patterns.account.application.common.model.credit.CreditAccountShortModel;

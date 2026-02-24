@@ -1,4 +1,4 @@
-package ru.patterns.account.application.service;
+package ru.patterns.account.application.service.operation;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

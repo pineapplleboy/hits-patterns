@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.patterns.account.application.common.model.AccountNumberResponseModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
-import ru.patterns.account.application.service.BankAccountService;
+import ru.patterns.account.application.service.account.BankAccountService;
 import ru.patterns.shared.utility.AuthUtility;
 
 import java.util.List;

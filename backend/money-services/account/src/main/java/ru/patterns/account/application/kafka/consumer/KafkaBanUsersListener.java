@@ -1,4 +1,4 @@
-package ru.patterns.account.application.kafka;
+package ru.patterns.account.application.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

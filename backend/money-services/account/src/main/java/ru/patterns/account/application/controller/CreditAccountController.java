@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
 import ru.patterns.account.application.common.model.credit.CreditAccountShortModel;
-import ru.patterns.account.application.service.CreditAccountService;
+import ru.patterns.account.application.service.account.CreditAccountService;
 import ru.patterns.shared.utility.AuthUtility;
 
 import java.util.List;

@@ -1,11 +1,11 @@
-package ru.patterns.account.application.kafka;
+package ru.patterns.account.application.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import ru.patterns.account.application.service.CreditAccountService;
+import ru.patterns.account.application.service.account.CreditAccountService;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
 
 @Component
