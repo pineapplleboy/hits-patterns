@@ -6,6 +6,7 @@ import ru.patterns.credit.application.service.CreditAccountService;
 import ru.patterns.shared.exception.UnauthorizedException;
 import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
+import ru.patterns.shared.utility.AuthUtility;
 import ru.patterns.shared.utility.JwtAuthUtility;
 
 import java.math.BigDecimal;
@@ -24,11 +25,7 @@ public class CreditAccountController {
     public OperationStatusResponseModel takeCredit(@PathVariable UUID userId, @PathVariable UUID rateId,
                                                    @RequestParam BigDecimal sum, @RequestHeader String authorization) {
 
-        AuthUser authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
-
-        if (!authUser.userId().equals(userId)) {
-            throw new UnauthorizedException(UNAUTHORIZED);
-        }
+        AuthUtility.checkUserIdEquality(authorization, userId);
 
         return creditAccountService.takeCredit(userId, rateId, sum);
     }
