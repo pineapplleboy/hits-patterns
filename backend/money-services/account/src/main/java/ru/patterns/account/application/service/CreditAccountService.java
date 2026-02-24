@@ -7,17 +7,21 @@ import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
 import ru.patterns.account.application.common.model.credit.CreditAccountShortModel;
+import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.entity.CreditAccount;
 import ru.patterns.account.domain.factory.CreditAccountFactory;
 import ru.patterns.account.domain.mapper.CreditAccountMapper;
+import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,12 +30,26 @@ import java.util.UUID;
 public class CreditAccountService {
 
     private final CreditAccountRepository creditAccountRepository;
+    private final BankAccountRepository bankAccountRepository;
     private final OperationService operationService;
     private final OperationHistoryService operationHistoryService;
 
     public void takeCredit(TakeCreditMessage takeCreditMessage) {
+        Optional<BankAccount> bankAccount = bankAccountRepository.
+                getBankAccountByAccountNumberAndActiveAndUserId(takeCreditMessage.getBankAccountNumber(), true, takeCreditMessage.getUserId());
+
+        if (bankAccount.isEmpty()) {
+            return;
+        }
+
         CreditAccount creditAccount = CreditAccountFactory.createCreditAccount(takeCreditMessage);
 
+        BankAccount actualAccount = bankAccount.get();
+        BigDecimal actualBalance = actualAccount.getBalance();
+        BigDecimal newBalance = takeCreditMessage.getCreditAmount().add(actualBalance);
+        actualAccount.setBalance(newBalance);
+
+        bankAccountRepository.save(actualAccount);
         creditAccountRepository.save(creditAccount);
 
         operationHistoryService.createAndSaveOperation(takeCreditMessage.getUserId(),

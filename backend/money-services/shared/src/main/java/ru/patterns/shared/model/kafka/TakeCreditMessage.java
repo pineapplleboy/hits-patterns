@@ -15,6 +15,8 @@ public class TakeCreditMessage {
 
     private UUID userId;
 
+    private String bankAccountNumber;
+
     private String creditRateName;
 
     private int creditRatePercent;
