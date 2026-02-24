@@ -25,4 +25,4 @@ kafka:
   group: ""
 
   consumer:
-    ban-users: 00_ban_users_core
+    ban-users: 00_ban_user_bank_accounts
