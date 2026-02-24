@@ -6,7 +6,7 @@ using patternsUsers.Services;
 namespace patternsUsers.Controllers
 {
     [ApiController]
-    [Route("users")]
+    [Route("patterns/api/v1/users")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
