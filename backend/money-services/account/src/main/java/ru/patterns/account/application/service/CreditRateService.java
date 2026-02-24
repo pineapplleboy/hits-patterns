@@ -3,7 +3,7 @@ package ru.patterns.account.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.account.application.common.enums.TransferAccountType;
+import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.utility.CreditUtility;
 import ru.patterns.account.domain.entity.CreditAccount;
 import ru.patterns.account.domain.repository.CreditAccountRepository;

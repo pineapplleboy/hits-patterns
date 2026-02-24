@@ -22,7 +22,7 @@ master-bank:
 
 kafka:
   url: localhost:9092
-  group: ""
+  group: "account-service"
 
   consumer:
     ban-users: 00_ban_user_bank_accounts

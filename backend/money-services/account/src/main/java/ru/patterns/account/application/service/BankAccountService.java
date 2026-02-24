@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.account.application.common.enums.TransferAccountType;
+import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.AccountNumberResponseModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
