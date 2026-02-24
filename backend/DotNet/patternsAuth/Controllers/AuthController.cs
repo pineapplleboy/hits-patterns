@@ -7,7 +7,7 @@ using patternsAuth.Services;
 namespace patternsAuth.Controllers
 {
     [ApiController]
-    [Route("auth")]
+    [Route("patterns/api/v1/auth")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
