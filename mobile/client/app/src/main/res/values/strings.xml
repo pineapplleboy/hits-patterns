@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">G-bank for client</string>
+    <string name="login_for_employees">Вход для сотрудников</string>
+    <string name="login">Логин</string>
+    <string name="password">Пароль</string>
+    <string name="hide_password">Скрыть</string>
+    <string name="show_password">Показать</string>
+    <string name="login_button">Войти</string>
 </resources>

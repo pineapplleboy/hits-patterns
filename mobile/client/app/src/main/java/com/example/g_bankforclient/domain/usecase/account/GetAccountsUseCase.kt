@@ -1,0 +1,12 @@
+package com.example.g_bankforclient.domain.usecase.account
+
+import com.example.g_bankforclient.common.models.Account
+import com.example.g_bankforclient.domain.repository.AccountRepository
+import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+
+class GetAccountsUseCase @Inject constructor(
+    private val repository: AccountRepository
+) {
+    operator fun invoke(): Flow<List<Account>> = repository.getAccounts()
+}
