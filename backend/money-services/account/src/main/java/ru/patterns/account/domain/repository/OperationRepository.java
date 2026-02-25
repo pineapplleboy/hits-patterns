@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface OperationRepository extends JpaRepository<Operation, UUID> {
     List<Operation> findByUserIdFrom(UUID userId);
     List<Operation> findByAccountNumberFromAndTransferAccountType(String accountNumberFrom, TransferAccountType transferAccountType);
+    List<Operation> findByRecipientAccountNumberAndTransferAccountType(String recipientAccountNumber, TransferAccountType transferAccountType);
 }

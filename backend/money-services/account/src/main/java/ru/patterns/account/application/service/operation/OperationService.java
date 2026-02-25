@@ -11,8 +11,10 @@ import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -29,10 +31,16 @@ public class OperationService {
 
     public List<OperationModel> getAccountOperations(UUID userId,
                                                      String accountNumber, TransferAccountType transferAccountType) {
-        return operationRepository.findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType)
-                .stream()
+        var outgoingOperations = operationRepository
+                .findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType);
+
+        var incomingOperations = operationRepository
+                .findByRecipientAccountNumberAndTransferAccountType(accountNumber, transferAccountType);
+
+        return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
                 .map(operation -> operation.toModel())
-                .toList();
+                .sorted(Comparator.comparing(OperationModel::getCreateTime))
+                .toList().reversed();
     }
 
     public OperationModel getOperationInfo(UUID operationId) {
