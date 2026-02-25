@@ -14,3 +14,6 @@ kafka:
 
   provider:
     transfer-assignment: 00_transfer_assignment
+
+accounts:
+  master-account-number: 0000-0000-0000-0000

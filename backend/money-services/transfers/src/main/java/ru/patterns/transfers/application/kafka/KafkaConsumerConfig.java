@@ -1,4 +1,4 @@
-package ru.patterns.account.application.kafka;
+package ru.patterns.transfers.application.kafka;
 
 import com.fasterxml.jackson.databind.deser.std.StringDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
