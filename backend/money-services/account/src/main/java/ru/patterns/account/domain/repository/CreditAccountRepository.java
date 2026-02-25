@@ -13,4 +13,5 @@ public interface CreditAccountRepository extends JpaRepository<CreditAccount, UU
     List<CreditAccount> getCreditAccountByUserIdAndActive(UUID userId, boolean active);
     Optional<CreditAccount> getByAccountNumberAndActiveAndUserId(String accountNumber, boolean active, UUID userId);
     List<CreditAccount> findAllByActiveIsTrueAndClosedIsFalseAndNextWriteOffDateLessThanEqual(Instant dateTime);
+    Optional<CreditAccount> findCreditAccountByAccountNumberAndActiveTrueAndClosedFalse(String accountNumber);
 }

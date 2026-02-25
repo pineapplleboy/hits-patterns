@@ -7,6 +7,7 @@ import ru.patterns.account.application.common.model.request.MoneyAmountRequestMo
 import ru.patterns.account.application.kafka.provider.TransferRequestProvider;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.OperationRepository;
+import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.kafka.TransferRequestMessage;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
@@ -64,7 +65,8 @@ public class TransferService {
                 .setRecipientAccountNumber(accountNumberTo)
                 .setAmount(amount.getAmount())
                 .setTransferAccountType(transferAccountType)
-                .setActionType(actionType);
+                .setActionType(actionType)
+                .setStatus(OperationStatus.CREATED);
 
         operationRepository.save(operation);
 

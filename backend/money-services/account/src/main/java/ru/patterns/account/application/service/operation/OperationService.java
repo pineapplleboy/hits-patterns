@@ -24,9 +24,13 @@ public class OperationService {
     private final OperationRepository operationRepository;
 
     public List<OperationModel> getUserOperations(UUID userId) {
-        return operationRepository.findByUserIdFrom(userId).stream()
+        var outgoingOperations = operationRepository.findByUserIdFrom(userId);
+        var incomingOperations = operationRepository.findByRecipientId(userId);
+
+        return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
                 .map(operation -> operation.toModel())
-                .toList();
+                .sorted(Comparator.comparing(OperationModel::getCreateTime))
+                .toList().reversed();
     }
 
     public List<OperationModel> getAccountOperations(UUID userId,

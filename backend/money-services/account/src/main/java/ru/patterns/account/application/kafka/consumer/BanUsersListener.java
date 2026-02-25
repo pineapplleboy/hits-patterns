@@ -24,7 +24,7 @@ public class BanUsersListener {
 
             ack.acknowledge();
         } catch (Exception ignored) {
-
+            ack.acknowledge();
         }
     }
 }

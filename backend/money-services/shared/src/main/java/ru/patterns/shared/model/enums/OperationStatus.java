@@ -4,5 +4,5 @@ public enum OperationStatus {
     CREATED,
     IN_PROCESS,
     SUCCESS,
-    FAILED
+    REJECTED,
 }

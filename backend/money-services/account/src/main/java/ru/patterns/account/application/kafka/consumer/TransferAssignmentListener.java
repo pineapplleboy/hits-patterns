@@ -5,22 +5,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import ru.patterns.account.application.service.account.CreditAccountService;
-import ru.patterns.shared.model.kafka.TakeCreditMessage;
+import ru.patterns.account.application.service.transfer.TransferOperationService;
+import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 
 @Component
 @RequiredArgsConstructor
-public class TakeCreditListener {
+public class TransferAssignmentListener {
 
-    private final CreditAccountService creditAccountService;
+    private final TransferOperationService transferOperationService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "${kafka.consumer.take-credit}", groupId = "${kafka.group}")
+    @KafkaListener(topics = "${kafka.consumer.transfer-assignment}", groupId = "${kafka.group}")
     public void listen(String message, Acknowledgment ack) {
         try {
-            TakeCreditMessage msg = objectMapper.readValue(message, TakeCreditMessage.class);
+            TransferAssignmentMessage msg = objectMapper.readValue(message, TransferAssignmentMessage.class);
 
-            creditAccountService.takeCredit(msg);
+            transferOperationService.makeTransfer(msg);
 
             ack.acknowledge();
         } catch (Exception ignored) {
