@@ -1,43 +1,122 @@
 package com.example.g_bankforemployees.feature.authorization.presentation
 
 import androidx.lifecycle.ViewModel
-import com.example.g_bankforemployees.feature.authorization.domain.model.UserCredentials
+import androidx.lifecycle.viewModelScope
+import com.example.g_bankforemployees.feature.authorization.domain.model.EmployeeLoginInput
+import com.example.g_bankforemployees.feature.authorization.domain.model.EmployeeRegistrationInput
+import com.example.g_bankforemployees.feature.authorization.domain.usecase.EmployeeLoginUseCase
+import com.example.g_bankforemployees.feature.authorization.domain.usecase.EmployeeRegisterUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class AuthorizationScreenViewModel : ViewModel() {
+class AuthorizationScreenViewModel(
+    private val employeeLoginUseCase: EmployeeLoginUseCase,
+    private val employeeRegisterUseCase: EmployeeRegisterUseCase,
+) : ViewModel() {
 
     private val _state: MutableStateFlow<AuthorizationScreenState> = MutableStateFlow(
-        value = AuthorizationScreenState.Default(
-            credentials = UserCredentials("", "")
-        )
+        AuthorizationScreenState.Default.Initial
     )
     val state: StateFlow<AuthorizationScreenState> = _state.asStateFlow()
 
     fun onLoginClick() {
-
-    }
-
-    fun onLoginChange(login: String) {
         val currentState = _state.value
-        if (currentState is AuthorizationScreenState.Default) {
-            _state.value = currentState.copy(
-                credentials = currentState.credentials.copy(
-                    login = login,
-                )
-            )
+        if (currentState !is AuthorizationScreenState.Default) return
+        viewModelScope.launch {
+            _state.value = AuthorizationScreenState.Loading
+            employeeLoginUseCase(currentState.loginInput)
+                .onSuccess {
+                    _state.value = AuthorizationScreenState.AuthSuccess
+                }
+                .onFailure { e ->
+                    _state.value = AuthorizationScreenState.Error(
+                        title = "Ошибка входа",
+                        description = e.message ?: "Не удалось выполнить вход",
+                    )
+                }
         }
     }
 
-    fun onPasswordChange(password: String) {
+    fun onRegisterClick() {
         val currentState = _state.value
-        if (currentState is AuthorizationScreenState.Default) {
-            _state.value = currentState.copy(
-                credentials = currentState.credentials.copy(
-                    password = password,
-                )
-            )
+        if (currentState !is AuthorizationScreenState.Default) return
+        viewModelScope.launch {
+            _state.value = AuthorizationScreenState.Loading
+            employeeRegisterUseCase(currentState.registrationInput)
+                .onSuccess {
+                    employeeLoginUseCase(
+                        EmployeeLoginInput(
+                            phone = currentState.registrationInput.phone,
+                            password = currentState.registrationInput.password,
+                        )
+                    )
+                        .onSuccess {
+                            _state.value = AuthorizationScreenState.AuthSuccess
+                        }
+                        .onFailure { e ->
+                            _state.value = AuthorizationScreenState.Error(
+                                title = "Регистрация успешна",
+                                description = "Не удалось выполнить вход: ${e.message}",
+                            )
+                        }
+                }
+                .onFailure { e ->
+                    _state.value = AuthorizationScreenState.Error(
+                        title = "Ошибка регистрации",
+                        description = e.message ?: "Не удалось зарегистрироваться",
+                    )
+                }
         }
+    }
+
+    fun onAuthSuccessHandled() {
+        _state.value = AuthorizationScreenState.Default.Initial
+    }
+
+    fun onLoginPhoneChange(phone: String) {
+        _state.update {
+            if (it is AuthorizationScreenState.Default) {
+                it.copy(loginInput = it.loginInput.copy(phone = phone))
+            } else it
+        }
+    }
+
+    fun onLoginPasswordChange(password: String) {
+        _state.update {
+            if (it is AuthorizationScreenState.Default) {
+                it.copy(loginInput = it.loginInput.copy(password = password))
+            } else it
+        }
+    }
+
+    fun onRegistrationNameChange(name: String) {
+        _state.update {
+            if (it is AuthorizationScreenState.Default) {
+                it.copy(registrationInput = it.registrationInput.copy(name = name))
+            } else it
+        }
+    }
+
+    fun onRegistrationPhoneChange(phone: String) {
+        _state.update {
+            if (it is AuthorizationScreenState.Default) {
+                it.copy(registrationInput = it.registrationInput.copy(phone = phone))
+            } else it
+        }
+    }
+
+    fun onRegistrationPasswordChange(password: String) {
+        _state.update {
+            if (it is AuthorizationScreenState.Default) {
+                it.copy(registrationInput = it.registrationInput.copy(password = password))
+            } else it
+        }
+    }
+
+    fun onRetry() {
+        _state.value = AuthorizationScreenState.Default.Initial
     }
 }
