@@ -49,6 +49,42 @@ namespace patternsAuth.Services.Implementations
 
         }
 
+        public async Task<string> UserRegister(RegisterDTO user, UserRole userRole)
+        {
+            bool userExists = await _context.AuthUsers.AnyAsync(u => u.Phone == user.Phone);
+            if (userExists) { throw new BadRequestException(ErrorMessages.PHONE_IS_ALREADY_IN_USE); }
+            var newUser = new AuthUserDB
+            {
+                Id = Guid.NewGuid(),
+                Phone = user.Phone,
+                Password = Hasher.HashPassword(user.Password),
+                Ban = false,
+                UserRole = userRole
+            };
+            await _context.AuthUsers.AddAsync(newUser);
+
+            await SendNewUserMessage(new UserDB
+            {
+                Id = newUser.Id,
+                Name = user.Name,
+                Phone = newUser.Phone,
+                Ban = newUser.Ban,
+                UserRole = newUser.UserRole,
+                Author = null
+            });
+
+            await _context.SaveChangesAsync();
+            var userLogin = new UserLoginDTO { Phone = newUser.Phone, Password = user.Password };          
+            if (userRole == UserRole.CLIENT)
+            {
+                return await LoginСlient(userLogin);
+            }
+            else
+            {
+                return await LoginEmployee(userLogin);
+            }
+        }
+
         public async Task<string> LoginEmployee(UserLoginDTO user)
         {
             var foundUser = await _userRepository.GetUserByPhone(user.Phone);

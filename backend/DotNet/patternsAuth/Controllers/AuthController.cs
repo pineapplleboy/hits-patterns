@@ -32,12 +32,25 @@ namespace patternsAuth.Controllers
             return Ok(await _authService.LoginEmployee(user));
         }
 
-        [HttpPost("clien-login")]
+        [HttpPost("client-login")]
         [ProducesResponseType(typeof(string), 200)]
         public async Task<IActionResult> LoginСlient(UserLoginDTO user)
         {
             return Ok(await _authService.LoginСlient(user));
         }
 
+        [HttpPost("employee-register")]
+        [ProducesResponseType(typeof(string), 200)]
+        public async Task<IActionResult> RegisterEmployee(RegisterDTO user)
+        {
+            return Ok(await _authService.UserRegister(user, UserRole.EMPLOYEE));
+        }
+
+        [HttpPost("client-register")]
+        [ProducesResponseType(typeof(string), 200)]
+        public async Task<IActionResult> RegisterСlient(RegisterDTO user)
+        {
+            return Ok(await _authService.UserRegister(user, UserRole.CLIENT));
+        }
     }
 }
