@@ -2,7 +2,7 @@ package ru.patterns.credit.application.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.patterns.credit.application.kafka.CreditProducer;
+import ru.patterns.credit.application.kafka.CreditProvider;
 import ru.patterns.credit.domain.entity.CreditRate;
 import ru.patterns.credit.domain.repository.CreditRateRepository;
 import ru.patterns.shared.exception.BadRequestException;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CreditAccountService {
 
-    private final CreditProducer creditProducer;
+    private final CreditProvider creditProvider;
     private final CreditRateRepository creditRateRepository;
 
     private final BigDecimal maxCreditAmount = BigDecimal.valueOf(500000);
@@ -31,7 +31,7 @@ public class CreditAccountService {
         CreditRate creditRate = creditRateRepository.findById(rateId)
                 .orElseThrow(() -> new NotFoundException("Credit rate not found"));
 
-        creditProducer.send(createTakeCreditMessage(userId, creditRate, sum));
+        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum));
 
         return new OperationStatusResponseModel(OperationStatus.SUCCESS);
     }

@@ -10,7 +10,7 @@ import ru.patterns.shared.model.kafka.BanUserMessage;
 
 @Component
 @RequiredArgsConstructor
-public class KafkaBanUsersListener {
+public class BanUsersListener {
 
     private final BanService banService;
     private final ObjectMapper objectMapper;

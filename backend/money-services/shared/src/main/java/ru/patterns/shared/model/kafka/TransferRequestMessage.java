@@ -11,6 +11,8 @@ import java.util.UUID;
 @Accessors(chain=true)
 public class TransferRequestMessage {
 
+    private UUID requestId;
+
     private UUID operationId;
 
     private UUID userIdFrom;

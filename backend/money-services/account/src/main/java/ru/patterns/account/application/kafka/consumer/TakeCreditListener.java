@@ -10,7 +10,7 @@ import ru.patterns.shared.model.kafka.TakeCreditMessage;
 
 @Component
 @RequiredArgsConstructor
-public class KafkaTakeCreditConsumer {
+public class TakeCreditListener {
 
     private final CreditAccountService creditAccountService;
     private final ObjectMapper objectMapper;

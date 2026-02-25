@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
+import ru.patterns.account.application.kafka.provider.TransferRequestProvider;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.model.enums.TransferAccountType;
@@ -18,6 +19,7 @@ public class TransferService {
 
     private final OperationRepository operationRepository;
     private final TransferOperationService transferOperationService;
+    private final TransferRequestProvider transferRequestProvider;
 
     public OperationStatusResponseModel replenishMoney(UUID userId, String bankAccountNumber, MoneyAmountRequestModel requestModel) {
         transferOperationService.validateAccountRemainder(bankAccountNumber, requestModel);
@@ -25,12 +27,16 @@ public class TransferService {
         Operation operation = createOperationRequest(userId, bankAccountNumber, bankAccountNumber, requestModel,
                 TransferAccountType.BANK_ACCOUNT, AccountActionType.TRANSFER_RECEIVED);
 
+        sendRequest(operation);
+
         return new OperationStatusResponseModel(operation.getStatus());
     }
 
     public OperationStatusResponseModel withdrawMoney(UUID userId, String bankAccountNumber, MoneyAmountRequestModel requestModel) {
         Operation operation = createOperationRequest(userId, bankAccountNumber, bankAccountNumber, requestModel,
                 TransferAccountType.BANK_ACCOUNT, AccountActionType.TRANSFER_SENT);
+
+        sendRequest(operation);
 
         return new OperationStatusResponseModel(operation.getStatus());
     }
@@ -41,6 +47,8 @@ public class TransferService {
 
         Operation operation = createOperationRequest(userId, bankAccountNumber, creditAccountNumber, requestModel,
                 TransferAccountType.CREDIT_ACCOUNT, AccountActionType.TRANSFER_SENT);
+
+        sendRequest(operation);
 
         return new OperationStatusResponseModel(operation.getStatus());
     }
@@ -64,9 +72,7 @@ public class TransferService {
     }
 
     private void sendRequest(Operation operation) {
-        TransferRequestMessage transferRequestMessage = createRequestContext(operation);
-
-        // todo: отправка сообщения
+        transferRequestProvider.send(createRequestContext(operation));
     }
 
     private TransferRequestMessage createRequestContext(Operation operation) {
