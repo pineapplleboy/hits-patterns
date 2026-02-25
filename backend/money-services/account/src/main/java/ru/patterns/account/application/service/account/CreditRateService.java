@@ -29,7 +29,7 @@ public class CreditRateService {
 
             while (creditAccount.getNextWriteOffDate().isBefore(Instant.now())) {
                 BigDecimal creditGrowth = calculateCreditDeptGrowth(creditAccount);
-                BigDecimal newDept = creditAccount.getDept().add(creditGrowth).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal newDept = creditAccount.getDept().add(creditGrowth).setScale(2, RoundingMode.UP);
 
                 creditAccount.setDept(newDept);
                 creditAccount.setNextWriteOffDate(CreditUtility.calculateNextCreditWriteOffDate(creditAccount.getNextWriteOffDate(), creditAccount.getWriteOffPeriod()));
@@ -48,16 +48,16 @@ public class CreditRateService {
 
     private BigDecimal calculateCreditDeptGrowth(CreditAccount creditAccount) {
         var annualRate = BigDecimal.valueOf(creditAccount.getCreditRatePercent())
-                .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(100), 10, RoundingMode.UP);
 
         var periodMinutes = BigDecimal.valueOf(creditAccount.getWriteOffPeriod().toMinutes());
 
         var periodRate = annualRate.multiply(periodMinutes)
-                .divide(BigDecimal.valueOf(365 * 24 * 60), 10, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(365 * 24 * 60), 10, RoundingMode.UP);
 
         var growth = creditAccount.getDept().multiply(periodRate);
 
-        return growth.setScale(2, RoundingMode.HALF_UP);
+        return growth.setScale(2, RoundingMode.UP);
     }
 
     private void saveOperation(CreditAccount creditAccount, BigDecimal growth) {

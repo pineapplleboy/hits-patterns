@@ -55,7 +55,7 @@ public class CreditAccountService {
         creditAccountRepository.save(creditAccount);
 
         operationHistoryService.createAndSaveOperation(takeCreditMessage.getUserId(),
-                TransferAccountType.BANK_ACCOUNT,
+                TransferAccountType.CREDIT_ACCOUNT,
                 takeCreditMessage.getCreditAmount(),
                 AccountActionType.OPEN_ACCOUNT,
                 OperationStatus.SUCCESS,
