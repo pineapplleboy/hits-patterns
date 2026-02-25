@@ -8,7 +8,7 @@ import ru.patterns.shared.model.kafka.TakeCreditMessage;
 
 @Component
 @RequiredArgsConstructor
-public class CreditProducer {
+public class CreditProvider {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 

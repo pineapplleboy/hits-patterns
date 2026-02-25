@@ -1,9 +1,12 @@
-package ru.patterns.account.application.service;
+package ru.patterns.account.application.service.account;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
-import ru.patterns.account.application.common.enums.TransferAccountType;
+import ru.patterns.account.application.common.enums.AccountActionType;
+import ru.patterns.account.application.service.operation.OperationHistoryService;
+import ru.patterns.account.application.service.operation.OperationService;
+import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.AccountNumberResponseModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
@@ -12,12 +15,10 @@ import ru.patterns.account.domain.factory.BankAccountFactory;
 import ru.patterns.account.domain.mapper.BankAccountMapper;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
-import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.exception.NotFoundException;
-import ru.patterns.shared.model.external.AuthUser;
-import ru.patterns.shared.model.external.Role;
-import ru.patterns.shared.utility.AuthUtility;
+import ru.patterns.shared.model.enums.OperationStatus;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,23 +29,22 @@ public class BankAccountService {
 
     private final BankAccountRepository bankAccountRepository;
     private final OperationService operationService;
+    private final OperationHistoryService operationHistoryService;
 
-    public AccountNumberResponseModel createBankAccount(AuthUser authUser, UUID userId) {
-        if (!authUser.userId().equals(userId)) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
-        }
-
+    public AccountNumberResponseModel createBankAccount(UUID userId) {
         BankAccount bankAccount = BankAccountFactory.createBankAccount(userId);
         bankAccountRepository.save(bankAccount);
+
+        operationHistoryService.createAndSaveOperation(userId,
+                TransferAccountType.BANK_ACCOUNT,
+                BigDecimal.valueOf(0),
+                AccountActionType.OPEN_ACCOUNT,
+                OperationStatus.SUCCESS);
 
         return new AccountNumberResponseModel(bankAccount.getAccountNumber());
     }
 
-    public List<BankAccountShortModel> getAllBankAccounts(AuthUser authUser) {
-        if (authUser.role() != Role.EMPLOYEE) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
-        }
-
+    public List<BankAccountShortModel> getAllBankAccounts() {
         return bankAccountRepository.findAll()
                 .stream()
                 .filter(BankAccount::isActive)
@@ -52,23 +52,19 @@ public class BankAccountService {
                 .toList();
     }
 
-    public List<BankAccountShortModel> getAllUserBankAccounts(AuthUser authUser, UUID userId) {
-        AuthUtility.checkUserRights(authUser, userId);
-
+    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId) {
         return bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true)
                 .stream()
                 .map(account -> account.toShortModel())
                 .toList();
     }
 
-    public BankAccountFullModel getBankAccountFullModel(AuthUser authUser, UUID userId, String accountNumber) {
-        AuthUtility.checkUserRights(authUser, userId);
-
+    public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber) {
         var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         var accountFullModel = account.toFullModelWithoutComments();
-        var operations = operationService.getAccountOperations(authUser, authUser.userId(), accountNumber, TransferAccountType.BANK_ACCOUNT);
+        var operations = operationService.getAccountOperations(userId, accountNumber, TransferAccountType.BANK_ACCOUNT);
 
         accountFullModel.setOperations(operations);
 

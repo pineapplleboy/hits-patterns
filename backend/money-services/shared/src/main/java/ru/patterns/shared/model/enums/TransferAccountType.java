@@ -1,4 +1,4 @@
-package ru.patterns.account.application.common.enums;
+package ru.patterns.shared.model.enums;
 
 public enum TransferAccountType {
     BANK_ACCOUNT,

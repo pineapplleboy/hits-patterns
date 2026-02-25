@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: transfers
+
+server:
+  port: 8083
+
+kafka:
+  url: localhost:9092
+  group: "transfers-service"
+
+  consumer:
+    transfer-request: 00_transfer_request
+
+  provider:
+    transfer-assignment: 00_transfer_assignment
+
+accounts:
+  master-account-number: 0000-0000-0000-0000

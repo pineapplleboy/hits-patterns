@@ -19,7 +19,7 @@ public class BankAccountFactory {
                 .setBalance(BigDecimal.valueOf(0));
     }
 
-    private String generateAccountNumber() {
+    public String generateAccountNumber() {
         return randomString() + "-" + randomString() + "-" + randomString() + "-" + randomString();
     }
 

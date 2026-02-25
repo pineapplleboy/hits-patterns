@@ -19,3 +19,15 @@ master-bank:
   account-number: 0000-0000-0000-0000
   money: 1000000000
   user-id: 00000000-0000-0000-0000-000000000000
+
+kafka:
+  url: localhost:9092
+  group: "account-service"
+
+  consumer:
+    ban-users: 00_ban_user_bank_accounts
+    take-credit: 00_take_credit
+    transfer-assignment: 00_transfer_assignment
+
+  provider:
+    transfer-request: 00_transfer_request

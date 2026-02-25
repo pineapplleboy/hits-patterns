@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.account.application.common.enums.TransferAccountType;
+import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.enums.OperationStatus;
 
 import java.math.BigDecimal;
@@ -19,7 +19,7 @@ import java.util.UUID;
 public class Operation {
 
     @Id
-    private UUID operationId;
+    private UUID operationId = UUID.randomUUID();
 
     @Column(nullable = false)
     private String accountNumberFrom;
@@ -30,8 +30,7 @@ public class Operation {
     @Column(nullable = false)
     private String recipientAccountNumber;
 
-    @Column(nullable = true)
-    private String recipientName;
+    private UUID recipientId;
 
     @Column(nullable = false)
     private BigDecimal amount;

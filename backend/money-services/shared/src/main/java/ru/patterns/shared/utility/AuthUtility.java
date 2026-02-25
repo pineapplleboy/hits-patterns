@@ -16,4 +16,23 @@ public class AuthUtility {
             throw new ForbiddenException(ErrorMessages.FORBIDDEN);
         }
     }
+
+    public void checkUserIdEquality(String authorizationHeader, UUID userId) {
+        AuthUser authUser = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader);
+        if (!authUser.userId().equals(userId)) {
+            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
+        }
+    }
+
+    public void checkUserIfEmployee(String authorizationHeader) {
+        AuthUser authUser = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader);
+        if (authUser.role() != Role.EMPLOYEE) {
+            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
+        }
+    }
+
+    public void checkUserIdEqualityOrUserEmployee(String authorizationHeader, UUID userId) {
+        AuthUser authUser = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader);
+        AuthUtility.checkUserRights(authUser, userId);
+    }
 }
