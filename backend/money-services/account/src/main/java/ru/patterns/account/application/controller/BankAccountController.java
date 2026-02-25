@@ -41,7 +41,7 @@ public class BankAccountController {
 
     @GetMapping("/users/{userId}/bank-accounts/{accountNumber}")
     public BankAccountFullModel getBankAccountInfo(@PathVariable UUID userId, @PathVariable String accountNumber, @RequestHeader String authorization) {
-        AuthUtility.checkUserIfEmployee(authorization);
+        AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
 
         return bankAccountService.getBankAccountFullModel(userId, accountNumber);
     }

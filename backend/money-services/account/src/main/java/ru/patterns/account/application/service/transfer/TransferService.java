@@ -23,9 +23,7 @@ public class TransferService {
     private final TransferRequestProvider transferRequestProvider;
 
     public OperationStatusResponseModel replenishMoney(UUID userId, String bankAccountNumber, MoneyAmountRequestModel requestModel) {
-        transferOperationService.validateAccountRemainder(bankAccountNumber, requestModel);
-
-        Operation operation = createOperationRequest(userId, bankAccountNumber, bankAccountNumber, requestModel,
+        Operation operation = createOperationRequest(null, userId, null, bankAccountNumber, requestModel,
                 TransferAccountType.BANK_ACCOUNT, AccountActionType.TRANSFER_RECEIVED);
 
         sendRequest(operation);
@@ -34,7 +32,7 @@ public class TransferService {
     }
 
     public OperationStatusResponseModel withdrawMoney(UUID userId, String bankAccountNumber, MoneyAmountRequestModel requestModel) {
-        Operation operation = createOperationRequest(userId, bankAccountNumber, bankAccountNumber, requestModel,
+        Operation operation = createOperationRequest(userId, null, bankAccountNumber, null, requestModel,
                 TransferAccountType.BANK_ACCOUNT, AccountActionType.TRANSFER_SENT);
 
         sendRequest(operation);
@@ -46,7 +44,7 @@ public class TransferService {
                                                   String creditAccountNumber, MoneyAmountRequestModel requestModel) {
         transferOperationService.validateAccountRemainder(bankAccountNumber, requestModel);
 
-        Operation operation = createOperationRequest(userId, bankAccountNumber, creditAccountNumber, requestModel,
+        Operation operation = createOperationRequest(userId, userId, bankAccountNumber, creditAccountNumber, requestModel,
                 TransferAccountType.CREDIT_ACCOUNT, AccountActionType.TRANSFER_SENT);
 
         sendRequest(operation);
@@ -54,13 +52,17 @@ public class TransferService {
         return new OperationStatusResponseModel(operation.getStatus());
     }
 
-    private Operation createOperationRequest(UUID userIdFrom, String accountNumberFrom,
+    private Operation createOperationRequest(UUID userIdFrom, UUID userIdTo, String accountNumberFrom,
                                              String accountNumberTo, MoneyAmountRequestModel amount,
                                              TransferAccountType transferAccountType, AccountActionType actionType) {
-        transferOperationService.validateAccountRemainder(accountNumberFrom, amount);
+
+        if (accountNumberFrom != null) {
+            transferOperationService.validateAccountRemainder(accountNumberFrom, amount);
+        }
 
         Operation operation = new Operation()
                 .setUserIdFrom(userIdFrom)
+                .setRecipientId(userIdTo)
                 .setAccountNumberFrom(accountNumberFrom)
                 .setRecipientAccountNumber(accountNumberTo)
                 .setAmount(amount.getAmount())

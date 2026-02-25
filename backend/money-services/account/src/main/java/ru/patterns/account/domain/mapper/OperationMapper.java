@@ -16,6 +16,7 @@ public class OperationMapper {
                 .setStatus(operation.getStatus())
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
-                .setRecipientAccountNumber(operation.getRecipientAccountNumber());
+                .setRecipientAccountNumber(operation.getRecipientAccountNumber())
+                .setUserIdFrom(operation.getUserIdFrom());
     }
 }

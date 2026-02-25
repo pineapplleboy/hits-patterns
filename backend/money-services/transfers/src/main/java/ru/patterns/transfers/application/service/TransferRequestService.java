@@ -29,10 +29,14 @@ public class TransferRequestService {
 
         if (message.getAccountNumberTo() == null) {
             assignment.setAccountNumberTo(masterAccountNumber);
+        } else {
+            assignment.setAccountNumberTo(message.getAccountNumberTo());
         }
 
         if (message.getAccountNumberFrom() == null) {
             assignment.setAccountNumberFrom(masterAccountNumber);
+        } else {
+            assignment.setAccountNumberFrom(message.getAccountNumberFrom());
         }
 
         return assignment;

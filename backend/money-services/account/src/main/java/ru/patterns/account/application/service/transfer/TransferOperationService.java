@@ -21,9 +21,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TransferOperationService {
 
-    private BankAccountRepository bankAccountRepository;
-    private CreditAccountRepository creditAccountRepository;
-    private OperationRepository operationRepository;
+    private final BankAccountRepository bankAccountRepository;
+    private final CreditAccountRepository creditAccountRepository;
+    private final OperationRepository operationRepository;
 
     public void validateAccountRemainder(String accountNumber, MoneyAmountRequestModel requestModel) {
         BankAccount bankAccount = bankAccountRepository
