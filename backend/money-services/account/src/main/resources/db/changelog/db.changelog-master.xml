@@ -17,5 +17,6 @@
     <include file="/db/changelog/008-add-user-id-to-operation.xml"/>
     <include file="/db/changelog/009-add-credit-close-field.xml"/>
     <include file="/db/changelog/010-change-operation-receiver-field.xml"/>
+    <include file="/db/changelog/011-fix-operation-schema.xml"/>
 
 </databaseChangeLog>

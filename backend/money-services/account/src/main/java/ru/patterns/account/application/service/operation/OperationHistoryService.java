@@ -21,9 +21,10 @@ public class OperationHistoryService {
                                        TransferAccountType transferAccountType,
                                        BigDecimal sum,
                                        AccountActionType actionType,
-                                       OperationStatus operationStatus) {
+                                       OperationStatus operationStatus,
+                                       String accountNumberFrom) {
         Operation operation = new Operation()
-                .setAccountNumberFrom(null)
+                .setAccountNumberFrom(accountNumberFrom)
                 .setUserIdFrom(userId)
                 .setRecipientAccountNumber(null)
                 .setRecipientId(null)

@@ -2,6 +2,9 @@ spring:
   application:
     name: account
 
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+
   datasource:
     url: jdbc:postgresql://localhost:5432/patterns_core_account
     username: postgres
@@ -21,7 +24,7 @@ master-bank:
   user-id: 00000000-0000-0000-0000-000000000000
 
 kafka:
-  url: localhost:9092
+  url: ${KAFKA_URL:localhost:29092}
   group: "account-service"
 
   consumer:

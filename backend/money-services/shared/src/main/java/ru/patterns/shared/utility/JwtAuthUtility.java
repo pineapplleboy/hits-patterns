@@ -80,12 +80,12 @@ public class JwtAuthUtility {
     }
 
     private Role mapRole(String stringRole) {
-        String role = stringRole.trim().toLowerCase();
+        if (stringRole.equals("Сlient")) {
+            return Role.CLIENT;
+        } else if (stringRole.equals("Employee")) {
+            return Role.EMPLOYEE;
+        }
 
-        return switch (role) {
-            case "employee" -> Role.EMPLOYEE;
-            case "client" -> Role.CLIENT;
-            default -> throw new UnauthorizedException(UNAUTHORIZED);
-        };
+        throw new UnauthorizedException(UNAUTHORIZED);
     }
 }

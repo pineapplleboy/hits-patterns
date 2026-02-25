@@ -24,6 +24,6 @@ public class BankAccountFactory {
     }
 
     private String randomString() {
-        return RandomStringUtils.randomAlphanumeric(4);
+        return RandomStringUtils.randomNumeric(4);
     }
 }

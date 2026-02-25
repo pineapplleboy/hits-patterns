@@ -23,7 +23,7 @@ public class CreditAccountService {
 
     private final BigDecimal maxCreditAmount = BigDecimal.valueOf(500000);
 
-    public OperationStatusResponseModel takeCredit(UUID userId, UUID rateId, BigDecimal sum) {
+    public OperationStatusResponseModel takeCredit(UUID userId, UUID rateId, BigDecimal sum, String bankAccountNum) {
         if (maxCreditAmount.compareTo(sum) <= 0) {
             throw new BadRequestException("Exceeded credit limit");
         }
@@ -31,17 +31,18 @@ public class CreditAccountService {
         CreditRate creditRate = creditRateRepository.findById(rateId)
                 .orElseThrow(() -> new NotFoundException("Credit rate not found"));
 
-        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum));
+        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum, bankAccountNum));
 
         return new OperationStatusResponseModel(OperationStatus.SUCCESS);
     }
 
-    private TakeCreditMessage createTakeCreditMessage(UUID userId, CreditRate creditRate, BigDecimal sum) {
+    private TakeCreditMessage createTakeCreditMessage(UUID userId, CreditRate creditRate, BigDecimal sum, String bankAccountNum) {
         return new TakeCreditMessage()
                 .setUserId(userId)
                 .setCreditRateName(creditRate.getName())
                 .setCreditRatePercent(creditRate.getPercent())
                 .setWriteOffPeriod(creditRate.getWriteOffPeriod())
-                .setCreditAmount(sum);
+                .setCreditAmount(sum)
+                .setBankAccountNumber(bankAccountNum);
     }
 }

@@ -58,7 +58,8 @@ public class CreditAccountService {
                 TransferAccountType.BANK_ACCOUNT,
                 takeCreditMessage.getCreditAmount(),
                 AccountActionType.OPEN_ACCOUNT,
-                OperationStatus.SUCCESS);
+                OperationStatus.SUCCESS,
+                creditAccount.getAccountNumber());
     }
 
     public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {

@@ -2,11 +2,14 @@ spring:
   application:
     name: transfers
 
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+
 server:
   port: 8083
 
 kafka:
-  url: localhost:9092
+  url: ${KAFKA_URL:localhost:29092}
   group: "transfers-service"
 
   consumer:

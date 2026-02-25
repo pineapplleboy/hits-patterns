@@ -66,6 +66,7 @@ public class CreditRateService {
                 TransferAccountType.CREDIT_ACCOUNT,
                 growth,
                 AccountActionType.TRANSFER_SENT,
-                OperationStatus.SUCCESS);
+                OperationStatus.SUCCESS,
+                creditAccount.getAccountNumber());
     }
 }

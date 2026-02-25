@@ -13,41 +13,46 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
+@Table(name = "operation")
 @Getter
 @Setter
 @Accessors(chain = true)
 public class Operation {
 
     @Id
+    @Column(name = "operation_id")
     private UUID operationId = UUID.randomUUID();
 
-    @Column(nullable = false)
+    @Column(name = "account_number")
     private String accountNumberFrom;
 
-    @Column(nullable = false)
+    @Column(name = "user_id_from")
     private UUID userIdFrom;
 
-    @Column(nullable = false)
+    @Column(name = "recipient_account_number")
     private String recipientAccountNumber;
 
+    @Column(name = "recipient_id")
     private UUID recipientId;
 
-    @Column(nullable = false)
+    @Column(name = "amount")
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "transfer_to_account_type")
     private TransferAccountType transferAccountType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "action_type")
     private AccountActionType actionType = AccountActionType.OPEN_ACCOUNT;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "operation_status")
     private OperationStatus status = OperationStatus.CREATED;
 
+    @Column(name = "operation_create_time")
     private Instant createTime = Instant.now();
 
+    @Column(name = "update_time")
     private Instant updateTime = Instant.now();
 }

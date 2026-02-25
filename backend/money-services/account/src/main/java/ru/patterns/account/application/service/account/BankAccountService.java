@@ -39,7 +39,8 @@ public class BankAccountService {
                 TransferAccountType.BANK_ACCOUNT,
                 BigDecimal.valueOf(0),
                 AccountActionType.OPEN_ACCOUNT,
-                OperationStatus.SUCCESS);
+                OperationStatus.SUCCESS,
+                bankAccount.getAccountNumber());
 
         return new AccountNumberResponseModel(bankAccount.getAccountNumber());
     }

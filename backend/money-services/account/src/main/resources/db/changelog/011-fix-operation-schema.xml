@@ -1,0 +1,23 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="011-fix-operation-schema" author="aleksey.z">
+
+        <dropIndex tableName="operation" indexName="idx_operation_account_id"/>
+
+        <dropColumn tableName="operation" columnName="account_id"/>
+
+        <dropNotNullConstraint tableName="operation"
+                               columnName="account_number"
+                               columnDataType="VARCHAR(64)"/>
+
+        <dropNotNullConstraint tableName="operation"
+                               columnName="recipient_account_number"
+                               columnDataType="VARCHAR(64)"/>
+    </changeSet>
+
+</databaseChangeLog>

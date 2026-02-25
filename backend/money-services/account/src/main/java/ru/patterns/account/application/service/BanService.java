@@ -26,22 +26,23 @@ public class BanService {
 
         userBankAccounts.forEach(bankAccount -> {
             bankAccount.setActive(!ban);
-            callOperationHistoryService(bankAccount.getUserId(), TransferAccountType.BANK_ACCOUNT, ban);
+            callOperationHistoryService(bankAccount.getUserId(), bankAccount.getAccountNumber(), TransferAccountType.BANK_ACCOUNT, ban);
         });
         userCreditAccounts.forEach(creditAccount -> {
             creditAccount.setActive(!ban);
-            callOperationHistoryService(creditAccount.getUserId(), TransferAccountType.CREDIT_ACCOUNT, ban);
+            callOperationHistoryService(creditAccount.getUserId(), creditAccount.getAccountNumber(), TransferAccountType.CREDIT_ACCOUNT, ban);
         });
 
         bankAccountRepository.saveAll(userBankAccounts);
         creditAccountRepository.saveAll(userCreditAccounts);
     }
 
-    private void callOperationHistoryService(UUID userId, TransferAccountType transferAccountType, boolean close) {
+    private void callOperationHistoryService(UUID userId, String accountNumber, TransferAccountType transferAccountType, boolean close) {
         operationHistoryService.createAndSaveOperation(userId,
                 transferAccountType,
                 BigDecimal.ZERO,
                 close ? AccountActionType.CLOSE_ACCOUNT : AccountActionType.OPEN_ACCOUNT,
-                OperationStatus.SUCCESS);
+                OperationStatus.SUCCESS,
+                accountNumber);
     }
 }
