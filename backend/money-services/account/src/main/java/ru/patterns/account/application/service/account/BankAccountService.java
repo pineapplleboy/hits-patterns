@@ -45,6 +45,14 @@ public class BankAccountService {
         return new AccountNumberResponseModel(bankAccount.getAccountNumber());
     }
 
+    public void closeBankAccount(UUID userId, String accountNumber) {
+        var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
+
+        account.setActive(false);
+        bankAccountRepository.save(account);
+    }
+
     public List<BankAccountShortModel> getAllBankAccounts() {
         return bankAccountRepository.findAll()
                 .stream()

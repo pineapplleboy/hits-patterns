@@ -25,6 +25,14 @@ public class BankAccountController {
         return bankAccountService.createBankAccount(userId);
     }
 
+    @DeleteMapping("/users/{userId}/bank-accounts/{accountNumber}")
+    public void closeBankAccount(@PathVariable UUID userId, @PathVariable String accountNumber,
+                                                       @RequestHeader String authorization) {
+        AuthUtility.checkUserIdEquality(authorization, userId);
+
+        bankAccountService.closeBankAccount(userId, accountNumber);
+    }
+
     @GetMapping("/bank-accounts")
     public List<BankAccountShortModel> getAllBankAccounts(@RequestHeader String authorization) {
         AuthUtility.checkUserIfEmployee(authorization);
