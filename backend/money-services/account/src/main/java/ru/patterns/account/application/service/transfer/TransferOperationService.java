@@ -1,6 +1,7 @@
 package ru.patterns.account.application.service.transfer;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
 import ru.patterns.account.domain.entity.BankAccount;
@@ -24,6 +25,9 @@ public class TransferOperationService {
     private final BankAccountRepository bankAccountRepository;
     private final CreditAccountRepository creditAccountRepository;
     private final OperationRepository operationRepository;
+
+    @Value("${master-bank.account-number}")
+    private String masterBankAccountNumber;
 
     public void validateAccountRemainder(String accountNumber, MoneyAmountRequestModel requestModel) {
         BankAccount bankAccount = bankAccountRepository
@@ -76,8 +80,11 @@ public class TransferOperationService {
             return;
         }
 
+        BankAccount masterBankAccount = findBankAccountByAccountNumber(masterBankAccountNumber);
+
         bankAccountFrom.setBalance(bankAccountFrom.getBalance().subtract(amount));
         creditAccountTo.setDept(creditAccountTo.getDept().subtract(amount));
+        masterBankAccount.setBalance(masterBankAccount.getBalance().add(amount));
 
         if (creditAccountTo.getDept().compareTo(BigDecimal.ZERO) == 0) {
             creditAccountTo.setClosed(true);
