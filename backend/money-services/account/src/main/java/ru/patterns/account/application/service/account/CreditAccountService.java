@@ -4,11 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.account.application.service.operation.OperationHistoryService;
-import ru.patterns.account.application.service.operation.OperationService;
-import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
 import ru.patterns.account.application.common.model.credit.CreditAccountShortModel;
+import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
+import ru.patterns.account.application.service.operation.OperationHistoryService;
+import ru.patterns.account.application.service.operation.OperationService;
+import ru.patterns.account.application.service.transfer.TransferService;
 import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.entity.CreditAccount;
 import ru.patterns.account.domain.factory.CreditAccountFactory;
@@ -18,9 +19,9 @@ import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
+import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
 
-import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,7 @@ public class CreditAccountService {
     private final BankAccountRepository bankAccountRepository;
     private final OperationService operationService;
     private final OperationHistoryService operationHistoryService;
+    private final TransferService transferService;
 
     public void takeCredit(TakeCreditMessage takeCreditMessage) {
         Optional<BankAccount> bankAccount = bankAccountRepository.
@@ -46,12 +48,6 @@ public class CreditAccountService {
 
         CreditAccount creditAccount = CreditAccountFactory.createCreditAccount(takeCreditMessage);
 
-        BankAccount actualAccount = bankAccount.get();
-        BigDecimal actualBalance = actualAccount.getBalance();
-        BigDecimal newBalance = takeCreditMessage.getCreditAmount().add(actualBalance);
-        actualAccount.setBalance(newBalance);
-
-        bankAccountRepository.save(actualAccount);
         creditAccountRepository.save(creditAccount);
 
         operationHistoryService.createAndSaveOperation(takeCreditMessage.getUserId(),
@@ -60,6 +56,9 @@ public class CreditAccountService {
                 AccountActionType.OPEN_ACCOUNT,
                 OperationStatus.SUCCESS,
                 creditAccount.getAccountNumber());
+
+        transferService.replenishMoney(takeCreditMessage.getUserId(), takeCreditMessage.getBankAccountNumber(),
+                new MoneyAmountRequestModel(takeCreditMessage.getCreditAmount()));
     }
 
     public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {
