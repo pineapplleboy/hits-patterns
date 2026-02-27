@@ -1,0 +1,172 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: patterns-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: patterns-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: patterns-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    restart: unless-stopped
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: patterns-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./docker/kafka/init-topics.sh:/init-topics.sh:ro
+    entrypoint: ["/bin/bash", "/init-topics.sh"]
+    restart: "no"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: patterns-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    ports:
+      - "127.0.0.1:8090:8080"
+    restart: unless-stopped
+
+  patterns-auth:
+    build:
+      context: ./DotNet
+      dockerfile: patternsAuth/Dockerfile
+    container_name: patterns-auth
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DbConnection: Host=postgres;Port=5432;Database=patternsAuth;Username=postgres;Password=postgres
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "127.0.0.1:5047:8080"
+    restart: unless-stopped
+
+  patterns-users:
+    build:
+      context: ./DotNet
+      dockerfile: patternsUsers/Dockerfile
+    container_name: patterns-users
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DbConnection: Host=postgres;Port=5432;Database=patternsUsers;Username=postgres;Password=postgres
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "127.0.0.1:5229:8080"
+    restart: unless-stopped
+
+  account-service:
+    build:
+      context: ./money-services
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: account
+    container_name: account-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_core_account
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      KAFKA_URL: kafka:9092
+    ports:
+      - "127.0.0.1:8082:8082"
+    restart: unless-stopped
+
+  credit-service:
+    build:
+      context: ./money-services
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: credit
+    container_name: credit-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_credit
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      APP_KAFKA_TAKE_CREDIT_TOPIC: 00_take_credit
+    ports:
+      - "127.0.0.1:8081:8081"
+    restart: unless-stopped
+
+  transfers-service:
+    build:
+      context: ./money-services
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: transfers
+    container_name: transfers-service
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_URL: kafka:9092
+    ports:
+      - "127.0.0.1:8083:8083"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

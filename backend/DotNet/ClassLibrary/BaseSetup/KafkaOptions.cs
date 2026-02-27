@@ -8,14 +8,17 @@ namespace ClassLibrary.BaseSetup
 {
     public static class KafkaOptions
     {
-        public const string bootstrapServer = "localhost:9092";
-        
-        public const string ban_user_auth = "00_ban_user_auth";
-        public const string ban_user_bank_accounts = "00_ban_user_bank_accounts";
-        public const string create_auth_user = "00_create_user";
-        
-        public const string ban_group_id = "ban-group";
-        public const string user_group_id = "user-group";
+        private static string Get(string key, string defaultValue)
+            => Environment.GetEnvironmentVariable(key) ?? defaultValue;
+
+        public static string bootstrapServer => Get("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092");
+
+        public static string ban_user_auth => Get("KAFKA_TOPIC_BAN_USER_AUTH", "00_ban_user_auth");
+        public static string ban_user_bank_accounts => Get("KAFKA_TOPIC_BAN_USER_BANK_ACCOUNTS", "00_ban_user_bank_accounts");
+        public static string create_auth_user => Get("KAFKA_TOPIC_CREATE_AUTH_USER", "00_create_user");
+
+        public static string ban_group_id => Get("KAFKA_GROUP_BAN", "ban-group");
+        public static string user_group_id => Get("KAFKA_GROUP_USER", "user-group");
 
     }
 }
