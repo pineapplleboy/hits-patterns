@@ -22,8 +22,7 @@ jobs:
         run: |
           ssh -p ${{ secrets.VPS_PORT || 22 }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             set -e
-            cd /home/deploy/patterns/hits-patterns
+            cd /home/deploy/patterns/hits-patterns/backend
             git pull origin main
-            cd backend
-            docker-compose up -d --build
+            docker compose up -d --build --remove-orphans
           EOF
