@@ -1,4 +1,4 @@
-package ru.patterns.credit.application.infrastructure;
+package ru.patterns.shared.infrastructure;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
