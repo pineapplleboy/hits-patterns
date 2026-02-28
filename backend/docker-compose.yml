@@ -16,6 +16,11 @@ services:
       retries: 20
     restart: unless-stopped
     mem_limit: 400m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
@@ -26,6 +31,11 @@ services:
       KAFKA_HEAP_OPTS: "-Xms64m -Xmx128m"
     restart: unless-stopped
     mem_limit: 180m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   kafka:
     image: confluentinc/cp-kafka:7.6.1
@@ -53,6 +63,11 @@ services:
       retries: 15
     restart: unless-stopped
     mem_limit: 750m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   kafka-init:
     image: confluentinc/cp-kafka:7.6.1
@@ -65,6 +80,11 @@ services:
     entrypoint: ["/bin/bash", "/init-topics.sh"]
     restart: "no"
     mem_limit: 200m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   patterns-auth:
     image: ghcr.io/pineapplleboy/hits-patterns-patterns-auth:latest
@@ -82,6 +102,11 @@ services:
       - "127.0.0.1:5047:8080"
     restart: unless-stopped
     mem_limit: 250m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   patterns-users:
     image: ghcr.io/pineapplleboy/hits-patterns-patterns-users:latest
@@ -99,6 +124,11 @@ services:
       - "127.0.0.1:5229:8080"
     restart: unless-stopped
     mem_limit: 250m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   account-service:
     image: ghcr.io/pineapplleboy/hits-patterns-account-service:latest
@@ -119,6 +149,11 @@ services:
       - "127.0.0.1:8082:8082"
     restart: unless-stopped
     mem_limit: 450m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   credit-service:
     image: ghcr.io/pineapplleboy/hits-patterns-credit-service:latest
@@ -139,6 +174,11 @@ services:
       - "127.0.0.1:8081:8081"
     restart: unless-stopped
     mem_limit: 400m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   transfers-service:
     image: ghcr.io/pineapplleboy/hits-patterns-transfers-service:latest
@@ -154,6 +194,11 @@ services:
       - "127.0.0.1:8083:8083"
     restart: unless-stopped
     mem_limit: 320m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres-data:
