@@ -3,6 +3,8 @@ package ru.patterns.account.application.service.operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
+import ru.patterns.account.domain.entity.BankAccount;
+import ru.patterns.account.domain.entity.CreditAccount;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.OperationRepository;
@@ -32,6 +34,34 @@ public class OperationHistoryService {
                 .setTransferAccountType(transferAccountType)
                 .setActionType(actionType)
                 .setStatus(operationStatus);
+
+        operationRepository.save(operation);
+    }
+
+    public void createAndSaveOperationAboutAccountCornerOperation(BankAccount account, AccountActionType actionType) {
+        Operation operation = new Operation()
+                .setAccountNumberFrom(null)
+                .setUserIdFrom(account.getUserId())
+                .setRecipientAccountNumber(null)
+                .setRecipientId(null)
+                .setAmount(BigDecimal.ZERO)
+                .setTransferAccountType(TransferAccountType.BANK_ACCOUNT)
+                .setActionType(actionType)
+                .setStatus(OperationStatus.SUCCESS);
+
+        operationRepository.save(operation);
+    }
+
+    public void createAndSaveOperationAboutAccountCornerOperation(CreditAccount account, AccountActionType actionType) {
+        Operation operation = new Operation()
+                .setAccountNumberFrom(null)
+                .setUserIdFrom(account.getUserId())
+                .setRecipientAccountNumber(null)
+                .setRecipientId(null)
+                .setAmount(BigDecimal.ZERO)
+                .setTransferAccountType(TransferAccountType.BANK_ACCOUNT)
+                .setActionType(actionType)
+                .setStatus(OperationStatus.SUCCESS);
 
         operationRepository.save(operation);
     }

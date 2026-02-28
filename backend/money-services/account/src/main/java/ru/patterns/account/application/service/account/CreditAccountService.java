@@ -18,7 +18,6 @@ import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
-import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
 
@@ -50,12 +49,7 @@ public class CreditAccountService {
 
         creditAccountRepository.save(creditAccount);
 
-        operationHistoryService.createAndSaveOperation(takeCreditMessage.getUserId(),
-                TransferAccountType.CREDIT_ACCOUNT,
-                takeCreditMessage.getCreditAmount(),
-                AccountActionType.OPEN_ACCOUNT,
-                OperationStatus.SUCCESS,
-                creditAccount.getAccountNumber());
+        operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(creditAccount, AccountActionType.OPEN_ACCOUNT);
 
         transferService.replenishMoney(takeCreditMessage.getUserId(), takeCreditMessage.getBankAccountNumber(),
                 new MoneyAmountRequestModel(takeCreditMessage.getCreditAmount()));
