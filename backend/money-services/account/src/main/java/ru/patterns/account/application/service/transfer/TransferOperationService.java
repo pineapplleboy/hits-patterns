@@ -3,7 +3,9 @@ package ru.patterns.account.application.service.transfer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
+import ru.patterns.account.application.service.operation.OperationHistoryService;
 import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.entity.CreditAccount;
 import ru.patterns.account.domain.entity.Operation;
@@ -25,6 +27,7 @@ public class TransferOperationService {
     private final BankAccountRepository bankAccountRepository;
     private final CreditAccountRepository creditAccountRepository;
     private final OperationRepository operationRepository;
+    private final OperationHistoryService operationHistoryService;
 
     @Value("${master-bank.account-number}")
     private String masterBankAccountNumber;
@@ -93,6 +96,8 @@ public class TransferOperationService {
 
         if (creditAccountTo.getDept().compareTo(BigDecimal.ZERO) == 0) {
             creditAccountTo.setClosed(true);
+
+            operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(creditAccountTo, AccountActionType.CLOSE_ACCOUNT);
         }
 
         bankAccountRepository.save(bankAccountFrom);
