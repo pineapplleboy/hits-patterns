@@ -53,10 +53,6 @@ namespace patternsAuth.Controllers
             return Ok(await _authService.UserRegister(user, UserRole.CLIENT));
         }
 
-        [HttpPost("actuator/health")]
-        public async Task<IActionResult> GetHealth()
-        {
-            return Ok(new Health { status = "UP" });
-        }
+
     }
 }
