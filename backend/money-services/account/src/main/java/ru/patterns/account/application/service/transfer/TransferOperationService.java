@@ -70,7 +70,7 @@ public class TransferOperationService {
     }
 
     private void makeTransferToCreditAccount(TransferAssignmentMessage assignment, BankAccount bankAccountFrom, Operation operation) {
-        CreditAccount creditAccountTo = findCreditAccountByAccountNumber(assignment.getAccountNumberFrom());
+        CreditAccount creditAccountTo = findCreditAccountByAccountNumber(assignment.getAccountNumberTo());
 
         BigDecimal amount = assignment.getAmount();
 
