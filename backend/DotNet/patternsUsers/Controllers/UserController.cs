@@ -53,5 +53,11 @@ namespace patternsUsers.Controllers
             await _userService.UnbanUser(id);
             return Ok();
         }
+
+        [HttpPost("actuator/health")]
+        public async Task<IActionResult> GetHealth()
+        {
+            return Ok(new Health { status = "UP"});
+        }
     }
 }
