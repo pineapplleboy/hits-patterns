@@ -28,7 +28,15 @@ class AuthorizationViewModel @Inject constructor(
         val currentState = _state.value
         if (currentState is AuthorizationScreenState.Default) {
             viewModelScope.launch {
-                val isAuthenticated = loginUseCase(currentState.credentials)
+                _state.value = AuthorizationScreenState.Loading
+                try {
+                    val isAuthenticated = loginUseCase(currentState.credentials)
+                    // Handle authentication result
+                } catch (e: Exception) {
+                    // Handle error - for now we'll just go back to default state
+                    // In a real app, you'd want to show an error message
+                    _state.value = currentState
+                }
             }
         }
     }

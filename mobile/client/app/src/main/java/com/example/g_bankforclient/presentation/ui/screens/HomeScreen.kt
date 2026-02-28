@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,13 +18,38 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.common.models.Account
+import com.example.g_bankforclient.presentation.state.HomeScreenState
 import com.example.g_bankforclient.presentation.ui.components.AccountCard
+import com.example.g_bankforclient.presentation.viewmodel.HomeViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 
 @Composable
 fun HomeScreen(
+    onAccountClick: (String) -> Unit,
+    onCreateAccount: () -> Unit
+) {
+    val viewModel: HomeViewModel = hiltViewModel()
+    val screenState by viewModel.state.collectAsStateWithLifecycle()
+
+    when (val state = screenState) {
+        is HomeScreenState.Default -> DefaultHomeScreen(
+            accounts = state.accounts,
+            onAccountClick = onAccountClick,
+            onCreateAccount = onCreateAccount
+        )
+        
+        HomeScreenState.Loading -> LoadingHomeScreen()
+        
+        is HomeScreenState.Error -> ErrorHomeScreen(state.message)
+    }
+}
+
+@Composable
+private fun DefaultHomeScreen(
     accounts: List<Account>,
     onAccountClick: (String) -> Unit,
     onCreateAccount: () -> Unit
@@ -164,6 +190,39 @@ fun HomeScreen(
     }
 }
 
+@Composable
+private fun LoadingHomeScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ErrorHomeScreen(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Ошибка загрузки",
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
@@ -180,8 +239,8 @@ fun HomeScreenPreview() {
         )
     )
 
-    GbankForClientTheme{
-        HomeScreen(
+    GbankForClientTheme {
+        DefaultHomeScreen(
             accounts = accounts,
             onAccountClick = { /* Пустая заглушка */ },
             onCreateAccount = { /* Пустая заглушка */ }

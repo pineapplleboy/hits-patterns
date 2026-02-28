@@ -48,37 +48,36 @@ import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 
 @Composable
 fun AuthorizationScreen(
-    onLoginClick: () -> Unit = {},
+    onLoginSuccess: () -> Unit,
 ) {
     val viewModel: AuthorizationViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
-        when (val state = screenState) {
-            is AuthorizationScreenState.Default -> DefaultState(
-                credentials = state.credentials,
-                onLoginClick = onLoginClick,
-                onLoginChange = viewModel::onLoginChange,
-                onPasswordChange = viewModel::onPasswordChange,
-                modifier = Modifier.padding(padding)
-            )
-
-            AuthorizationScreenState.Loading -> LoadingState()
-        }
+    when (val state = screenState) {
+        is AuthorizationScreenState.Default -> DefaultAuthorizationScreen(
+            credentials = state.credentials,
+            onLoginChange = viewModel::onLoginChange,
+            onPasswordChange = viewModel::onPasswordChange,
+            onLoginClick = {
+                viewModel.onLoginClick()
+                // In a real app, you'd navigate based on the result
+                // For now, we'll just call onLoginSuccess
+                onLoginSuccess()
+            }
+        )
+        
+        AuthorizationScreenState.Loading -> LoadingAuthorizationScreen()
     }
 }
 
 @Composable
-private fun DefaultState(
+private fun DefaultAuthorizationScreen(
     credentials: UserCredentials,
     onLoginChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit,
-    modifier: Modifier,
 ) = Column(
-    modifier = modifier
+    modifier = Modifier
         .fillMaxSize()
         .imePadding()
         .verticalScroll(rememberScrollState())
@@ -180,9 +179,8 @@ private fun DefaultState(
     }
 }
 
-
 @Composable
-private fun LoadingState() {
+private fun LoadingAuthorizationScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -201,12 +199,11 @@ private fun LoadingState() {
 @Composable
 private fun AuthorizationScreenPreview() {
     GbankForClientTheme {
-        DefaultState(
+        DefaultAuthorizationScreen(
             credentials = UserCredentials("", ""),
             onLoginChange = {},
             onPasswordChange = {},
-            onLoginClick = {},
-            modifier = Modifier
+            onLoginClick = {}
         )
     }
 }

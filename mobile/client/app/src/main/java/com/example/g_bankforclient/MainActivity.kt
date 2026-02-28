@@ -22,7 +22,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.g_bankforclient.common.navigation.BankNavigation
 import com.example.g_bankforclient.common.navigation.Screen
 import com.example.g_bankforclient.presentation.ui.components.BankBottomNavigation
-import com.example.g_bankforclient.presentation.viewmodel.BankViewModel
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -42,7 +41,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun BankApp() {
     val navController = rememberNavController()
-    val viewModel: BankViewModel = hiltViewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -55,8 +53,7 @@ fun BankApp() {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 BankNavigation(
-                    navController = navController,
-                    viewModel = viewModel
+                    navController = navController
                 )
             }
 

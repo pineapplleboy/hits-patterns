@@ -7,7 +7,6 @@ import androidx.navigation.compose.NavHost
 
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.g_bankforclient.common.navigation.*
 import com.example.g_bankforclient.presentation.ui.screens.AccountDetailsScreen
 import com.example.g_bankforclient.presentation.ui.screens.AuthorizationScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreateAccountScreen
@@ -16,12 +15,10 @@ import com.example.g_bankforclient.presentation.ui.screens.CreditDetailsScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreditsScreen
 import com.example.g_bankforclient.presentation.ui.screens.HomeScreen
 import com.example.g_bankforclient.presentation.ui.screens.TransactionHistoryScreen
-import com.example.g_bankforclient.presentation.viewmodel.BankViewModel
 
 @Composable
 fun BankNavigation(
-    navController: NavHostController,
-    viewModel: BankViewModel
+    navController: NavHostController
 ) {
     NavHost(
         navController = navController,
@@ -30,15 +27,16 @@ fun BankNavigation(
         // Авторизация
         composable(Screen.Authorization.route) {
             AuthorizationScreen(
-                onLoginClick = {
-                    navController.navigate(Screen.Home.route)
+                onLoginSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Authorization.route) { inclusive = true }
+                    }
                 }
             )
         }
         // Главный экран
         composable(Screen.Home.route) {
             HomeScreen(
-                accounts = viewModel.accounts,
                 onAccountClick = { accountId ->
                     navController.navigate(Screen.AccountDetails.createRoute(accountId))
                 },
@@ -51,7 +49,6 @@ fun BankNavigation(
         // Экран кредитов
         composable(Screen.Credits.route) {
             CreditsScreen(
-                credits = viewModel.credits,
                 onCreditClick = { creditId ->
                     navController.navigate(Screen.CreditDetails.createRoute(creditId))
                 },
@@ -66,24 +63,17 @@ fun BankNavigation(
             route = Screen.AccountDetails.route,
             arguments = listOf(navArgument("accountId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val accountId = backStackEntry.arguments?.getString("accountId")
-            val account = viewModel.accounts.find { it.id == accountId }
-
-            account?.let {
-                AccountDetailsScreen(
-                    account = it,
-                    onBack = { navController.popBackStack() },
-                    onDeposit = { amount -> viewModel.deposit(it.id, amount) },
-                    onWithdrawal = { amount -> viewModel.withdrawal(it.id, amount) },
-                    onViewHistory = {
-                        navController.navigate(Screen.TransactionHistory.createRoute(it.id))
-                    },
-                    onCloseAccount = {
-                        viewModel.closeAccount(it.id)
-                        navController.popBackStack()
-                    }
-                )
-            }
+            val accountId = backStackEntry.arguments?.getString("accountId") ?: return@composable
+            AccountDetailsScreen(
+                accountId = accountId,
+                onBack = { navController.popBackStack() },
+                onViewHistory = {
+                    navController.navigate(Screen.TransactionHistory.createRoute(accountId))
+                },
+                onAccountClosed = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         // Экран деталей кредита
@@ -91,27 +81,18 @@ fun BankNavigation(
             route = Screen.CreditDetails.route,
             arguments = listOf(navArgument("creditId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val creditId = backStackEntry.arguments?.getString("creditId")
-            val credit = viewModel.credits.find { it.id == creditId }
-
-            credit?.let {
-                CreditDetailsScreen(
-                    credit = it,
-                    accounts = viewModel.accounts,
-                    onBack = { navController.popBackStack() },
-                    onPayCredit = { accountId, amount ->
-                        viewModel.payCredit(it.id, accountId, amount)
-                    }
-                )
-            }
+            val creditId = backStackEntry.arguments?.getString("creditId") ?: return@composable
+            CreditDetailsScreen(
+                creditId = creditId,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // Экран создания счета
         composable(Screen.CreateAccount.route) {
             CreateAccountScreen(
                 onBack = { navController.popBackStack() },
-                onCreateAccount = { name ->
-                    viewModel.createAccount(name)
+                onAccountCreated = {
                     navController.popBackStack()
                 }
             )
@@ -121,8 +102,7 @@ fun BankNavigation(
         composable(Screen.CreateCredit.route) {
             CreateCreditScreen(
                 onBack = { navController.popBackStack() },
-                onCreateCredit = { name, amount, rate ->
-                    viewModel.createCredit(name, amount, rate)
+                onCreditCreated = {
                     navController.popBackStack()
                 }
             )
@@ -133,11 +113,9 @@ fun BankNavigation(
             route = Screen.TransactionHistory.route,
             arguments = listOf(navArgument("accountId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val accountId = backStackEntry.arguments?.getString("accountId")
-            val accountTransactions = viewModel.transactions.filter { it.accountId == accountId }
-
+            val accountId = backStackEntry.arguments?.getString("accountId") ?: return@composable
             TransactionHistoryScreen(
-                transactions = accountTransactions,
+                accountId = accountId,
                 onBack = { navController.popBackStack() }
             )
         }

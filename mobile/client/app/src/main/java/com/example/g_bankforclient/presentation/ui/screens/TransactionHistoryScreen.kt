@@ -8,13 +8,19 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.common.models.Transaction
 import com.example.g_bankforclient.common.models.TransactionType
+import com.example.g_bankforclient.presentation.state.TransactionHistoryScreenState
 import com.example.g_bankforclient.presentation.ui.components.TransactionItem
+import com.example.g_bankforclient.presentation.viewmodel.TransactionHistoryViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 import java.util.Date
@@ -23,6 +29,31 @@ import java.util.Date
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionHistoryScreen(
+    accountId: String,
+    onBack: () -> Unit
+) {
+    val viewModel: TransactionHistoryViewModel = hiltViewModel()
+    val screenState by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(accountId) {
+        viewModel.loadTransactionHistory(accountId)
+    }
+
+    when (val state = screenState) {
+        is TransactionHistoryScreenState.Default -> DefaultTransactionHistoryScreen(
+            transactions = state.transactions,
+            onBack = onBack
+        )
+        
+        TransactionHistoryScreenState.Loading -> LoadingTransactionHistoryScreen()
+        
+        is TransactionHistoryScreenState.Error -> ErrorTransactionHistoryScreen(state.message)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DefaultTransactionHistoryScreen(
     transactions: List<Transaction>,
     onBack: () -> Unit
 ) {
@@ -95,11 +126,44 @@ fun TransactionHistoryScreen(
     }
 }
 
+@Composable
+private fun LoadingTransactionHistoryScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ErrorTransactionHistoryScreen(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Ошибка загрузки",
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun TransactionHistoryScreenPreview() {
     GbankForClientTheme {
-        TransactionHistoryScreen(
+        DefaultTransactionHistoryScreen(
             transactions = listOf(
                 Transaction(
                     id = "1",

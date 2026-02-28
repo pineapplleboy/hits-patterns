@@ -17,21 +17,72 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.common.models.Account
 import com.example.g_bankforclient.common.models.Credit
+import com.example.g_bankforclient.presentation.state.CreditDetailsScreenState
+import com.example.g_bankforclient.presentation.viewmodel.CreditDetailsViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreditDetailsScreen(
+    creditId: String,
+    onBack: () -> Unit
+) {
+    val viewModel: CreditDetailsViewModel = hiltViewModel()
+    val screenState by viewModel.state.collectAsStateWithLifecycle()
+    var amount by remember { mutableStateOf("") }
+    var selectedAccountId by remember { mutableStateOf("") }
+
+    LaunchedEffect(creditId) {
+        viewModel.loadCreditDetails(creditId)
+    }
+
+    when (val state = screenState) {
+        is CreditDetailsScreenState.Default -> {
+            // Initialize selected account ID if not set
+            LaunchedEffect(state.credit) {
+                if (selectedAccountId.isEmpty()) {
+                    selectedAccountId = viewModel.accounts.firstOrNull()?.id ?: ""
+                }
+            }
+            
+            DefaultCreditDetailsScreen(
+                credit = state.credit,
+                accounts = viewModel.accounts,
+                amount = amount,
+                selectedAccountId = selectedAccountId,
+                onAmountChange = { amount = it },
+                onSelectedAccountChange = { selectedAccountId = it },
+                onBack = onBack,
+                onPayCredit = { accountId, paymentAmount -> 
+                    viewModel.payCredit(state.credit.id, accountId, paymentAmount)
+                    amount = ""
+                }
+            )
+        }
+        
+        CreditDetailsScreenState.Loading -> LoadingCreditDetailsScreen()
+        
+        is CreditDetailsScreenState.Error -> ErrorCreditDetailsScreen(state.message)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DefaultCreditDetailsScreen(
     credit: Credit,
     accounts: List<Account>,
+    amount: String,
+    selectedAccountId: String,
+    onAmountChange: (String) -> Unit,
+    onSelectedAccountChange: (String) -> Unit,
     onBack: () -> Unit,
     onPayCredit: (String, Double) -> Unit
 ) {
-    var amount by remember { mutableStateOf("") }
-    var selectedAccountId by remember { mutableStateOf(accounts.firstOrNull()?.id ?: "") }
     val selectedAccount = accounts.find { it.id == selectedAccountId }
     val progress = ((credit.amount - credit.debt) / credit.amount * 100).toFloat()
 
@@ -212,7 +263,7 @@ fun CreditDetailsScreen(
                             // Simple dropdown-like list
                             accounts.forEach { account ->
                                 Surface(
-                                    onClick = { selectedAccountId = account.id },
+                                    onClick = { onSelectedAccountChange(account.id) },
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(12.dp),
                                     color = if (selectedAccountId == account.id)
@@ -231,7 +282,7 @@ fun CreditDetailsScreen(
 
                         OutlinedTextField(
                             value = amount,
-                            onValueChange = { amount = it },
+                            onValueChange = onAmountChange,
                             label = { Text("Сумма платежа") },
                             placeholder = { Text("0") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -245,7 +296,7 @@ fun CreditDetailsScreen(
                         ) {
                             listOf(5000.0, 10000.0, 25000.0).forEach { quickAmount ->
                                 OutlinedButton(
-                                    onClick = { amount = quickAmount.toInt().toString() },
+                                    onClick = { onAmountChange(quickAmount.toInt().toString()) },
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
@@ -264,7 +315,6 @@ fun CreditDetailsScreen(
                                             // Show error
                                         } else {
                                             onPayCredit(selectedAccountId, value)
-                                            amount = ""
                                         }
                                     }
                                 }
@@ -302,11 +352,44 @@ fun CreditDetailsScreen(
     }
 }
 
+@Composable
+private fun LoadingCreditDetailsScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ErrorCreditDetailsScreen(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Ошибка загрузки",
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun CreditDetailsScreenPreview() {
     GbankForClientTheme {
-        CreditDetailsScreen(
+        DefaultCreditDetailsScreen(
             credit = Credit(
                 id = "1",
                 name = "Ипотека",
@@ -318,6 +401,10 @@ fun CreditDetailsScreenPreview() {
                 Account(id = "1", name = "Основной счёт", balance = 150_000.0),
                 Account(id = "2", name = "Накопительный", balance = 45_000.0)
             ),
+            amount = "",
+            selectedAccountId = "1",
+            onAmountChange = { /* Заглушка */ },
+            onSelectedAccountChange = { /* Заглушка */ },
             onBack = { /* Заглушка */ },
             onPayCredit = { _, _ -> /* Заглушка */ }
         )

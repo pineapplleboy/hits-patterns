@@ -18,23 +18,68 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.common.models.Account
+import com.example.g_bankforclient.presentation.state.AccountDetailsScreenState
+import com.example.g_bankforclient.presentation.viewmodel.AccountDetailsViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountDetailsScreen(
+    accountId: String,
+    onBack: () -> Unit,
+    onViewHistory: () -> Unit,
+    onAccountClosed: () -> Unit
+) {
+    val viewModel: AccountDetailsViewModel = hiltViewModel()
+    val screenState by viewModel.state.collectAsStateWithLifecycle()
+    var amount by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(accountId) {
+        viewModel.loadAccountDetails(accountId)
+    }
+
+    when (val state = screenState) {
+        is AccountDetailsScreenState.Default -> DefaultAccountDetailsScreen(
+            account = state.account,
+            amount = amount,
+            showDeleteDialog = showDeleteDialog,
+            onAmountChange = { amount = it },
+            onShowDeleteDialogChange = { showDeleteDialog = it },
+            onBack = onBack,
+            onDeposit = { viewModel.deposit(state.account.id, it) },
+            onWithdrawal = { viewModel.withdrawal(state.account.id, it) },
+            onViewHistory = onViewHistory,
+            onCloseAccount = { 
+                viewModel.closeAccount(state.account.id)
+                onAccountClosed()
+            }
+        )
+        
+        AccountDetailsScreenState.Loading -> LoadingAccountDetailsScreen()
+        
+        is AccountDetailsScreenState.Error -> ErrorAccountDetailsScreen(state.message)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DefaultAccountDetailsScreen(
     account: Account,
+    amount: String,
+    showDeleteDialog: Boolean,
+    onAmountChange: (String) -> Unit,
+    onShowDeleteDialogChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onDeposit: (Double) -> Unit,
     onWithdrawal: (Double) -> Unit,
     onViewHistory: () -> Unit,
     onCloseAccount: () -> Unit
 ) {
-    var amount by remember { mutableStateOf("") }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
     Scaffold(
         topBar = {
             Surface(
@@ -120,7 +165,7 @@ fun AccountDetailsScreen(
                                     amount.toDoubleOrNull()?.let { value ->
                                         if (value > 0) {
                                             onDeposit(value)
-                                            amount = ""
+                                            onAmountChange("")
                                         }
                                     }
                                 },
@@ -143,7 +188,7 @@ fun AccountDetailsScreen(
                                     amount.toDoubleOrNull()?.let { value ->
                                         if (value > 0 && value <= account.balance) {
                                             onWithdrawal(value)
-                                            amount = ""
+                                            onAmountChange("")
                                         }
                                     }
                                 },
@@ -165,7 +210,7 @@ fun AccountDetailsScreen(
 
                         OutlinedTextField(
                             value = amount,
-                            onValueChange = { amount = it },
+                            onValueChange = onAmountChange,
                             label = { Text("Сумма операции") },
                             placeholder = { Text("0") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -224,7 +269,7 @@ fun AccountDetailsScreen(
 
             item {
                 OutlinedButton(
-                    onClick = { showDeleteDialog = true },
+                    onClick = { onShowDeleteDialogChange(true) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = BankColors.ErrorRed
@@ -246,7 +291,7 @@ fun AccountDetailsScreen(
 
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { onShowDeleteDialogChange(false) },
             title = { Text("Закрыть счет?") },
             text = {
                 Text(
@@ -260,14 +305,14 @@ fun AccountDetailsScreen(
                         if (account.balance == 0.0) {
                             onCloseAccount()
                         }
-                        showDeleteDialog = false
+                        onShowDeleteDialogChange(false)
                     }
                 ) {
                     Text("Закрыть", color = BankColors.ErrorRed)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                TextButton(onClick = { onShowDeleteDialogChange(false) }) {
                     Text("Отмена")
                 }
             },
@@ -276,16 +321,53 @@ fun AccountDetailsScreen(
     }
 }
 
+@Composable
+private fun LoadingAccountDetailsScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ErrorAccountDetailsScreen(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Ошибка загрузки",
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun AccountDetailsScreenPreview() {
     GbankForClientTheme {
-        AccountDetailsScreen(
+        DefaultAccountDetailsScreen(
             account = Account(
                 id = "1",
                 name = "Основной счёт",
                 balance = 123456.78
             ),
+            amount = "",
+            showDeleteDialog = false,
+            onAmountChange = { /* Заглушка */ },
+            onShowDeleteDialogChange = { /* Заглушка */ },
             onBack = { /* Заглушка */ },
             onDeposit = { /* Заглушка */ },
             onWithdrawal = { /* Заглушка */ },
