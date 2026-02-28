@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import ru.patterns.shared.exception.BadRequestException;
+import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.exception.UnauthorizedException;
 import ru.patterns.shared.model.response.ErrorResponse;
@@ -20,6 +22,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> catchUnauthorizedException(UnauthorizedException exception) {
         return new ResponseEntity<>(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), exception.getMessage()),
                 HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchForbiddenException(ForbiddenException exception) {
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.FORBIDDEN.value(), exception.getMessage()),
+                HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchBadRequestException(BadRequestException exception) {
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), exception.getMessage()),
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
