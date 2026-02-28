@@ -70,14 +70,19 @@ public class TransferOperationService {
     }
 
     private void makeTransferToCreditAccount(TransferAssignmentMessage assignment, BankAccount bankAccountFrom, Operation operation) {
-        CreditAccount creditAccountTo = findCreditAccountByAccountNumber(assignment.getAccountNumberFrom());
+        CreditAccount creditAccountTo = findCreditAccountByAccountNumber(assignment.getAccountNumberTo());
 
         BigDecimal amount = assignment.getAmount();
 
-        if (creditAccountTo.getDept().compareTo(amount) < 0) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             operation.setStatus(OperationStatus.REJECTED);
             operationRepository.save(operation);
             return;
+        }
+
+        if (creditAccountTo.getDept().compareTo(amount) < 0) {
+            amount = creditAccountTo.getDept();
+            operation.setAmount(amount);
         }
 
         BankAccount masterBankAccount = findBankAccountByAccountNumber(masterBankAccountNumber);
