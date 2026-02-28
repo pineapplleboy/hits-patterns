@@ -4,6 +4,10 @@ on:
   push:
     branches: [ "main" ]
 
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,8 +25,10 @@ jobs:
       - name: Deploy
         run: |
           ssh -p ${{ secrets.VPS_PORT || 22 }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            set -e
-            cd /home/deploy/patterns/hits-patterns/backend
-            git pull origin main
-            docker compose up -d --build --remove-orphans
+            flock -n /tmp/deploy.lock bash -lc '
+              set -e
+              cd /home/deploy/patterns/hits-patterns/backend
+              git pull origin main
+              docker compose up -d --build --remove-orphans
+            '
           EOF
