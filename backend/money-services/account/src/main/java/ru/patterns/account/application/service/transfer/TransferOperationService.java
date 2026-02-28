@@ -75,9 +75,8 @@ public class TransferOperationService {
         BigDecimal amount = assignment.getAmount();
 
         if (creditAccountTo.getDept().compareTo(amount) < 0) {
-            operation.setStatus(OperationStatus.REJECTED);
-            operationRepository.save(operation);
-            return;
+            amount = creditAccountTo.getDept();
+            operation.setAmount(amount);
         }
 
         BankAccount masterBankAccount = findBankAccountByAccountNumber(masterBankAccountNumber);
