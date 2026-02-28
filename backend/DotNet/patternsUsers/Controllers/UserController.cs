@@ -54,10 +54,5 @@ namespace patternsUsers.Controllers
             return Ok();
         }
 
-        [HttpPost("actuator/health")]
-        public async Task<IActionResult> GetHealth()
-        {
-            return Ok(new Health { status = "UP"});
-        }
     }
 }
