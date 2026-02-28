@@ -23,7 +23,6 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-
       KAFKA_HEAP_OPTS: "-Xms64m -Xmx128m"
     restart: unless-stopped
     mem_limit: 180m
@@ -68,9 +67,7 @@ services:
     mem_limit: 200m
 
   patterns-auth:
-    build:
-      context: ./DotNet
-      dockerfile: patternsAuth/Dockerfile
+    image: ghcr.io/pineapplleboy/hits-patterns-patterns-auth:latest
     container_name: patterns-auth
     depends_on:
       postgres:
@@ -87,9 +84,7 @@ services:
     mem_limit: 250m
 
   patterns-users:
-    build:
-      context: ./DotNet
-      dockerfile: patternsUsers/Dockerfile
+    image: ghcr.io/pineapplleboy/hits-patterns-patterns-users:latest
     container_name: patterns-users
     depends_on:
       postgres:
@@ -106,11 +101,7 @@ services:
     mem_limit: 250m
 
   account-service:
-    build:
-      context: ./money-services
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: account
+    image: ghcr.io/pineapplleboy/hits-patterns-account-service:latest
     container_name: account-service
     depends_on:
       postgres:
@@ -130,11 +121,7 @@ services:
     mem_limit: 450m
 
   credit-service:
-    build:
-      context: ./money-services
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: credit
+    image: ghcr.io/pineapplleboy/hits-patterns-credit-service:latest
     container_name: credit-service
     depends_on:
       postgres:
@@ -154,11 +141,7 @@ services:
     mem_limit: 400m
 
   transfers-service:
-    build:
-      context: ./money-services
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: transfers
+    image: ghcr.io/pineapplleboy/hits-patterns-transfers-service:latest
     container_name: transfers-service
     depends_on:
       kafka-init:

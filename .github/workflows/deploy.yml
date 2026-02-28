@@ -1,34 +1,126 @@
-name: Deploy to VPS
+name: Build & Deploy to VPS
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 concurrency:
   group: deploy-main
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # patterns-auth (.NET)
+      - name: Build & push patterns-auth
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/DotNet
+          file: ./backend/DotNet/patternsAuth/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/pineapplleboy/hits-patterns-patterns-auth:latest
+            ghcr.io/pineapplleboy/hits-patterns-patterns-auth:${{ github.sha }}
+
+      # patterns-users (.NET)
+      - name: Build & push patterns-users
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/DotNet
+          file: ./backend/DotNet/patternsUsers/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/pineapplleboy/hits-patterns-patterns-users:latest
+            ghcr.io/pineapplleboy/hits-patterns-patterns-users:${{ github.sha }}
+
+      # account-service (Java)
+      - name: Build & push account-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/money-services
+          file: ./backend/money-services/Dockerfile
+          push: true
+          build-args: |
+            SERVICE_NAME=account
+          tags: |
+            ghcr.io/pineapplleboy/hits-patterns-account-service:latest
+            ghcr.io/pineapplleboy/hits-patterns-account-service:${{ github.sha }}
+
+      # credit-service (Java)
+      - name: Build & push credit-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/money-services
+          file: ./backend/money-services/Dockerfile
+          push: true
+          build-args: |
+            SERVICE_NAME=credit
+          tags: |
+            ghcr.io/pineapplleboy/hits-patterns-credit-service:latest
+            ghcr.io/pineapplleboy/hits-patterns-credit-service:${{ github.sha }}
+
+      # transfers-service (Java)
+      - name: Build & push transfers-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/money-services
+          file: ./backend/money-services/Dockerfile
+          push: true
+          build-args: |
+            SERVICE_NAME=transfers
+          tags: |
+            ghcr.io/pineapplleboy/hits-patterns-transfers-service:latest
+            ghcr.io/pineapplleboy/hits-patterns-transfers-service:${{ github.sha }}
+
   deploy:
     runs-on: ubuntu-latest
+    needs: build_and_push
     steps:
       - name: Install SSH client
         run: sudo apt-get update && sudo apt-get install -y openssh-client
 
       - name: Setup SSH key
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p ${{ secrets.VPS_PORT || 22 }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${VPS_PORT:-22}" -H "$VPS_HOST" >> ~/.ssh/known_hosts
 
-      - name: Deploy
+      - name: Deploy (pull only)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          ssh -p ${{ secrets.VPS_PORT || 22 }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          ssh -p "${VPS_PORT:-22}" "$VPS_USER@$VPS_HOST" << 'EOF'
+            set -e
             flock -n /tmp/deploy.lock bash -lc '
               set -e
-              cd /home/deploy/patterns/hits-patterns/backend
+              cd /home/deploy/patterns/hits-patterns
               git pull origin main
-              docker compose up -d --build --remove-orphans
-            '
+              cd backend
+              docker compose pull
+              docker compose up -d --remove-orphans
+            ' || { echo "Another deploy is already running (lock /tmp/deploy.lock)."; exit 1; }
           EOF
