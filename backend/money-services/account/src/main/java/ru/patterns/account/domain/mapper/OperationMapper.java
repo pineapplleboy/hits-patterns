@@ -34,14 +34,14 @@ public class OperationMapper {
 
         return new OperationModel()
                 .setOperationId(operation.getOperationId())
-                .setAccountNumberFrom(operation.getActionType() == AccountActionType.TRANSFER_RECEIVED ? accountNumberFrom : null)
+                .setAccountNumberFrom(accountNumberFrom)
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
                 .setAmount(operation.getAmount())
                 .setStatus(operation.getStatus())
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
-                .setRecipientAccountNumber(operation.getActionType() == AccountActionType.TRANSFER_SENT ? operation.getRecipientAccountNumber() : null)
+                .setRecipientAccountNumber(operation.getRecipientAccountNumber())
                 .setUserIdFrom(operation.getUserIdFrom());
     }
 }

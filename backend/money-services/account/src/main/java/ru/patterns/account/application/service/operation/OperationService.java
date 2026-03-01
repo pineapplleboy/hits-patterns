@@ -33,8 +33,7 @@ public class OperationService {
                 .toList().reversed();
     }
 
-    public List<OperationModel> getAccountOperations(UUID userId,
-                                                     String accountNumber, TransferAccountType transferAccountType) {
+    public List<OperationModel> getAccountOperations(String accountNumber, TransferAccountType transferAccountType) {
         var outgoingOperations = operationRepository
                 .findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType);
 

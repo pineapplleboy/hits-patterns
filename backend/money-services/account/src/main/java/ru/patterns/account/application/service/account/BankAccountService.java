@@ -19,6 +19,7 @@ import ru.patterns.shared.model.enums.TransferAccountType;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -68,7 +69,11 @@ public class BankAccountService {
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         var accountFullModel = account.toFullModelWithoutComments();
-        var operations = operationService.getAccountOperations(userId, accountNumber, TransferAccountType.BANK_ACCOUNT);
+        var bankOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.BANK_ACCOUNT);
+        var creditOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);
+        var operations = Stream.concat(bankOperations.stream(), creditOperations.stream())
+                .sorted((left, right) -> right.getCreateTime().compareTo(left.getCreateTime()))
+                .toList();
 
         accountFullModel.setOperations(operations);
 

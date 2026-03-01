@@ -32,7 +32,7 @@ public class OperationController {
                                                      @RequestHeader String authorization) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
 
-        return operationService.getAccountOperations(userId, accountNumber, transferType);
+        return operationService.getAccountOperations(accountNumber, transferType);
     }
 
     @GetMapping("/users/{userId}/operations/{operationId}")

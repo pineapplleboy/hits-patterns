@@ -68,7 +68,7 @@ public class CreditAccountService {
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         var accountFullModel = account.toFullModel();
-        var operations = operationService.getAccountOperations(userId, accountNumber, TransferAccountType.CREDIT_ACCOUNT);
+        var operations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);
 
         accountFullModel.setOperations(operations);
 
