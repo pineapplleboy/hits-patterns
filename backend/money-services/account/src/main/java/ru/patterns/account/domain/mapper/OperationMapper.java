@@ -26,7 +26,7 @@ public class OperationMapper {
 
     public OperationModel toModel(Operation operation, UUID requestingUser) {
         AccountActionType actionType = operation.getActionType();
-        String accountNumberFrom = operation.getActionType() != AccountActionType.TRANSFER ? operation.getAccountNumberFrom() : null;
+        String accountNumberFrom = operation.getActionType() != AccountActionType.TRANSFER ? null : operation.getAccountNumberFrom();
 
         if (actionType == AccountActionType.TRANSFER) {
             actionType = operation.getUserIdFrom().equals(requestingUser) ? AccountActionType.TRANSFER_SENT : AccountActionType.TRANSFER_RECEIVED;
