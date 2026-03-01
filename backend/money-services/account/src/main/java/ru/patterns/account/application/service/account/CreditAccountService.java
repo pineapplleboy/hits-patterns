@@ -64,7 +64,7 @@ public class CreditAccountService {
     }
 
     public CreditAccountFullModel getUserCreditFullInfo(UUID userId, String accountNumber) {
-        var account = creditAccountRepository.getByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
+        var account = creditAccountRepository.getByAccountNumberAndUserId(accountNumber, userId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         var accountFullModel = account.toFullModel();

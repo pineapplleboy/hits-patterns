@@ -37,6 +37,10 @@ public class TransferOperationService {
                 .getBankAccountByAccountNumberAndActiveTrue(accountNumber)
                 .orElseThrow(() -> new BadRequestException("Account number not found"));
 
+        if (bankAccount.isBanned()) {
+            throw new BadRequestException("Account is banned");
+        }
+
         if (bankAccount.getBalance().compareTo(requestModel.getAmount()) < 0) {
             throw new BadRequestException("Incorrect request amount");
         }
@@ -60,6 +64,10 @@ public class TransferOperationService {
     private void makeTransferToBankAccount(TransferAssignmentMessage assignment, BankAccount bankAccountFrom, Operation operation) {
         BankAccount bankAccountTo = findBankAccountByAccountNumber(assignment.getAccountNumberTo());
 
+        if (bankAccountTo.isBanned()) {
+            throw new BadRequestException("Receiver bank account is banned");
+        }
+
         BigDecimal amount = assignment.getAmount();
 
         bankAccountFrom.setBalance(bankAccountFrom.getBalance().subtract(amount));
@@ -74,6 +82,10 @@ public class TransferOperationService {
 
     private void makeTransferToCreditAccount(TransferAssignmentMessage assignment, BankAccount bankAccountFrom, Operation operation) {
         CreditAccount creditAccountTo = findCreditAccountByAccountNumber(assignment.getAccountNumberTo());
+
+        if (!creditAccountTo.isActive()) {
+            throw new BadRequestException("Credit account is banned");
+        }
 
         BigDecimal amount = assignment.getAmount();
 

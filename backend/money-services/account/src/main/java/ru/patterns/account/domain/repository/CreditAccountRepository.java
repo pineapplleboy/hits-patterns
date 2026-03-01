@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface CreditAccountRepository extends JpaRepository<CreditAccount, UUID> {
     List<CreditAccount> getCreditAccountByUserId(UUID userId);
     List<CreditAccount> getCreditAccountsByUserIdAndClosedIsFalse(UUID userId);
-    Optional<CreditAccount> getByAccountNumberAndActiveAndUserId(String accountNumber, boolean active, UUID userId);
+    Optional<CreditAccount> getByAccountNumberAndUserId(String accountNumber, UUID userId);
     List<CreditAccount> findAllByActiveIsTrueAndClosedIsFalseAndNextWriteOffDateLessThanEqual(Instant dateTime);
     Optional<CreditAccount> findCreditAccountByAccountNumberAndActiveTrueAndClosedFalse(String accountNumber);
 }
