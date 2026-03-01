@@ -18,5 +18,6 @@
     <include file="/db/changelog/009-add-credit-close-field.xml"/>
     <include file="/db/changelog/010-change-operation-receiver-field.xml"/>
     <include file="/db/changelog/011-fix-operation-schema.xml"/>
+    <include file="/db/changelog/012-add-banned-field-to-bank-account.xml"/>
 
 </databaseChangeLog>
