@@ -27,29 +27,29 @@ public class BanService {
         userBankAccounts.forEach(bankAccount -> {
 
             if ((!bankAccount.isBanned() && ban) || (bankAccount.isBanned() && !ban)) {
-                bankAccount.setBanned(!ban);
                 callOperationHistoryService(bankAccount.getUserId(), bankAccount.getAccountNumber(), TransferAccountType.BANK_ACCOUNT, ban);
             }
 
+            bankAccount.setBanned(ban);
         });
         userCreditAccounts.forEach(creditAccount -> {
 
-            if ((!creditAccount.isActive() && ban) || (creditAccount.isActive() && !ban)) {
-                creditAccount.setActive(!ban);
+            if ((creditAccount.isActive() && ban) || (!creditAccount.isActive() && !ban)) {
                 callOperationHistoryService(creditAccount.getUserId(), creditAccount.getAccountNumber(), TransferAccountType.CREDIT_ACCOUNT, ban);
             }
 
+            creditAccount.setActive(!ban);
         });
 
         bankAccountRepository.saveAll(userBankAccounts);
         creditAccountRepository.saveAll(userCreditAccounts);
     }
 
-    private void callOperationHistoryService(UUID userId, String accountNumber, TransferAccountType transferAccountType, boolean close) {
+    private void callOperationHistoryService(UUID userId, String accountNumber, TransferAccountType transferAccountType, boolean ban) {
         operationHistoryService.createAndSaveOperation(userId,
                 transferAccountType,
                 BigDecimal.ZERO,
-                close ? AccountActionType.ACCOUNT_BANNED : AccountActionType.ACCOUNT_UNBANNED,
+                ban ? AccountActionType.ACCOUNT_BANNED : AccountActionType.ACCOUNT_UNBANNED,
                 OperationStatus.SUCCESS,
                 accountNumber);
     }

@@ -42,7 +42,7 @@ public class OperationService {
                 .findByRecipientAccountNumberAndTransferAccountTypeAndRecipientId(accountNumber, transferAccountType, userId);
 
         return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
-                .map(operation -> operation.toModel())
+                .map(operation -> OperationMapper.toModel(operation, userId))
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList().reversed();
     }
