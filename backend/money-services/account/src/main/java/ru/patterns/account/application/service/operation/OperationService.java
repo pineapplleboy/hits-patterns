@@ -14,6 +14,7 @@ import ru.patterns.shared.model.response.OperationStatusResponseModel;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Service
@@ -34,16 +35,35 @@ public class OperationService {
     }
 
     public List<OperationModel> getAccountOperations(String accountNumber, TransferAccountType transferAccountType) {
+        Stream<Operation> operations = getOperationsByType(accountNumber, transferAccountType);
+        if (transferAccountType == TransferAccountType.BANK_ACCOUNT) {
+            operations = Stream.concat(
+                    operations,
+                    getOperationsByType(accountNumber, TransferAccountType.CREDIT_ACCOUNT)
+            );
+        }
+
+        return operations
+                .collect(java.util.stream.Collectors.toMap(
+                        Operation::getOperationId,
+                        Function.identity(),
+                        (left, right) -> left
+                ))
+                .values()
+                .stream()
+                .map(operation -> OperationMapper.toModel(operation, accountNumber))
+                .sorted(Comparator.comparing(OperationModel::getCreateTime))
+                .toList().reversed();
+    }
+
+    private Stream<Operation> getOperationsByType(String accountNumber, TransferAccountType transferAccountType) {
         var outgoingOperations = operationRepository
                 .findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType);
 
         var incomingOperations = operationRepository
                 .findByRecipientAccountNumberAndTransferAccountType(accountNumber, transferAccountType);
 
-        return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
-                .map(operation -> OperationMapper.toModel(operation, accountNumber))
-                .sorted(Comparator.comparing(OperationModel::getCreateTime))
-                .toList().reversed();
+        return Stream.concat(outgoingOperations.stream(), incomingOperations.stream());
     }
 
     public OperationModel getOperationInfo(UUID operationId) {

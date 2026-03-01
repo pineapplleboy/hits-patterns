@@ -70,7 +70,9 @@ public class BankAccountService {
 
         var accountFullModel = account.toFullModelWithoutComments();
         var bankOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.BANK_ACCOUNT);
+
         var creditOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);
+
         var operations = Stream.concat(bankOperations.stream(), creditOperations.stream())
                 .sorted((left, right) -> right.getCreateTime().compareTo(left.getCreateTime()))
                 .toList();
