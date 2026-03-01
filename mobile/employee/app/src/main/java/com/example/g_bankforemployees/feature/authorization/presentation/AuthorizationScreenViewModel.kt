@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 class AuthorizationScreenViewModel(
     private val employeeLoginUseCase: EmployeeLoginUseCase,
     private val employeeRegisterUseCase: EmployeeRegisterUseCase,
+    private val navigatorHolder: com.example.g_bankforemployees.common.navigation.NavigatorHolder,
 ) : ViewModel() {
 
     private val _state: MutableStateFlow<AuthorizationScreenState> = MutableStateFlow(
@@ -29,7 +30,8 @@ class AuthorizationScreenViewModel(
             _state.value = AuthorizationScreenState.Loading
             employeeLoginUseCase(currentState.loginInput)
                 .onSuccess {
-                    _state.value = AuthorizationScreenState.AuthSuccess
+                    _state.value = AuthorizationScreenState.Default.Initial
+                    navigatorHolder.navigator?.navigateToUsersList()
                 }
                 .onFailure { e ->
                     _state.value = AuthorizationScreenState.Error(
@@ -47,21 +49,8 @@ class AuthorizationScreenViewModel(
             _state.value = AuthorizationScreenState.Loading
             employeeRegisterUseCase(currentState.registrationInput)
                 .onSuccess {
-                    employeeLoginUseCase(
-                        EmployeeLoginInput(
-                            phone = currentState.registrationInput.phone,
-                            password = currentState.registrationInput.password,
-                        )
-                    )
-                        .onSuccess {
-                            _state.value = AuthorizationScreenState.AuthSuccess
-                        }
-                        .onFailure { e ->
-                            _state.value = AuthorizationScreenState.Error(
-                                title = "Регистрация успешна",
-                                description = "Не удалось выполнить вход: ${e.message}",
-                            )
-                        }
+                    _state.value = AuthorizationScreenState.Default.Initial
+                    navigatorHolder.navigator?.navigateToUsersList()
                 }
                 .onFailure { e ->
                     _state.value = AuthorizationScreenState.Error(
@@ -70,10 +59,6 @@ class AuthorizationScreenViewModel(
                     )
                 }
         }
-    }
-
-    fun onAuthSuccessHandled() {
-        _state.value = AuthorizationScreenState.Default.Initial
     }
 
     fun onLoginPhoneChange(phone: String) {

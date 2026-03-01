@@ -1,4 +1,4 @@
-package com.example.g_bankforemployees.common.theme
+package com.example.g_bankforemployees.common.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

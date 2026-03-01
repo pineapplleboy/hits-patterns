@@ -10,9 +10,14 @@ class AuthInterceptor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        val url = request.url.toString()
+        val path = request.url.encodedPath
 
-        if (url.contains("/auth/")) {
+        if (
+            path.endsWith("/auth/employee-login") ||
+            path.endsWith("/auth/client-login") ||
+            path.endsWith("/auth/employee-register") ||
+            path.endsWith("/auth/client-register")
+        ) {
             return chain.proceed(request)
         }
 

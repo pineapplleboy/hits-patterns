@@ -3,8 +3,8 @@ package com.example.g_bankforemployees.feature.authorization.data.repository
 import com.example.g_bankforemployees.common.network.safeApiCall
 import com.example.g_bankforemployees.common.network.safeApiCallUnit
 import com.example.g_bankforemployees.feature.authorization.data.mapper.toEmployeeLoginDto
-import com.example.g_bankforemployees.feature.authorization.data.mapper.toEmployeeRegisterDto
 import com.example.g_bankforemployees.feature.authorization.data.mapper.toRegisterDto
+import com.example.g_bankforemployees.feature.authorization.data.mapper.toRegisterUserDto
 import com.example.g_bankforemployees.feature.authorization.data.remote.AuthApi
 import com.example.g_bankforemployees.feature.authorization.domain.TokenStorage
 import com.example.g_bankforemployees.feature.authorization.domain.model.EmployeeLoginInput
@@ -27,8 +27,13 @@ class AuthRepositoryImpl(
         )
 
     override suspend fun employeeRegister(input: EmployeeRegistrationInput): Result<Unit> =
-        safeApiCallUnit { authApi.employeeRegister(input.toEmployeeRegisterDto()) }
+        safeApiCall(
+            apiCall = { authApi.employeeRegister(input.toRegisterDto()) },
+            converter = { token ->
+                tokenStorage.setToken(token)
+            }
+        )
 
     override suspend fun registerUser(input: RegisterUserInput): Result<Unit> =
-        safeApiCallUnit { authApi.employeeRegister(input.toRegisterDto()) }
+        safeApiCallUnit { authApi.employeeRegisterUser(input.toRegisterUserDto()) }
 }

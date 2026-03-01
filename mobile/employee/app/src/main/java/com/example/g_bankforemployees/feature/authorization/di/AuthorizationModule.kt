@@ -19,6 +19,7 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 val authorizationModule = module {
 
@@ -52,8 +53,9 @@ val authorizationModule = module {
     single {
         val contentType = "application/json".toMediaType()
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:5000/")
+            .baseUrl("http://91.227.18.176/")
             .client(get())
+            .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(get<Json>().asConverterFactory(contentType))
             .build()
     }
@@ -88,7 +90,8 @@ val authorizationModule = module {
     viewModel {
         AuthorizationScreenViewModel(
             employeeLoginUseCase = get(),
-            employeeRegisterUseCase = get()
+            employeeRegisterUseCase = get(),
+            navigatorHolder = get(),
         )
     }
 }

@@ -49,13 +49,39 @@ import com.example.g_bankforemployees.feature.authorization.domain.model.Employe
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AuthorizationScreen() {
-    val viewModel: AuthorizationScreenViewModel = koinViewModel()
-    val screenState by viewModel.state.collectAsStateWithLifecycle()
-
+fun AuthorizationScreen(viewModel: AuthorizationScreenViewModel) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+    AuthorizationScreenContent(
+        state = state,
+        selectedTabIndex = selectedTabIndex,
+        onSelectedTabIndexChange = { selectedTabIndex = it },
+        onLoginClick = viewModel::onLoginClick,
+        onRegisterClick = viewModel::onRegisterClick,
+        onLoginPhoneChange = viewModel::onLoginPhoneChange,
+        onLoginPasswordChange = viewModel::onLoginPasswordChange,
+        onRegistrationNameChange = viewModel::onRegistrationNameChange,
+        onRegistrationPhoneChange = viewModel::onRegistrationPhoneChange,
+        onRegistrationPasswordChange = viewModel::onRegistrationPasswordChange,
+        onRetry = viewModel::onRetry,
+    )
+}
 
-    when (val state = screenState) {
+@Composable
+private fun AuthorizationScreenContent(
+    state: AuthorizationScreenState,
+    selectedTabIndex: Int,
+    onSelectedTabIndexChange: (Int) -> Unit,
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit,
+    onLoginPhoneChange: (String) -> Unit,
+    onLoginPasswordChange: (String) -> Unit,
+    onRegistrationNameChange: (String) -> Unit,
+    onRegistrationPhoneChange: (String) -> Unit,
+    onRegistrationPasswordChange: (String) -> Unit,
+    onRetry: () -> Unit,
+) {
+    when (state) {
         is AuthorizationScreenState.Default -> {
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.background
@@ -80,7 +106,7 @@ fun AuthorizationScreen() {
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "OG-BANK",
+                                text = stringResource(R.string.brand_name),
                                 style = MaterialTheme.typography.displayLarge,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
@@ -93,28 +119,28 @@ fun AuthorizationScreen() {
                             ) {
                                 Tab(
                                     selected = selectedTabIndex == 0,
-                                    onClick = { selectedTabIndex = 0 },
+                                    onClick = { onSelectedTabIndexChange(0) },
                                     text = { Text(stringResource(R.string.login_button)) }
                                 )
                                 Tab(
                                     selected = selectedTabIndex == 1,
-                                    onClick = { selectedTabIndex = 1 },
+                                    onClick = { onSelectedTabIndexChange(1) },
                                     text = { Text(stringResource(R.string.registration)) }
                                 )
                             }
                             when (selectedTabIndex) {
                                 0 -> LoginTabContent(
                                     loginInput = state.loginInput,
-                                    onLoginClick = viewModel::onLoginClick,
-                                    onPhoneChange = viewModel::onLoginPhoneChange,
-                                    onPasswordChange = viewModel::onLoginPasswordChange,
+                                    onLoginClick = onLoginClick,
+                                    onPhoneChange = onLoginPhoneChange,
+                                    onPasswordChange = onLoginPasswordChange,
                                 )
                                 1 -> RegisterTabContent(
                                     registrationInput = state.registrationInput,
-                                    onRegisterClick = viewModel::onRegisterClick,
-                                    onNameChange = viewModel::onRegistrationNameChange,
-                                    onPhoneChange = viewModel::onRegistrationPhoneChange,
-                                    onPasswordChange = viewModel::onRegistrationPasswordChange,
+                                    onRegisterClick = onRegisterClick,
+                                    onNameChange = onRegistrationNameChange,
+                                    onPhoneChange = onRegistrationPhoneChange,
+                                    onPasswordChange = onRegistrationPasswordChange,
                                 )
                             }
                         }
@@ -125,10 +151,10 @@ fun AuthorizationScreen() {
         is AuthorizationScreenState.Error -> ErrorState(
             title = state.title,
             description = state.description,
-            onRetry = viewModel::onRetry,
+            onRetry = onRetry,
         )
         AuthorizationScreenState.Loading -> LoadingState()
-        AuthorizationScreenState.AuthSuccess -> {  }
+        else -> {}
     }
 }
 
@@ -288,6 +314,6 @@ private fun RegisterTabContent(
 @Composable
 private fun AuthorizationScreenPreview() {
     BankTheme {
-        AuthorizationScreen()
+        AuthorizationScreen(viewModel = koinViewModel())
     }
 }
