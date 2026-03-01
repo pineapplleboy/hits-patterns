@@ -30,8 +30,8 @@ public class OperationMapper {
 
         if (actionType == AccountActionType.TRANSFER) {
             actionType = requestingUser != null && requestingUser.equals(operation.getUserIdFrom())
-                    ? AccountActionType.TRANSFER_SENT
-                    : AccountActionType.TRANSFER_RECEIVED;
+                    ? AccountActionType.TRANSFER_RECEIVED
+                    : AccountActionType.TRANSFER_SENT;
         }
 
         return new OperationModel()
