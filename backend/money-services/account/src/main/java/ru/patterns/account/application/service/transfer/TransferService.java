@@ -55,7 +55,6 @@ public class TransferService {
     private Operation createOperationTransferRequest(UUID userIdFrom, UUID userIdTo, String accountNumberFrom,
                                                      String accountNumberTo, MoneyAmountRequestModel amount,
                                                      TransferAccountType transferAccountType) {
-
         if (accountNumberFrom != null) {
             transferOperationService.validateAccountRemainder(accountNumberFrom, amount);
         }

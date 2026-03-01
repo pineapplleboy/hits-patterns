@@ -56,7 +56,7 @@ public class CreditAccountService {
     }
 
     public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {
-        return creditAccountRepository.getCreditAccountsByUserIdAndActiveAndClosedIsFalse(userId, true)
+        return creditAccountRepository.getCreditAccountsByUserIdAndClosedIsFalse(userId)
                 .stream()
                 .sorted(Comparator.comparing(CreditAccount::isClosed))
                 .map(account -> account.toModel())
