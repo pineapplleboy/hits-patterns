@@ -30,20 +30,20 @@ public class OperationMapper {
 
         if (actionType == AccountActionType.TRANSFER) {
             actionType = requestingUser != null && requestingUser.equals(operation.getUserIdFrom())
-                    ? AccountActionType.TRANSFER_RECEIVED
-                    : AccountActionType.TRANSFER_SENT;
+                    ? AccountActionType.TRANSFER_SENT
+                    : AccountActionType.TRANSFER_RECEIVED;
         }
 
         return new OperationModel()
                 .setOperationId(operation.getOperationId())
-                .setAccountNumberFrom(operation.getActionType() == AccountActionType.TRANSFER ? accountNumberFrom : null)
+                .setAccountNumberFrom(operation.getActionType() == AccountActionType.TRANSFER_RECEIVED ? accountNumberFrom : null)
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
                 .setAmount(operation.getAmount())
                 .setStatus(operation.getStatus())
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
-                .setRecipientAccountNumber(operation.getRecipientAccountNumber())
+                .setRecipientAccountNumber(operation.getActionType() == AccountActionType.TRANSFER_SENT ? operation.getRecipientAccountNumber() : null)
                 .setUserIdFrom(operation.getUserIdFrom());
     }
 }

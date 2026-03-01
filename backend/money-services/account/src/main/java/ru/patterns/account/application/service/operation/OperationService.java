@@ -36,10 +36,10 @@ public class OperationService {
     public List<OperationModel> getAccountOperations(UUID userId,
                                                      String accountNumber, TransferAccountType transferAccountType) {
         var outgoingOperations = operationRepository
-                .findByAccountNumberFromAndTransferAccountTypeAndUserIdFrom(accountNumber, transferAccountType, userId);
+                .findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType);
 
         var incomingOperations = operationRepository
-                .findByRecipientAccountNumberAndTransferAccountTypeAndRecipientId(accountNumber, transferAccountType, userId);
+                .findByRecipientAccountNumberAndTransferAccountType(accountNumber, transferAccountType);
 
         return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
                 .map(operation -> OperationMapper.toModel(operation, userId))
