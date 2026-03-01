@@ -5,8 +5,6 @@ import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.model.OperationModel;
 import ru.patterns.account.domain.entity.Operation;
 
-import java.util.UUID;
-
 @UtilityClass
 public class OperationMapper {
 
@@ -24,12 +22,12 @@ public class OperationMapper {
                 .setUserIdFrom(operation.getUserIdFrom());
     }
 
-    public OperationModel toModel(Operation operation, UUID requestingUser) {
+    public OperationModel toModel(Operation operation, String requestingAccountNumber) {
         AccountActionType actionType = operation.getActionType();
         String accountNumberFrom = operation.getAccountNumberFrom();
 
         if (actionType == AccountActionType.TRANSFER) {
-            actionType = requestingUser != null && requestingUser.equals(operation.getUserIdFrom())
+            actionType = requestingAccountNumber != null && requestingAccountNumber.equals(operation.getAccountNumberFrom())
                     ? AccountActionType.TRANSFER_SENT
                     : AccountActionType.TRANSFER_RECEIVED;
         }

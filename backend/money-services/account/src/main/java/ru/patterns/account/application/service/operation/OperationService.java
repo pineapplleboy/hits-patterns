@@ -28,7 +28,7 @@ public class OperationService {
         var incomingOperations = operationRepository.findByRecipientId(userId);
 
         return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
-                .map(operation -> OperationMapper.toModel(operation, userId))
+                .map(operation -> OperationMapper.toModel(operation, null))
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList().reversed();
     }
@@ -42,7 +42,7 @@ public class OperationService {
                 .findByRecipientAccountNumberAndTransferAccountType(accountNumber, transferAccountType);
 
         return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
-                .map(operation -> OperationMapper.toModel(operation, userId))
+                .map(operation -> OperationMapper.toModel(operation, accountNumber))
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList().reversed();
     }
