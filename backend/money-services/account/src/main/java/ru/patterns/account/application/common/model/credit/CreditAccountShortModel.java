@@ -28,4 +28,6 @@ public class CreditAccountShortModel {
     private Duration writeOffPeriod;
 
     private Instant nextWriteOffDate;
+
+    private boolean banned = false;
 }

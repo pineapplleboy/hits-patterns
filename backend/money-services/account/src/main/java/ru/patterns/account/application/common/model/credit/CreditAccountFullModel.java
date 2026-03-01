@@ -31,5 +31,7 @@ public class CreditAccountFullModel {
 
     private Instant nextWriteOffDate;
 
+    private boolean banned = false;
+
     private List<OperationModel> operations;
 }

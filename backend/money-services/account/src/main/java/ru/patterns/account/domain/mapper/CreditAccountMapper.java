@@ -16,7 +16,8 @@ public class CreditAccountMapper {
                 .setDept(creditAccount.getDept())
                 .setCreditRatePercent(creditAccount.getCreditRatePercent())
                 .setNextWriteOffDate(creditAccount.getNextWriteOffDate())
-                .setWriteOffPeriod(creditAccount.getWriteOffPeriod());
+                .setWriteOffPeriod(creditAccount.getWriteOffPeriod())
+                .setBanned(!creditAccount.isActive());
     }
 
     public CreditAccountFullModel toFullModel(CreditAccount creditAccount) {
@@ -27,6 +28,7 @@ public class CreditAccountMapper {
                 .setDept(creditAccount.getDept())
                 .setCreditRatePercent(creditAccount.getCreditRatePercent())
                 .setNextWriteOffDate(creditAccount.getNextWriteOffDate())
-                .setWriteOffPeriod(creditAccount.getWriteOffPeriod());
+                .setWriteOffPeriod(creditAccount.getWriteOffPeriod())
+                .setBanned(!creditAccount.isActive());
     }
 }
