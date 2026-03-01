@@ -26,6 +26,7 @@ public class OperationMapper {
 
     public OperationModel toModel(Operation operation, UUID requestingUser) {
         AccountActionType actionType = operation.getActionType();
+        String accountNumberFrom = operation.getActionType() != AccountActionType.TRANSFER ? operation.getAccountNumberFrom() : null;
 
         if (actionType == AccountActionType.TRANSFER) {
             actionType = operation.getUserIdFrom().equals(requestingUser) ? AccountActionType.TRANSFER_SENT : AccountActionType.TRANSFER_RECEIVED;
@@ -33,7 +34,7 @@ public class OperationMapper {
 
         return new OperationModel()
                 .setOperationId(operation.getOperationId())
-                .setAccountNumberFrom(operation.getAccountNumberFrom())
+                .setAccountNumberFrom(accountNumberFrom)
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
                 .setAmount(operation.getAmount())
