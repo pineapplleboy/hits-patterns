@@ -1,0 +1,87 @@
+<resources>
+    <string name="app_name">G-bank for employees</string>
+
+    <!-- Authorization -->
+    <string name="login_for_employees">Вход для сотрудников</string>
+    <string name="login">Логин</string>
+    <string name="password">Пароль</string>
+    <string name="hide_password">Скрыть</string>
+    <string name="show_password">Показать</string>
+    <string name="login_button">Вход</string>
+    <string name="registration">Регистрация</string>
+    <string name="phone">Телефон</string>
+    <string name="name">Имя</string>
+    <string name="brand_name">OG-BANK</string>
+
+    <!-- Common -->
+    <string name="retry">Повторить</string>
+    <string name="error">Ошибка</string>
+    <string name="loading">Загрузка…</string>
+    <string name="banned">Заблокирован</string>
+    <string name="unban">Разблокировать</string>
+    <string name="ban">Заблокировать</string>
+    <string name="user_default">Пользователь</string>
+    <string name="name_empty">—</string>
+
+    <!-- Users list-->
+    <string name="tab_users">Пользователи</string>
+    <string name="tab_tariffs">Тарифы</string>
+    <string name="tab_clients">Клиенты</string>
+    <string name="tab_employees">Сотрудники</string>
+
+    <!-- User create -->
+    <string name="new_user">Новый пользователь</string>
+    <string name="role_client">Клиент</string>
+    <string name="role_employee">Сотрудник</string>
+    <string name="create">Создать</string>
+    <string name="creating">Создание…</string>
+
+    <!-- Credit rate -->
+    <string name="new_rate">Новый тариф</string>
+    <string name="new_credit_rate_title">Новый кредитный тариф</string>
+    <string name="tariff_name">Название тарифа</string>
+    <string name="tariff_percent">Процентная ставка, %%</string>
+    <string name="write_off_period">Период списания</string>
+    <string name="days">Дни</string>
+    <string name="hours">Часы</string>
+    <string name="minutes">Минуты</string>
+    <string name="create_rate">Создать тариф</string>
+
+    <!-- Client details-->
+    <string name="tab_accounts">Счета</string>
+    <string name="tab_credits">Кредиты</string>
+    <string name="balance_format">Баланс: %1$.2f</string>
+    <string name="debt_format">Долг: %1$.2f</string>
+    <string name="credit_rate_format">%1$s (%2$d%%)</string>
+    <string name="write_off_period_label">Период списания: %1$s</string>
+    <string name="next_write_off">След. списание: %1$s</string>
+    <string name="error_load_accounts">Не удалось загрузить счета</string>
+    <string name="error_load_credits">Не удалось загрузить кредиты</string>
+
+    <!-- Account details -->
+    <string name="account_details">Детали счёта</string>
+    <string name="account_type_bank">Банковский счёт</string>
+    <string name="account_type_credit">Кредитный счёт</string>
+    <string name="operations_history">История операций</string>
+    <string name="error_load_operations">Не удалось загрузить операции</string>
+    <string name="from_account">Со счёта: %1$s</string>
+    <string name="to_recipient">Кому: %1$s</string>
+    <string name="account_label">счёт %1$s</string>
+    <string name="status_label">Статус: %1$s</string>
+
+    <!-- Operation types -->
+    <string name="op_open_account">Открытие счёта</string>
+    <string name="op_close_account">Закрытие счёта</string>
+    <string name="op_transfer_received">Перевод получен</string>
+    <string name="op_transfer_sent">Перевод отправлен</string>
+    <string name="status_created">Создана</string>
+    <string name="status_in_process">В процессе</string>
+    <string name="status_success">Успешно</string>
+    <string name="status_rejected">Отклонена</string>
+
+    <!-- Auth errors -->
+    <string name="error_login_title">Ошибка входа</string>
+    <string name="error_register_title">Ошибка регистрации</string>
+    <string name="account_banned">Счёт заблокирован</string>
+    <string name="account_unbanned">Счёт разблокирован</string>
+</resources>

@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  version: 1.0.0
+  description: API сервиса account
+servers:
+  - url: http://localhost:8082
+tags:
+  - name: BankAccounts
+  - name: CreditAccounts
+  - name: Operations
+  - name: Transfers
+security:
+  - bearerAuth: []
+
+paths:
+  /patterns/api/v1/users/{userId}/bank-accounts:
+    post:
+      tags: [BankAccounts]
+      summary: Создать банковский счет пользователю
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Счет создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountNumberResponseModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+    get:
+      tags: [BankAccounts]
+      summary: Получить все банковские счета пользователя
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Список счетов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BankAccountShortModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/bank-accounts:
+    get:
+      tags: [BankAccounts]
+      summary: Получить все банковские счета (только сотрудник)
+      responses:
+        '200':
+          description: Список счетов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BankAccountShortModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/bank-accounts/{accountNumber}:
+    get:
+      tags: [BankAccounts]
+      summary: Получить полный банковский счет
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/AccountNumberPath'
+      responses:
+        '200':
+          description: Информация по счету
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccountFullModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/credit-accounts:
+    get:
+      tags: [CreditAccounts]
+      summary: Получить историю кредитных счетов пользователя
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Список кредитных счетов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditAccountShortModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/credit-accounts/{accountNumber}:
+    get:
+      tags: [CreditAccounts]
+      summary: Получить полный кредитный счет
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/AccountNumberPath'
+      responses:
+        '200':
+          description: Информация по кредитному счету
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditAccountFullModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/operations:
+    get:
+      tags: [Operations]
+      summary: Получить все операции пользователя
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Список операций
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/account-operations:
+    get:
+      tags: [Operations]
+      summary: Получить операции по конкретному счету
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountNumber
+          in: query
+          required: true
+          schema: { type: string }
+        - name: transferType
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TransferAccountType'
+      responses:
+        '200':
+          description: Список операций
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/operations/{operationId}:
+    get:
+      tags: [Operations]
+      summary: Получить операцию по ID
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - name: operationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/operations/{operationId}/status:
+    get:
+      tags: [Operations]
+      summary: Получить статус операции
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - name: operationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Статус операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatusResponseModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/transfers/bank-account/{bankAccountNumber}/replenish:
+    post:
+      tags: [Transfers]
+      summary: Пополнение банковского счета
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - name: bankAccountNumber
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyAmountRequestModel'
+      responses:
+        '200':
+          description: Статус операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatusResponseModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/transfers/bank-account/{bankAccountNumber}/withdraw:
+    post:
+      tags: [Transfers]
+      summary: Снятие с банковского счета
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - name: bankAccountNumber
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyAmountRequestModel'
+      responses:
+        '200':
+          description: Статус операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatusResponseModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /patterns/api/v1/users/{userId}/transfers/bank-account/{bankAccountNumber}/credit-payments/{creditAccountNumber}:
+    post:
+      tags: [Transfers]
+      summary: Погашение кредита с банковского счета
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - name: bankAccountNumber
+          in: path
+          required: true
+          schema: { type: string }
+        - name: creditAccountNumber
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyAmountRequestModel'
+      responses:
+        '200':
+          description: Статус операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatusResponseModel'
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AccountNumberPath:
+      name: accountNumber
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    UnauthorizedError:
+      description: Неавторизован
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ForbiddenError:
+      description: Доступ запрещен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: Внутренняя ошибка
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    AccountNumberResponseModel:
+      type: object
+      properties:
+        accountNumber: { type: string }
+      required: [accountNumber]
+
+    MoneyAmountRequestModel:
+      type: object
+      properties:
+        amount: { type: number, format: double }
+      required: [amount]
+
+    BankAccountShortModel:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        accountNumber: { type: string }
+        balance: { type: number, format: double }
+
+    BankAccountFullModel:
+      allOf:
+        - $ref: '#/components/schemas/BankAccountShortModel'
+        - type: object
+          properties:
+            operations:
+              type: array
+              items: { $ref: '#/components/schemas/OperationModel' }
+            createTime: { type: string, format: date-time }
+
+    CreditAccountShortModel:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        accountNumber: { type: string }
+        dept: { type: number, format: double }
+        creditRateName: { type: string }
+        creditRatePercent: { type: integer, format: int32 }
+        writeOffPeriod:
+          type: string
+          description: Duration (обычно ISO-8601, например PT24H)
+        nextWriteOffDate: { type: string, format: date-time }
+
+    CreditAccountFullModel:
+      allOf:
+        - $ref: '#/components/schemas/CreditAccountShortModel'
+        - type: object
+          properties:
+            operations:
+              type: array
+              items: { $ref: '#/components/schemas/OperationModel' }
+
+    OperationModel:
+      type: object
+      properties:
+        operationId: { type: string, format: uuid }
+        accountNumberFrom: { type: string, nullable: true }
+        userIdFrom: { type: string, format: uuid, nullable: true }
+        recipientAccountNumber: { type: string, nullable: true }
+        amount: { type: number, format: double }
+        transferAccountType: { $ref: '#/components/schemas/TransferAccountType' }
+        actionType: { $ref: '#/components/schemas/AccountActionType' }
+        status: { $ref: '#/components/schemas/OperationStatus' }
+        createTime: { type: string, format: date-time }
+
+    OperationStatusResponseModel:
+      type: object
+      properties:
+        status: { $ref: '#/components/schemas/OperationStatus' }
+      required: [status]
+
+    TransferAccountType:
+      type: string
+      enum: [BANK_ACCOUNT, CREDIT_ACCOUNT]
+
+    OperationStatus:
+      type: string
+      enum: [CREATED, IN_PROCESS, SUCCESS, REJECTED]
+
+    AccountActionType:
+      type: string
+      enum: [OPEN_ACCOUNT, CLOSE_ACCOUNT, TRANSFER_RECEIVED, TRANSFER_SENT]
+
+    ErrorResponse:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+      required: [code, message]
