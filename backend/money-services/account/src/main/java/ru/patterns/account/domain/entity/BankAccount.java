@@ -32,7 +32,15 @@ public class BankAccount {
     @Column(nullable = false, scale = 2)
     private BigDecimal balance;
 
+    /*
+    Активность счёта, данное поле может измениться только в одну сторону на false при закрытии счёта клиентом
+     */
     private boolean active = true;
+
+    /*
+    Относится ли счёт к заблокированному клиенту. Может меняться в обе стороны
+     */
+    private boolean banned = false;
 
     @Column(nullable = false, updatable = false)
     private Instant createTime = Instant.now();

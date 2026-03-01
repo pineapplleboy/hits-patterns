@@ -15,4 +15,6 @@ public class BankAccountShortModel {
     private String accountNumber;
 
     private BigDecimal balance;
+
+    private boolean banned = false;
 }

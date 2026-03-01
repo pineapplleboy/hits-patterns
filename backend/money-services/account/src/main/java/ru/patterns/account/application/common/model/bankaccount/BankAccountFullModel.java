@@ -22,4 +22,6 @@ public class BankAccountFullModel {
     private List<OperationModel> operations;
 
     private Instant createTime;
+
+    private boolean banned = false;
 }

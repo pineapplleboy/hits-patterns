@@ -12,7 +12,8 @@ public class BankAccountMapper {
         return new BankAccountShortModel()
                 .setAccountNumber(bankAccount.getAccountNumber())
                 .setId(bankAccount.getId())
-                .setBalance(bankAccount.getBalance());
+                .setBalance(bankAccount.getBalance())
+                .setBanned(bankAccount.isBanned());
     }
 
     public BankAccountFullModel toFullModelWithoutComments(BankAccount bankAccount) {
@@ -20,6 +21,7 @@ public class BankAccountMapper {
                 .setId(bankAccount.getId())
                 .setAccountNumber(bankAccount.getAccountNumber())
                 .setBalance(bankAccount.getBalance())
-                .setCreateTime(bankAccount.getCreateTime());
+                .setCreateTime(bankAccount.getCreateTime())
+                .setBanned(bankAccount.isBanned());
     }
 }

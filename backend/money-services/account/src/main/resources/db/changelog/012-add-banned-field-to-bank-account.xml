@@ -1,0 +1,20 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="012-add-banned-field-to-bank-account" author="aleksey.z">
+        <addColumn tableName="bank_account">
+            <column name="banned" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <update tableName="bank_account">
+            <column name="banned" valueBoolean="false"/>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>
