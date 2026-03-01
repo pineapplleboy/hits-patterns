@@ -6,5 +6,5 @@ import javax.inject.Inject
 class CreateAccountUseCase @Inject constructor(
     private val repository: AccountRepository
 ) {
-    suspend operator fun invoke(name: String) = repository.createAccount(name)
+    suspend operator fun invoke(initialAmount: Double) = repository.createAccount(initialAmount)
 }

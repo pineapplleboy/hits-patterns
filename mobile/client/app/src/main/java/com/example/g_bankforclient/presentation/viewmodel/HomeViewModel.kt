@@ -3,6 +3,7 @@ package com.example.g_bankforclient.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.g_bankforclient.domain.usecase.account.GetAccountsUseCase
+import com.example.g_bankforclient.domain.usecase.auth.LogoutUseCase
 import com.example.g_bankforclient.presentation.state.HomeScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,13 +14,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getAccountsUseCase: GetAccountsUseCase
+    private val getAccountsUseCase: GetAccountsUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _state: MutableStateFlow<HomeScreenState> = MutableStateFlow(
-        value = HomeScreenState.Default(
-            accounts = emptyList()
-        )
+        value = HomeScreenState.Default(accounts = emptyList())
     )
     val state: StateFlow<HomeScreenState> = _state.asStateFlow()
 
@@ -27,20 +27,26 @@ class HomeViewModel @Inject constructor(
         loadAccounts()
     }
 
-    private fun loadAccounts() {
+    fun loadAccounts() {
         viewModelScope.launch {
-            _state.value = HomeScreenState.Loading
-            try {
-                getAccountsUseCase().collect { accounts ->
-                    _state.value = HomeScreenState.Default(
-                        accounts = accounts
+            val currentAccounts =
+                (_state.value as? HomeScreenState.Default)?.accounts ?: emptyList()
+            _state.value = HomeScreenState.Default(accounts = currentAccounts, isLoading = true)
+            runCatching { getAccountsUseCase() }
+                .onSuccess { accounts ->
+                    _state.value = HomeScreenState.Default(accounts = accounts, isLoading = false)
+                }
+                .onFailure { e ->
+                    _state.value = HomeScreenState.Error(
+                        message = e.message ?: "Не удалось загрузить счета"
                     )
                 }
-            } catch (e: Exception) {
-                _state.value = HomeScreenState.Error(
-                    message = e.message ?: "Failed to load accounts"
-                )
-            }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            logoutUseCase()
         }
     }
 }

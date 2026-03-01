@@ -1,4 +1,4 @@
-package com.example.g_bankforclient.common.models
+package com.example.g_bankforclient.domain.models
 
 import java.util.UUID
 
@@ -15,3 +15,4 @@ enum class UserRole {
     CLIENT,
     EMPLOYEE
 }
+

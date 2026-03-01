@@ -1,15 +1,34 @@
 package com.example.g_bankforclient.presentation.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,10 +38,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.g_bankforclient.common.models.Account
+import com.example.g_bankforclient.domain.models.Account
 import com.example.g_bankforclient.presentation.state.HomeScreenState
 import com.example.g_bankforclient.presentation.ui.components.AccountCard
+import com.example.g_bankforclient.presentation.ui.utils.formatMoney
 import com.example.g_bankforclient.presentation.viewmodel.HomeViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
@@ -30,19 +53,44 @@ import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 @Composable
 fun HomeScreen(
     onAccountClick: (String) -> Unit,
-    onCreateAccount: () -> Unit
+    onCreateAccount: () -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
 
+    val handleLogout: () -> Unit = {
+        viewModel.logout()
+        onLogout()
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadAccounts()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     when (val state = screenState) {
         is HomeScreenState.Default -> DefaultHomeScreen(
             accounts = state.accounts,
+            isLoading = state.isLoading,
             onAccountClick = onAccountClick,
-            onCreateAccount = onCreateAccount
+            onCreateAccount = onCreateAccount,
+            onLogout = handleLogout
         )
-        
-        HomeScreenState.Loading -> LoadingHomeScreen()
+
+        HomeScreenState.Loading -> DefaultHomeScreen(
+            accounts = emptyList(),
+            isLoading = true,
+            onAccountClick = onAccountClick,
+            onCreateAccount = onCreateAccount,
+            onLogout = handleLogout
+        )
         
         is HomeScreenState.Error -> ErrorHomeScreen(state.message)
     }
@@ -51,8 +99,10 @@ fun HomeScreen(
 @Composable
 private fun DefaultHomeScreen(
     accounts: List<Account>,
+    isLoading: Boolean = false,
     onAccountClick: (String) -> Unit,
-    onCreateAccount: () -> Unit
+    onCreateAccount: () -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     val totalBalance = accounts.sumOf { it.balance }
 
@@ -65,23 +115,34 @@ private fun DefaultHomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Header
         item {
-            Column {
-                Text(
-                    text = "Добро пожаловать",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = BankColors.SecondaryText
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Мои финансы",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Добро пожаловать",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = BankColors.SecondaryText
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Мои финансы",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
+                IconButton(onClick = onLogout) {
+                    Icon(
+                        imageVector = Icons.Filled.Logout,
+                        contentDescription = "Выйти",
+                        tint = BankColors.MediumGray
+                    )
+                }
             }
         }
 
-        // Total Balance Card
         item {
             Box(
                 modifier = Modifier
@@ -102,7 +163,7 @@ private fun DefaultHomeScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "${totalBalance.toInt().toString().replace(Regex("(\\d)(?=(\\d{3})+$)"), "$1 ")} ₽",
+                        text = totalBalance.formatMoney(),
                         style = MaterialTheme.typography.headlineLarge,
                         color = Color.White
                     )
@@ -125,7 +186,6 @@ private fun DefaultHomeScreen(
             }
         }
 
-        // Accounts Section Header
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -152,7 +212,22 @@ private fun DefaultHomeScreen(
             }
         }
 
-        // Accounts List
+        if (isLoading) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        strokeWidth = 3.dp
+                    )
+                }
+            }
+        }
+
         if (accounts.isEmpty()) {
             item {
                 Column(
@@ -183,20 +258,14 @@ private fun DefaultHomeScreen(
             items(accounts) { account ->
                 AccountCard(
                     account = account,
-                    onClick = { onAccountClick(account.id) }
+                    onClick = {
+                        if (!account.banned) {
+                            onAccountClick(account.id)
+                        }
+                    }
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun LoadingHomeScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
     }
 }
 
@@ -242,6 +311,7 @@ fun HomeScreenPreview() {
     GbankForClientTheme {
         DefaultHomeScreen(
             accounts = accounts,
+            isLoading = false,
             onAccountClick = { /* Пустая заглушка */ },
             onCreateAccount = { /* Пустая заглушка */ }
         )

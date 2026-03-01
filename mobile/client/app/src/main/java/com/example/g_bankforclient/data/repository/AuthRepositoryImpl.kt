@@ -1,44 +1,49 @@
 package com.example.g_bankforclient.data.repository
 
-import com.example.g_bankforclient.common.models.UserCredentials
 import com.example.g_bankforclient.data.network.AuthService
+import com.example.g_bankforclient.data.network.UserService
+import com.example.g_bankforclient.data.network.model.RegisterDTO
 import com.example.g_bankforclient.data.network.model.UserLoginDTO
 import com.example.g_bankforclient.domain.TokenStorage
+import com.example.g_bankforclient.domain.models.UserCredentials
 import com.example.g_bankforclient.domain.repository.AuthRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authService: AuthService,
+    private val userService: UserService,
     private val tokenStorage: TokenStorage
 ) : AuthRepository {
-    
-    private val _isAuthenticated = MutableStateFlow(false)
-
-    override fun getAuthState(): Flow<Boolean> = _isAuthenticated.asStateFlow()
 
     override suspend fun login(credentials: UserCredentials): Boolean {
-        return try {
-            val loginDTO = UserLoginDTO(
-                phone = credentials.login,
-                password = credentials.password
-            )
-            val token = authService.clientLogin(loginDTO)
-            tokenStorage.setToken(token)
-            _isAuthenticated.value = true
-            true
-        } catch (e: Exception) {
-            _isAuthenticated.value = false
-            false
-        }
+        val loginDTO = UserLoginDTO(
+            phone = credentials.login,
+            password = credentials.password
+        )
+        val token = authService.clientLogin(loginDTO)
+        tokenStorage.setToken(token)
+        val profile = userService.getMyProfile()
+        tokenStorage.setUserId(profile.id.toString())
+        return true
+    }
+
+    override suspend fun register(name: String, phone: String, password: String): Boolean {
+        val registerDTO = RegisterDTO(
+            name = name,
+            phone = phone,
+            password = password
+        )
+        val token = authService.clientRegister(registerDTO)
+        tokenStorage.setToken(token)
+        val profile = userService.getMyProfile()
+        tokenStorage.setUserId(profile.id.toString())
+        return true
     }
 
     override suspend fun logout() {
         tokenStorage.clearToken()
-        _isAuthenticated.value = false
+        tokenStorage.setUserId(null)
     }
 }

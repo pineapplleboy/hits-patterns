@@ -8,22 +8,30 @@ import com.example.g_bankforclient.data.network.AuthService
 import com.example.g_bankforclient.data.network.UserService
 import com.example.g_bankforclient.data.token.SharedPreferencesTokenStorage
 import com.example.g_bankforclient.domain.TokenStorage
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return GsonBuilder().create()
+    }
     
     @Provides
     @Singleton
@@ -86,6 +94,7 @@ object NetworkModule {
         return Retrofit.Builder()
             .baseUrl("http://91.227.18.176/auth/") // Authorization service
             .client(okHttpClient)
+            .addConverterFactory(ScalarsConverterFactory.create()) // Для text/plain ответов (JWT токен)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

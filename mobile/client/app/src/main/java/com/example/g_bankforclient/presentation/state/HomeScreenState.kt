@@ -1,6 +1,6 @@
 package com.example.g_bankforclient.presentation.state
 
-import com.example.g_bankforclient.common.models.Account
+import com.example.g_bankforclient.domain.models.Account
 
 sealed interface HomeScreenState {
 

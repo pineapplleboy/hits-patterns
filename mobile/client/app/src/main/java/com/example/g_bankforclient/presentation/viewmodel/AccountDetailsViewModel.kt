@@ -2,14 +2,15 @@ package com.example.g_bankforclient.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.g_bankforclient.common.models.Account
+import com.example.g_bankforclient.domain.models.Account
 import com.example.g_bankforclient.domain.usecase.account.CloseAccountUseCase
 import com.example.g_bankforclient.domain.usecase.account.DepositUseCase
-import com.example.g_bankforclient.domain.usecase.account.GetAccountsUseCase
+import com.example.g_bankforclient.domain.usecase.account.GetAccountDetailsUseCase
+import com.example.g_bankforclient.domain.usecase.account.GetAccountTransactionsUseCase
 import com.example.g_bankforclient.domain.usecase.account.WithdrawalUseCase
-import com.example.g_bankforclient.domain.usecase.transaction.GetTransactionsUseCase
 import com.example.g_bankforclient.presentation.state.AccountDetailsScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,8 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AccountDetailsViewModel @Inject constructor(
-    private val getAccountsUseCase: GetAccountsUseCase,
-    private val getTransactionsUseCase: GetTransactionsUseCase,
+    private val getAccountDetailsUseCase: GetAccountDetailsUseCase,
+    private val getAccountTransactionsUseCase: GetAccountTransactionsUseCase,
     private val depositUseCase: DepositUseCase,
     private val withdrawalUseCase: WithdrawalUseCase,
     private val closeAccountUseCase: CloseAccountUseCase
@@ -36,24 +37,18 @@ class AccountDetailsViewModel @Inject constructor(
     fun loadAccountDetails(accountId: String) {
         viewModelScope.launch {
             _state.value = AccountDetailsScreenState.Loading
-            try {
-                // Load account details
-                getAccountsUseCase().collect { accounts ->
-                    val account = accounts.find { it.id == accountId }
-                    if (account != null) {
-                        // Load transactions for this account
-                        getTransactionsUseCase().collect { transactions ->
-                            val accountTransactions = transactions.filter { it.accountId == accountId }
-                            _state.value = AccountDetailsScreenState.Default(
-                                account = account,
-                                transactions = accountTransactions
-                            )
-                        }
-                    }
-                }
-            } catch (e: Exception) {
+            runCatching {
+                val account = getAccountDetailsUseCase(accountId)
+                val transactions = getAccountTransactionsUseCase(accountId)
+                Pair(account, transactions)
+            }.onSuccess { (account, transactions) ->
+                _state.value = AccountDetailsScreenState.Default(
+                    account = account,
+                    transactions = transactions
+                )
+            }.onFailure { e ->
                 _state.value = AccountDetailsScreenState.Error(
-                    message = e.message ?: "Failed to load account details"
+                    message = e.message ?: "Не удалось загрузить данные счёта"
                 )
             }
         }
@@ -61,37 +56,88 @@ class AccountDetailsViewModel @Inject constructor(
 
     fun deposit(accountId: String, amount: Double) {
         viewModelScope.launch {
-            try {
-                depositUseCase(accountId, amount)
-                // Reload account details to reflect the new balance
-                loadAccountDetails(accountId)
-            } catch (e: Exception) {
-                // In a real app, you'd want to show an error message to the user
-                // For now, we'll just log it
-            }
+            val currentState = _state.value as? AccountDetailsScreenState.Default ?: return@launch
+            _state.value = currentState.copy(isLoading = true, errorMessage = null)
+
+            runCatching { depositUseCase(accountId, amount) }
+                .onSuccess {
+                    delay(1000)
+                    reloadSilently(accountId)
+                }
+                .onFailure { e ->
+                    _state.value = currentState.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Ошибка при пополнении счёта"
+                    )
+                }
         }
     }
 
     fun withdrawal(accountId: String, amount: Double) {
         viewModelScope.launch {
-            try {
-                withdrawalUseCase(accountId, amount)
-                // Reload account details to reflect the new balance
-                loadAccountDetails(accountId)
-            } catch (e: Exception) {
-                // In a real app, you'd want to show an error message to the user
-                // For now, we'll just log it
-            }
+            val currentState = _state.value as? AccountDetailsScreenState.Default ?: return@launch
+            _state.value = currentState.copy(isLoading = true, errorMessage = null)
+
+            runCatching { withdrawalUseCase(accountId, amount) }
+                .onSuccess {
+                    delay(1000)
+                    reloadSilently(accountId)
+                }
+                .onFailure { e ->
+                    _state.value = currentState.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Ошибка при снятии средств"
+                    )
+                }
         }
     }
 
     fun closeAccount(accountId: String) {
         viewModelScope.launch {
-            try {
-                closeAccountUseCase(accountId)
-            } catch (e: Exception) {
-                // In a real app, you'd want to show an error message to the user
-                // For now, we'll just log it
+            val currentState = _state.value as? AccountDetailsScreenState.Default ?: return@launch
+            _state.value = currentState.copy(isLoading = true, errorMessage = null)
+
+            runCatching { closeAccountUseCase(accountId) }
+                .onSuccess {
+                    _state.value = currentState.copy(isLoading = false)
+                }
+                .onFailure { e ->
+                    _state.value = currentState.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Ошибка при закрытии счёта"
+                    )
+                }
+        }
+    }
+
+    fun clearError() {
+        val currentState = _state.value as? AccountDetailsScreenState.Default ?: return
+        _state.value = currentState.copy(errorMessage = null)
+    }
+
+    private suspend fun reloadSilently(accountId: String) {
+        runCatching {
+            val account = getAccountDetailsUseCase(accountId)
+            val transactions = getAccountTransactionsUseCase(accountId)
+            Pair(account, transactions)
+        }.onSuccess { (account, transactions) ->
+            val currentState = _state.value as? AccountDetailsScreenState.Default
+            _state.value = (currentState ?: AccountDetailsScreenState.Default(
+                account = account,
+                transactions = transactions
+            )).copy(
+                account = account,
+                transactions = transactions,
+                isLoading = false,
+                errorMessage = null
+            )
+        }.onFailure { e ->
+            val currentState = _state.value as? AccountDetailsScreenState.Default
+            if (currentState != null) {
+                _state.value = currentState.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Не удалось обновить данные"
+                )
             }
         }
     }

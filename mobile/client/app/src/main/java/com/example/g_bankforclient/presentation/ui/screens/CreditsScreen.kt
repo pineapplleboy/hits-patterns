@@ -2,37 +2,72 @@ package com.example.g_bankforclient.presentation.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.g_bankforclient.common.models.Credit
-import com.example.g_bankforclient.common.models.CreditRate
+import com.example.g_bankforclient.domain.models.Credit
+import com.example.g_bankforclient.domain.models.CreditRate
 import com.example.g_bankforclient.presentation.state.CreditsScreenState
 import com.example.g_bankforclient.presentation.ui.components.CreditCard
+import com.example.g_bankforclient.presentation.ui.utils.formatMoney
 import com.example.g_bankforclient.presentation.viewmodel.CreditsViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
+import java.util.UUID
 
 @Composable
 fun CreditsScreen(
@@ -41,19 +76,66 @@ fun CreditsScreen(
 ) {
     val viewModel: CreditsViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    when (val state = screenState) {
-        is CreditsScreenState.Default -> DefaultCreditsScreen(
-            credits = state.credits,
-            creditRates = state.creditRates,
-            onCreditClick = onCreditClick,
-            onCreateCredit = onCreateCredit,
-            onTakeCredit = { rateId, sum, bankAccountNum -> viewModel.takeCredit(rateId, sum, bankAccountNum) }
-        )
-        
-        CreditsScreenState.Loading -> LoadingCreditsScreen()
-        
-        is CreditsScreenState.Error -> ErrorCreditsScreen(state.message)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadCreditsAndRates()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    LaunchedEffect(screenState) {
+        if (screenState is CreditsScreenState.Default && (screenState as CreditsScreenState.Default).errorMessage != null) {
+            snackbarHostState.showSnackbar(
+                (screenState as CreditsScreenState.Default).errorMessage ?: "Ошибка"
+            )
+            viewModel.clearError()
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        when (val state = screenState) {
+            is CreditsScreenState.Default -> DefaultCreditsScreen(
+                credits = state.credits,
+                creditRates = state.creditRates,
+                isLoading = state.isLoading,
+                onCreditClick = onCreditClick,
+                onCreateCredit = onCreateCredit,
+                onTakeCredit = { rateId, sum, bankAccountNum ->
+                    viewModel.takeCredit(
+                        rateId,
+                        sum,
+                        bankAccountNum
+                    )
+                },
+                modifier = Modifier.padding(paddingValues)
+            )
+
+            CreditsScreenState.Loading -> DefaultCreditsScreen(
+                credits = emptyList(),
+                creditRates = emptyList(),
+                isLoading = true,
+                onCreditClick = onCreditClick,
+                onCreateCredit = onCreateCredit,
+                onTakeCredit = { rateId, sum, bankAccountNum ->
+                    viewModel.takeCredit(
+                        rateId,
+                        sum,
+                        bankAccountNum
+                    )
+                },
+                modifier = Modifier.padding(paddingValues)
+            )
+
+            is CreditsScreenState.Error -> ErrorCreditsScreen(state.message)
+        }
     }
 }
 
@@ -61,14 +143,29 @@ fun CreditsScreen(
 private fun DefaultCreditsScreen(
     credits: List<Credit>,
     creditRates: List<CreditRate>,
+    isLoading: Boolean,
     onCreditClick: (String) -> Unit,
     onCreateCredit: () -> Unit,
-    onTakeCredit: (java.util.UUID, Double, String) -> Unit
+    onTakeCredit: (UUID, Double, String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val totalDebt = credits.sumOf { it.debt }
+    val listState = rememberLazyListState()
+    var scrollToRates by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollToRates) {
+        if (scrollToRates && creditRates.isNotEmpty()) {
+            val ratesStartIndex = 4 + credits.size
+            if (ratesStartIndex < listState.layoutInfo.totalItemsCount) {
+                listState.animateScrollToItem(ratesStartIndex)
+            }
+            scrollToRates = false
+        }
+    }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        state = listState,
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
@@ -76,7 +173,6 @@ private fun DefaultCreditsScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Header
         item {
             Text(
                 text = "Кредиты",
@@ -84,7 +180,6 @@ private fun DefaultCreditsScreen(
             )
         }
 
-        // Total Debt Card
         item {
             Box(
                 modifier = Modifier
@@ -105,7 +200,7 @@ private fun DefaultCreditsScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "${totalDebt.toInt().toString().replace(Regex("(\\d)(?=(\\d{3})+$)"), "$1 ")} ₽",
+                        text = totalDebt.formatMoney(),
                         style = MaterialTheme.typography.headlineLarge,
                         color = Color.White
                     )
@@ -128,7 +223,6 @@ private fun DefaultCreditsScreen(
             }
         }
 
-        // Credits Section Header
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -140,7 +234,13 @@ private fun DefaultCreditsScreen(
                     style = MaterialTheme.typography.headlineSmall
                 )
                 FilledIconButton(
-                    onClick = onCreateCredit,
+                    onClick = {
+                        if (creditRates.isNotEmpty()) {
+                            scrollToRates = true
+                        } else {
+                            onCreateCredit()
+                        }
+                    },
                     modifier = Modifier.size(40.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primary
@@ -155,8 +255,11 @@ private fun DefaultCreditsScreen(
             }
         }
 
-        // Credits List
-        if (credits.isEmpty()) {
+        if (isLoading && credits.isEmpty()) {
+            items(3) {
+                CreditCardShimmer()
+            }
+        } else if (credits.isEmpty()) {
             item {
                 Column(
                     modifier = Modifier
@@ -165,7 +268,6 @@ private fun DefaultCreditsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-//                        imageVector = Icons.Default.CreditCard,
                         imageVector = Icons.Default.Face,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp),
@@ -185,14 +287,17 @@ private fun DefaultCreditsScreen(
             }
         } else {
             items(credits) { credit ->
-                CreditCard(
-                    credit = credit,
-                    onClick = { onCreditClick(credit.id) }
-                )
+                if (isLoading) {
+                    CreditCardShimmer()
+                } else {
+                    CreditCard(
+                        credit = credit,
+                        onClick = { onCreditClick(credit.id) }
+                    )
+                }
             }
         }
         
-        // Available Credit Rates Section
         if (creditRates.isNotEmpty()) {
             item {
                 Text(
@@ -223,9 +328,94 @@ private fun LoadingCreditsScreen() {
 }
 
 @Composable
+private fun CreditCardShimmer() {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
+        shadowElevation = 2.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Box(
+                        modifier = Modifier
+                            .width(120.dp)
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(BankColors.LightGray)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(150.dp)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(BankColors.LightGray)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(BankColors.LightGray)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(BankColors.LightGray)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(BankColors.LightGray)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(12.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(BankColors.LightGray)
+                )
+                Box(
+                    modifier = Modifier
+                        .width(90.dp)
+                        .height(12.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(BankColors.LightGray)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun CreditRateItem(
     rate: CreditRate,
-    onTakeCredit: (java.util.UUID, Double, String) -> Unit
+    onTakeCredit: (UUID, Double, String) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var amount by remember { mutableStateOf("") }
@@ -383,21 +573,22 @@ fun CreditsScreenPreview() {
             ),
             creditRates = listOf(
                 CreditRate(
-                    rateId = java.util.UUID.randomUUID(),
+                    rateId = UUID.randomUUID(),
                     name = "Потребительский кредит",
                     percent = 14,
                     writeOffPeriod = "P60M"
                 ),
                 CreditRate(
-                    rateId = java.util.UUID.randomUUID(),
+                    rateId = UUID.randomUUID(),
                     name = "Ипотека",
                     percent = 8,
                     writeOffPeriod = "P120M"
                 )
             ),
-            onCreditClick = { /* Заглушка */ },
-            onCreateCredit = { /* Заглушка */ },
-            onTakeCredit = { _, _, _ -> /* Заглушка */ }
+            onCreditClick = { },
+            onCreateCredit = { },
+            onTakeCredit = { _, _, _ -> },
+            isLoading = false,
         )
     }
 }

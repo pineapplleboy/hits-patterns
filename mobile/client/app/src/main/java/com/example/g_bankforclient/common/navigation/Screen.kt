@@ -5,7 +5,6 @@ sealed class Screen(val route: String) {
     object Authorization: Screen("authorization")
     object Credits : Screen("credits")
     object CreateAccount : Screen("create_account")
-    object CreateCredit : Screen("create_credit")
 
     object AccountDetails : Screen("account_details/{accountId}") {
         fun createRoute(accountId: String) = "account_details/$accountId"
@@ -20,7 +19,6 @@ sealed class Screen(val route: String) {
     }
 }
 
-// Список экранов для нижней навигации
 sealed class BottomNavScreen(val route: String, val title: String) {
     object Home : BottomNavScreen("home", "Главная")
     object Credits : BottomNavScreen("credits", "Кредиты")

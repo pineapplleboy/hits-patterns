@@ -1,126 +1,88 @@
 package com.example.g_bankforclient.data.repository
 
-import com.example.g_bankforclient.common.models.Credit
-import com.example.g_bankforclient.common.models.CreditRate
+import com.example.g_bankforclient.data.mapper.toCreditDomain
+import com.example.g_bankforclient.data.mapper.toDomain
+import com.example.g_bankforclient.data.network.AccountService
 import com.example.g_bankforclient.data.network.ApiService
-import com.example.g_bankforclient.data.network.model.CreditRateDataModel
+import com.example.g_bankforclient.data.network.model.MoneyAmountRequestModel
+import com.example.g_bankforclient.data.network.model.TransferAccountType
+import com.example.g_bankforclient.domain.models.Credit
+import com.example.g_bankforclient.domain.models.CreditRate
+import com.example.g_bankforclient.domain.models.Transaction
 import com.example.g_bankforclient.domain.repository.CreditRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class CreditRepositoryImpl @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val accountService: AccountService,
+    private val tokenStorage: com.example.g_bankforclient.domain.TokenStorage
 ) : CreditRepository {
-    
-    private val _credits = MutableStateFlow(
-        listOf(
-            Credit("1", "Ипотека", 5000000.0, 3200000.0, 8.5),
-            Credit("2", "Автокредит", 800000.0, 320000.0, 12.0)
-        )
-    )
 
-    override fun getCredits(): Flow<List<Credit>> = _credits.asStateFlow()
+    private val currentUserId: UUID
+        get() = tokenStorage.getUserId()
+            ?.let { UUID.fromString(it) }
+            ?: error("Пользователь не авторизован")
 
-    override suspend fun createCredit(name: String, amount: Double, interestRate: Double) {
-        _credits.value = _credits.value + Credit(
-            id = System.currentTimeMillis().toString(),
-            name = name,
-            amount = amount,
-            debt = amount,
-            interestRate = interestRate
-        )
+    override suspend fun getCredits(): List<Credit> {
+        val creditAccounts = accountService.getUserCreditAccounts(currentUserId)
+
+        return creditAccounts.map { creditAccount ->
+            val creditOperations = try {
+                accountService.getAccountOperations(
+                    userId = currentUserId,
+                    accountNumber = creditAccount.accountNumber,
+                    transferType = TransferAccountType.CREDIT_ACCOUNT
+                ).map { it.toCreditDomain(fallbackAccountId = creditAccount.accountNumber) }
+            } catch (e: Exception) {
+                emptyList()
+            }
+
+            creditAccount.toDomain(creditOperations)
+        }
+    }
+
+    override suspend fun getCreditDetails(accountNumber: String): Credit {
+        val creditDetails = accountService.getCreditAccountDetails(currentUserId, accountNumber)
+        val transactions = creditDetails.operations.map {
+            it.toCreditDomain(fallbackAccountId = accountNumber)
+        }
+        return creditDetails.toDomain(transactions)
+    }
+
+    override suspend fun getCreditTransactions(accountNumber: String): List<Transaction> {
+        return accountService.getAccountOperations(
+            userId = currentUserId,
+            accountNumber = accountNumber,
+            transferType = TransferAccountType.CREDIT_ACCOUNT
+        ).map { it.toCreditDomain(fallbackAccountId = accountNumber) }
     }
 
     override suspend fun payCredit(creditId: String, accountId: String, amount: Double) {
-        val credit = _credits.value.find { it.id == creditId }
+        val response = accountService.payCreditFromBankAccount(
+            userId = currentUserId,
+            bankAccountNumber = accountId,
+            creditAccountNumber = creditId,
+            request = MoneyAmountRequestModel(amount = amount)
+        )
 
-        if (credit != null && credit.debt >= amount) {
-            _credits.value = _credits.value.map { crd ->
-                if (crd.id == creditId) {
-                    crd.copy(debt = crd.debt - amount)
-                } else {
-                    crd
-                }
-            }
+        if (response.status.name != "SUCCESS") {
+            throw Exception("Операция оплаты кредита в работе")
         }
     }
     
     override suspend fun getAvailableCreditRates(): List<CreditRate> {
-        return try {
-            val networkRates = apiService.getAvailableCreditPlans()
-            networkRates.map { networkRate ->
-                CreditRate(
-                    rateId = networkRate.rateId,
-                    name = networkRate.name,
-                    percent = networkRate.percent,
-                    writeOffPeriod = networkRate.writeOffPeriod
-                )
-            }
-        } catch (e: Exception) {
-            // Return empty list or handle error appropriately
-            emptyList()
-        }
+        return apiService.getAvailableCreditPlans().map { it.toDomain() }
     }
     
     override suspend fun getAvailableCreditRateById(id: UUID): CreditRate {
-        val networkRate = apiService.getAvailableCreditPlanById(id)
-        return CreditRate(
-            rateId = networkRate.rateId,
-            name = networkRate.name,
-            percent = networkRate.percent,
-            writeOffPeriod = networkRate.writeOffPeriod
-        )
+        return apiService.getAvailableCreditPlanById(id).toDomain()
     }
     
     override suspend fun takeCredit(userId: UUID, rateId: UUID, sum: Double, bankAccountNum: String): Boolean {
-        return try {
-            val response = apiService.takeCredit(userId, rateId, sum, bankAccountNum)
-            // Assuming SUCCESS status means the operation was successful
-            response.status.name == "SUCCESS"
-        } catch (e: Exception) {
-            false
-        }
-    }
-    
-    override suspend fun createCreditRate(creditRateData: CreditRate): UUID? {
-        return try {
-            val networkData = CreditRateDataModel(
-                name = creditRateData.name,
-                percent = creditRateData.percent,
-                writeOffPeriod = creditRateData.writeOffPeriod
-            )
-            val response = apiService.createCreditRate(networkData)
-            response.id
-        } catch (e: Exception) {
-            null
-        }
-    }
-    
-    override suspend fun updateCreditRate(id: UUID, creditRateData: CreditRate): Boolean {
-        return try {
-            val networkData = CreditRateDataModel(
-                name = creditRateData.name,
-                percent = creditRateData.percent,
-                writeOffPeriod = creditRateData.writeOffPeriod
-            )
-            apiService.updateCreditRate(id, networkData)
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-    
-    override suspend fun deactivateCreditRate(id: UUID): Boolean {
-        return try {
-            apiService.deactivateCreditRate(id)
-            true
-        } catch (e: Exception) {
-            false
-        }
+        val response = apiService.takeCredit(userId, rateId, sum, bankAccountNum)
+        return response.status.name == "SUCCESS"
     }
 }

@@ -23,9 +23,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,8 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.R
+import com.example.g_bankforclient.domain.models.UserCredentials
 import com.example.g_bankforclient.presentation.state.AuthorizationScreenState
-import com.example.g_bankforclient.common.models.UserCredentials
 import com.example.g_bankforclient.presentation.viewmodel.AuthorizationViewModel
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 
@@ -52,32 +55,69 @@ fun AuthorizationScreen(
 ) {
     val viewModel: AuthorizationViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    when (val state = screenState) {
-        is AuthorizationScreenState.Default -> DefaultAuthorizationScreen(
-            credentials = state.credentials,
-            onLoginChange = viewModel::onLoginChange,
-            onPasswordChange = viewModel::onPasswordChange,
-            onLoginClick = {
-                viewModel.onLoginClick()
-                // In a real app, you'd navigate based on the result
-                // For now, we'll just call onLoginSuccess
-                onLoginSuccess()
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        when (val state = screenState) {
+            is AuthorizationScreenState.Default -> DefaultAuthorizationScreen(
+                credentials = state.credentials,
+                name = state.name,
+                isRegisterMode = state.isRegisterMode,
+                onNameChange = viewModel::onNameChange,
+                onLoginChange = viewModel::onLoginChange,
+                onPasswordChange = viewModel::onPasswordChange,
+                onLoginClick = viewModel::onLoginClick,
+                onToggleMode = viewModel::toggleMode,
+                modifier = Modifier.padding(padding)
+            )
+
+            AuthorizationScreenState.Loading -> LoadingAuthorizationScreen()
+
+            AuthorizationScreenState.AuthSuccess -> {
+                LaunchedEffect(Unit) {
+                    onLoginSuccess()
+                }
+                LoadingAuthorizationScreen()
             }
-        )
-        
-        AuthorizationScreenState.Loading -> LoadingAuthorizationScreen()
+
+            is AuthorizationScreenState.Error -> {
+                LaunchedEffect(state.title, state.description) {
+                    snackbarHostState.showSnackbar(
+                        message = "${state.title}: ${state.description}"
+                    )
+                    viewModel.dismissError()
+                }
+                DefaultAuthorizationScreen(
+                    credentials = state.credentials,
+                    name = state.name,
+                    isRegisterMode = state.isRegisterMode,
+                    onNameChange = viewModel::onNameChange,
+                    onLoginChange = viewModel::onLoginChange,
+                    onPasswordChange = viewModel::onPasswordChange,
+                    onLoginClick = viewModel::onLoginClick,
+                    onToggleMode = viewModel::toggleMode,
+                    modifier = Modifier.padding(padding)
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun DefaultAuthorizationScreen(
     credentials: UserCredentials,
+    name: String,
+    isRegisterMode: Boolean,
+    onNameChange: (String) -> Unit,
     onLoginChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit,
+    onToggleMode: () -> Unit,
+    modifier: Modifier = Modifier,
 ) = Column(
-    modifier = Modifier
+    modifier = modifier
         .fillMaxSize()
         .imePadding()
         .verticalScroll(rememberScrollState())
@@ -111,21 +151,37 @@ private fun DefaultAuthorizationScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = stringResource(R.string.login_for_employees),
+                text = if (isRegisterMode) "Регистрация" else stringResource(R.string.login_for_employees),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            if (isRegisterMode) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = onNameChange,
+                    label = { Text("Имя") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             OutlinedTextField(
                 value = credentials.login,
                 onValueChange = onLoginChange,
-                label = { Text(stringResource(R.string.login)) },
+                label = { Text(if (isRegisterMode) "Телефон" else stringResource(R.string.login)) },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = if (isRegisterMode) KeyboardType.Phone else KeyboardType.Text
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -160,7 +216,11 @@ private fun DefaultAuthorizationScreen(
 
             Button(
                 onClick = onLoginClick,
-                enabled = credentials.login.isNotBlank() && credentials.password.isNotBlank(),
+                enabled = if (isRegisterMode) {
+                    name.isNotBlank() && credentials.login.isNotBlank() && credentials.password.isNotBlank()
+                } else {
+                    credentials.login.isNotBlank() && credentials.password.isNotBlank()
+                },
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -171,8 +231,20 @@ private fun DefaultAuthorizationScreen(
                 )
             ) {
                 Text(
-                    text = stringResource(R.string.login_button),
+                    text = if (isRegisterMode) "Зарегистрироваться" else stringResource(R.string.login_button),
                     style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(
+                onClick = onToggleMode,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = if (isRegisterMode) "Уже есть аккаунт? Войти" else "Нет аккаунта? Зарегистрироваться",
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
@@ -201,9 +273,13 @@ private fun AuthorizationScreenPreview() {
     GbankForClientTheme {
         DefaultAuthorizationScreen(
             credentials = UserCredentials("", ""),
+            name = "",
+            isRegisterMode = false,
+            onNameChange = {},
             onLoginChange = {},
             onPasswordChange = {},
-            onLoginClick = {}
+            onLoginClick = {},
+            onToggleMode = {}
         )
     }
 }

@@ -1,10 +1,9 @@
 package com.example.g_bankforclient.domain.repository
 
-import com.example.g_bankforclient.common.models.UserCredentials
-import kotlinx.coroutines.flow.Flow
+import com.example.g_bankforclient.domain.models.UserCredentials
 
 interface AuthRepository {
-    fun getAuthState(): Flow<Boolean>
     suspend fun login(credentials: UserCredentials): Boolean
+    suspend fun register(name: String, phone: String, password: String): Boolean
     suspend fun logout()
 }

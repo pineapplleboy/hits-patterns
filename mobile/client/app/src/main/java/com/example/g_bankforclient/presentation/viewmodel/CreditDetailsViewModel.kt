@@ -2,8 +2,10 @@ package com.example.g_bankforclient.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.g_bankforclient.domain.models.Account
+import com.example.g_bankforclient.domain.models.Credit
 import com.example.g_bankforclient.domain.usecase.account.GetAccountsUseCase
-import com.example.g_bankforclient.domain.usecase.credit.GetCreditsUseCase
+import com.example.g_bankforclient.domain.usecase.credit.GetCreditDetailsUseCase
 import com.example.g_bankforclient.domain.usecase.credit.PayCreditUseCase
 import com.example.g_bankforclient.presentation.state.CreditDetailsScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,18 +14,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.example.g_bankforclient.common.models.Account
 
 @HiltViewModel
 class CreditDetailsViewModel @Inject constructor(
-    private val getCreditsUseCase: GetCreditsUseCase,
+    private val getCreditDetailsUseCase: GetCreditDetailsUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val payCreditUseCase: PayCreditUseCase
 ) : ViewModel() {
 
     private val _state: MutableStateFlow<CreditDetailsScreenState> = MutableStateFlow(
         value = CreditDetailsScreenState.Default(
-            credit = com.example.g_bankforclient.common.models.Credit("", "", 0.0, 0.0, 0.0)
+            credit = Credit("", "", 0.0, 0.0, 0.0)
         )
     )
     val state: StateFlow<CreditDetailsScreenState> = _state.asStateFlow()
@@ -37,46 +38,52 @@ class CreditDetailsViewModel @Inject constructor(
 
     private fun loadAccounts() {
         viewModelScope.launch {
-            try {
-                getAccountsUseCase().collect { accounts ->
-                    _accounts.value = accounts
-                }
-            } catch (e: Exception) {
-                // Handle error
-            }
+            runCatching { getAccountsUseCase() }
+                .onSuccess { accounts -> _accounts.value = accounts }
         }
     }
 
     fun loadCreditDetails(creditId: String) {
         viewModelScope.launch {
             _state.value = CreditDetailsScreenState.Loading
-            try {
-                getCreditsUseCase().collect { credits ->
-                    val credit = credits.find { it.id == creditId }
-                    if (credit != null) {
-                        _state.value = CreditDetailsScreenState.Default(
-                            credit = credit
-                        )
-                    }
+            runCatching { getCreditDetailsUseCase(creditId) }
+                .onSuccess { credit ->
+                    _state.value = CreditDetailsScreenState.Default(credit = credit)
                 }
-            } catch (e: Exception) {
-                _state.value = CreditDetailsScreenState.Error(
-                    message = e.message ?: "Failed to load credit details"
-                )
-            }
+                .onFailure { e ->
+                    _state.value = CreditDetailsScreenState.Error(
+                        message = e.message ?: "Не удалось загрузить данные кредита"
+                    )
+                }
         }
     }
 
     fun payCredit(creditId: String, accountId: String, amount: Double) {
         viewModelScope.launch {
-            try {
-                payCreditUseCase(creditId, accountId, amount)
-                // Reload credit details to reflect the new debt
-                loadCreditDetails(creditId)
-            } catch (e: Exception) {
-                // In a real app, you'd want to show an error message to the user
-                // For now, we'll just log it
+            val currentState = _state.value
+            if (currentState is CreditDetailsScreenState.Default) {
+                _state.value = currentState.copy(isLoading = true, errorMessage = null)
             }
+            runCatching { payCreditUseCase(creditId, accountId, amount) }
+                .onSuccess {
+                    loadCreditDetails(creditId)
+                }
+                .onFailure { e ->
+                    val state = _state.value
+                    if (state is CreditDetailsScreenState.Default) {
+                        _state.value = state.copy(
+                            isLoading = false,
+                            errorMessage = e.message ?: "Ошибка при оплате кредита"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun clearError() {
+        val currentState = _state.value
+        if (currentState is CreditDetailsScreenState.Default) {
+            _state.value = currentState.copy(errorMessage = null)
         }
     }
 }

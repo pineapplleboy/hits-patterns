@@ -32,23 +32,27 @@ class CreditsViewModel @Inject constructor(
         loadCreditsAndRates()
     }
 
-    private fun loadCreditsAndRates() {
+    fun loadCreditsAndRates() {
         viewModelScope.launch {
-            _state.value = CreditsScreenState.Loading
-            try {
-                // Load credit rates first
+            val currentState = _state.value as? CreditsScreenState.Default
+            _state.value = CreditsScreenState.Default(
+                credits = currentState?.credits ?: emptyList(),
+                creditRates = currentState?.creditRates ?: emptyList(),
+                isLoading = true
+            )
+            runCatching {
                 val creditRates = getCreditRatesUseCase()
-                
-                // Then load credits
-                getCreditsUseCase().collect { credits ->
-                    _state.value = CreditsScreenState.Default(
-                        credits = credits,
-                        creditRates = creditRates
-                    )
-                }
-            } catch (e: Exception) {
+                val credits = getCreditsUseCase()
+                Pair(credits, creditRates)
+            }.onSuccess { (credits, creditRates) ->
+                _state.value = CreditsScreenState.Default(
+                    credits = credits,
+                    creditRates = creditRates,
+                    isLoading = false
+                )
+            }.onFailure { e ->
                 _state.value = CreditsScreenState.Error(
-                    message = e.message ?: "Failed to load data"
+                    message = e.message ?: "Не удалось загрузить данные"
                 )
             }
         }
@@ -56,16 +60,40 @@ class CreditsViewModel @Inject constructor(
     
     fun takeCredit(rateId: java.util.UUID, sum: Double, bankAccountNum: String) {
         viewModelScope.launch {
-            try {
-                val success = takeCreditByRateUseCase(rateId, sum, bankAccountNum)
-                if (success) {
-                    // Reload data after successful credit taking
-                    loadCreditsAndRates()
-                }
-                // TODO: Handle success/error state in UI
-            } catch (e: Exception) {
-                // TODO: Handle error state in UI
+            val currentState = _state.value
+            if (currentState is CreditsScreenState.Default) {
+                _state.value = currentState.copy(isLoading = true, errorMessage = null)
             }
+            runCatching { takeCreditByRateUseCase(rateId, sum, bankAccountNum) }
+                .onSuccess { success ->
+                    if (success) {
+                        loadCreditsAndRates()
+                    } else {
+                        val state = _state.value
+                        if (state is CreditsScreenState.Default) {
+                            _state.value = state.copy(
+                                isLoading = false,
+                                errorMessage = "Не удалось оформить кредит"
+                            )
+                        }
+                    }
+                }
+                .onFailure { e ->
+                    val state = _state.value
+                    if (state is CreditsScreenState.Default) {
+                        _state.value = state.copy(
+                            isLoading = false,
+                            errorMessage = e.message ?: "Ошибка при оформлении кредита"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun clearError() {
+        val currentState = _state.value
+        if (currentState is CreditsScreenState.Default) {
+            _state.value = currentState.copy(errorMessage = null)
         }
     }
 }

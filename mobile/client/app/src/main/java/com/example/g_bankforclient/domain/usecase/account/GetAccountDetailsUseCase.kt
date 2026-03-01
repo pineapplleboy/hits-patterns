@@ -4,8 +4,10 @@ import com.example.g_bankforclient.domain.models.Account
 import com.example.g_bankforclient.domain.repository.AccountRepository
 import javax.inject.Inject
 
-class GetAccountsUseCase @Inject constructor(
+class GetAccountDetailsUseCase @Inject constructor(
     private val repository: AccountRepository
 ) {
-    suspend operator fun invoke(): List<Account> = repository.getAccounts()
+    suspend operator fun invoke(accountNumber: String): Account =
+        repository.getAccountDetails(accountNumber)
 }
+

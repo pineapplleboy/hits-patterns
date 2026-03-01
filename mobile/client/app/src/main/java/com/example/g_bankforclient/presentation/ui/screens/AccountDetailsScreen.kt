@@ -1,15 +1,54 @@
 package com.example.g_bankforclient.presentation.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,8 +59,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.g_bankforclient.common.models.Account
+import com.example.g_bankforclient.domain.models.Account
 import com.example.g_bankforclient.presentation.state.AccountDetailsScreenState
+import com.example.g_bankforclient.presentation.ui.utils.formatMoney
 import com.example.g_bankforclient.presentation.viewmodel.AccountDetailsViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
@@ -43,26 +83,77 @@ fun AccountDetailsScreen(
         viewModel.loadAccountDetails(accountId)
     }
 
-    when (val state = screenState) {
-        is AccountDetailsScreenState.Default -> DefaultAccountDetailsScreen(
-            account = state.account,
-            amount = amount,
-            showDeleteDialog = showDeleteDialog,
-            onAmountChange = { amount = it },
-            onShowDeleteDialogChange = { showDeleteDialog = it },
-            onBack = onBack,
-            onDeposit = { viewModel.deposit(state.account.id, it) },
-            onWithdrawal = { viewModel.withdrawal(state.account.id, it) },
-            onViewHistory = onViewHistory,
-            onCloseAccount = { 
-                viewModel.closeAccount(state.account.id)
-                onAccountClosed()
-            }
-        )
-        
-        AccountDetailsScreenState.Loading -> LoadingAccountDetailsScreen()
-        
-        is AccountDetailsScreenState.Error -> ErrorAccountDetailsScreen(state.message)
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(screenState) {
+        if (screenState is AccountDetailsScreenState.Default && (screenState as AccountDetailsScreenState.Default).errorMessage != null) {
+            snackbarHostState.showSnackbar(
+                (screenState as AccountDetailsScreenState.Default).errorMessage ?: "Ошибка"
+            )
+            viewModel.clearError()
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        when (val state = screenState) {
+            is AccountDetailsScreenState.Default -> DefaultAccountDetailsScreen(
+                account = state.account,
+                amount = amount,
+                showDeleteDialog = showDeleteDialog,
+                isLoading = state.isLoading,
+                onAmountChange = { amount = it },
+                onShowDeleteDialogChange = { showDeleteDialog = it },
+                onBack = onBack,
+                onRefresh = { viewModel.loadAccountDetails(accountId) },
+                onDeposit = { viewModel.deposit(state.account.id, it) },
+                onWithdrawal = { viewModel.withdrawal(state.account.id, it) },
+                onViewHistory = onViewHistory,
+                onCloseAccount = {
+                    viewModel.closeAccount(state.account.id)
+                    onAccountClosed()
+                },
+                modifier = Modifier.padding(paddingValues)
+            )
+
+            AccountDetailsScreenState.Loading -> LoadingAccountDetailsScreen()
+
+            is AccountDetailsScreenState.Error -> ErrorAccountDetailsScreen(state.message)
+        }
+    }
+}
+
+@Composable
+fun ErrorAccountDetailsScreen(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Ошибка загрузки",
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
+fun LoadingAccountDetailsScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
     }
 }
 
@@ -72,13 +163,16 @@ private fun DefaultAccountDetailsScreen(
     account: Account,
     amount: String,
     showDeleteDialog: Boolean,
+    isLoading: Boolean,
     onAmountChange: (String) -> Unit,
     onShowDeleteDialogChange: (Boolean) -> Unit,
     onBack: () -> Unit,
+    onRefresh: () -> Unit,
     onDeposit: (Double) -> Unit,
     onWithdrawal: (Double) -> Unit,
     onViewHistory: () -> Unit,
-    onCloseAccount: () -> Unit
+    onCloseAccount: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
         topBar = {
@@ -88,15 +182,32 @@ private fun DefaultAccountDetailsScreen(
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Назад",
-                            tint = BankColors.MediumGray
-                        )
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Назад",
+                                tint = BankColors.MediumGray
+                            )
+                        }
+                        IconButton(
+                            onClick = onRefresh,
+                            modifier = Modifier.padding(end = 8.dp),
+                            enabled = !isLoading
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Обновить",
+                                tint = if (isLoading) BankColors.MediumGray.copy(alpha = 0.5f) else BankColors.MediumGray
+                            )
+                        }
                     }
                     Text(
                         text = account.name,
@@ -107,14 +218,16 @@ private fun DefaultAccountDetailsScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
+        Box(
+            modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(24.dp),
+                .padding(paddingValues)
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Balance Card
             item {
                 Box(
                     modifier = Modifier
@@ -122,7 +235,10 @@ private fun DefaultAccountDetailsScreen(
                         .clip(RoundedCornerShape(24.dp))
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(BankColors.PurplePrimary, BankColors.PurplePrimaryLight)
+                                colors = listOf(
+                                    BankColors.PurplePrimary,
+                                    BankColors.PurplePrimaryLight
+                                )
                             )
                         )
                         .padding(24.dp)
@@ -135,7 +251,7 @@ private fun DefaultAccountDetailsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "${account.balance.toInt().toString().replace(Regex("(\\d)(?=(\\d{3})+$)"), "$1 ")} ₽",
+                            text = account.balance.formatMoney(),
                             style = MaterialTheme.typography.displaySmall,
                             color = Color.White
                         )
@@ -143,7 +259,44 @@ private fun DefaultAccountDetailsScreen(
                 }
             }
 
-            // Actions Card
+                if (account.banned) {
+                    item {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = BankColors.ErrorRed.copy(alpha = 0.1f),
+                            border = BorderStroke(1.dp, BankColors.ErrorRed.copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Block,
+                                    contentDescription = null,
+                                    tint = BankColors.ErrorRed,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Счёт заблокирован",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = BankColors.ErrorRed
+                                    )
+                                    Text(
+                                        text = "Операции по счёту недоступны",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = BankColors.ErrorRed.copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -169,7 +322,10 @@ private fun DefaultAccountDetailsScreen(
                                         }
                                     }
                                 },
-                                modifier = Modifier.weight(1f).height(56.dp),
+                                enabled = !isLoading && !account.banned,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = BankColors.Success
                                 ),
@@ -192,7 +348,10 @@ private fun DefaultAccountDetailsScreen(
                                         }
                                     }
                                 },
-                                modifier = Modifier.weight(1f).height(56.dp),
+                                enabled = !isLoading && !account.banned,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = BankColors.Warning
                                 ),
@@ -221,7 +380,6 @@ private fun DefaultAccountDetailsScreen(
                 }
             }
 
-            // View History Button
             item {
                 Surface(
                     onClick = onViewHistory,
@@ -270,7 +428,9 @@ private fun DefaultAccountDetailsScreen(
             item {
                 OutlinedButton(
                     onClick = { onShowDeleteDialogChange(true) },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = BankColors.ErrorRed
                     ),
@@ -321,40 +481,7 @@ private fun DefaultAccountDetailsScreen(
     }
 }
 
-@Composable
-private fun LoadingAccountDetailsScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
-private fun ErrorAccountDetailsScreen(message: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Ошибка загрузки",
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
+    @Preview
 @Composable
 fun AccountDetailsScreenPreview() {
     GbankForClientTheme {
@@ -366,13 +493,17 @@ fun AccountDetailsScreenPreview() {
             ),
             amount = "",
             showDeleteDialog = false,
-            onAmountChange = { /* Заглушка */ },
-            onShowDeleteDialogChange = { /* Заглушка */ },
-            onBack = { /* Заглушка */ },
-            onDeposit = { /* Заглушка */ },
-            onWithdrawal = { /* Заглушка */ },
-            onViewHistory = { /* Заглушка */ },
-            onCloseAccount = { /* Заглушка */ }
+            onAmountChange = { },
+            onShowDeleteDialogChange = { },
+            onBack = { },
+            isLoading = false,
+            onDeposit = { },
+            onWithdrawal = { },
+            onViewHistory = { },
+            onCloseAccount = { },
+            onRefresh = { }
         )
     }
+    }
 }
+

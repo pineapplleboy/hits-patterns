@@ -1,16 +1,15 @@
 package com.example.g_bankforclient.common.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
-
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.g_bankforclient.presentation.ui.screens.AccountDetailsScreen
 import com.example.g_bankforclient.presentation.ui.screens.AuthorizationScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreateAccountScreen
-import com.example.g_bankforclient.presentation.ui.screens.CreateCreditScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreditDetailsScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreditsScreen
 import com.example.g_bankforclient.presentation.ui.screens.HomeScreen
@@ -18,13 +17,14 @@ import com.example.g_bankforclient.presentation.ui.screens.TransactionHistoryScr
 
 @Composable
 fun BankNavigation(
-    navController: NavHostController
+    navController: NavHostController,
+    modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Authorization.route
+        startDestination = Screen.Authorization.route,
+        modifier = modifier
     ) {
-        // Авторизация
         composable(Screen.Authorization.route) {
             AuthorizationScreen(
                 onLoginSuccess = {
@@ -34,7 +34,6 @@ fun BankNavigation(
                 }
             )
         }
-        // Главный экран
         composable(Screen.Home.route) {
             HomeScreen(
                 onAccountClick = { accountId ->
@@ -42,23 +41,24 @@ fun BankNavigation(
                 },
                 onCreateAccount = {
                     navController.navigate(Screen.CreateAccount.route)
+                },
+                onLogout = {
+                    navController.navigate(Screen.Authorization.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
 
-        // Экран кредитов
         composable(Screen.Credits.route) {
             CreditsScreen(
                 onCreditClick = { creditId ->
                     navController.navigate(Screen.CreditDetails.createRoute(creditId))
                 },
-                onCreateCredit = {
-                    navController.navigate(Screen.CreateCredit.route)
-                }
+                onCreateCredit = { }
             )
         }
 
-        // Экран деталей счета
         composable(
             route = Screen.AccountDetails.route,
             arguments = listOf(navArgument("accountId") { type = NavType.StringType })
@@ -76,7 +76,6 @@ fun BankNavigation(
             )
         }
 
-        // Экран деталей кредита
         composable(
             route = Screen.CreditDetails.route,
             arguments = listOf(navArgument("creditId") { type = NavType.StringType })
@@ -88,7 +87,6 @@ fun BankNavigation(
             )
         }
 
-        // Экран создания счета
         composable(Screen.CreateAccount.route) {
             CreateAccountScreen(
                 onBack = { navController.popBackStack() },
@@ -98,17 +96,6 @@ fun BankNavigation(
             )
         }
 
-        // Экран создания кредита
-        composable(Screen.CreateCredit.route) {
-            CreateCreditScreen(
-                onBack = { navController.popBackStack() },
-                onCreditCreated = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        // Экран истории операций
         composable(
             route = Screen.TransactionHistory.route,
             arguments = listOf(navArgument("accountId") { type = NavType.StringType })

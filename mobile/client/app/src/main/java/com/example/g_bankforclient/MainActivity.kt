@@ -4,19 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.g_bankforclient.common.navigation.BankNavigation
@@ -46,17 +39,8 @@ fun BankApp() {
 
     val showBottomNav = currentRoute == Screen.Home.route || currentRoute == Screen.Credits.route
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.weight(1f)) {
-                BankNavigation(
-                    navController = navController
-                )
-            }
-
+    Scaffold(
+        bottomBar = {
             if (showBottomNav) {
                 BankBottomNavigation(
                     currentRoute = currentRoute,
@@ -71,6 +55,12 @@ fun BankApp() {
                     }
                 )
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
+        BankNavigation(
+            navController = navController,
+            modifier = Modifier.padding(paddingValues)
+        )
     }
 }

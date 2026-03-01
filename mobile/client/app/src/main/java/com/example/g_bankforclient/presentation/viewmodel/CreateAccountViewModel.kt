@@ -21,19 +21,20 @@ class CreateAccountViewModel @Inject constructor(
     )
     val state: StateFlow<CreateAccountScreenState> = _state.asStateFlow()
 
-    fun createAccount(name: String) {
+    fun createAccount() {
         viewModelScope.launch {
             _state.value = CreateAccountScreenState.Loading
-            try {
-                createAccountUseCase(name)
-                _state.value = CreateAccountScreenState.Success(
-                    message = "Account created successfully"
-                )
-            } catch (e: Exception) {
-                _state.value = CreateAccountScreenState.Error(
-                    message = e.message ?: "Failed to create account"
-                )
-            }
+            runCatching { createAccountUseCase(0.0) }
+                .onSuccess {
+                    _state.value = CreateAccountScreenState.Success(
+                        message = "Счет успешно открыт"
+                    )
+                }
+                .onFailure { e ->
+                    _state.value = CreateAccountScreenState.Error(
+                        message = e.message ?: "Не удалось открыть счет"
+                    )
+                }
         }
     }
 }

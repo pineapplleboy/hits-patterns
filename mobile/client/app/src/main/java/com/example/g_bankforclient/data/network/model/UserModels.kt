@@ -3,26 +3,6 @@ package com.example.g_bankforclient.data.network.model
 import com.google.gson.annotations.SerializedName
 import java.util.UUID
 
-data class UserDB(
-    @SerializedName("id")
-    val id: UUID,
-    
-    @SerializedName("name")
-    val name: String?,
-    
-    @SerializedName("phone")
-    val phone: String?,
-    
-    @SerializedName("ban")
-    val ban: Boolean,
-    
-    @SerializedName("userRole")
-    val userRole: UserRole,
-    
-    @SerializedName("author")
-    val author: UUID?
-)
-
 data class UserDTO(
     @SerializedName("id")
     val id: UUID,
@@ -40,10 +20,7 @@ data class UserDTO(
     val userRole: UserRole,
     
     @SerializedName("author")
-    val author: UUID?,
-    
-    @SerializedName("isBannable")
-    val isBannable: Boolean
+    val author: UUID?
 )
 
 enum class UserRole {

@@ -14,7 +14,8 @@ data class MoneyAmountRequestModel(
 data class BankAccountShortModel(
     val id: UUID,
     val accountNumber: String,
-    val balance: Double
+    val balance: Double,
+    val banned: Boolean = false
 )
 
 data class BankAccountFullModel(
@@ -22,7 +23,8 @@ data class BankAccountFullModel(
     val accountNumber: String,
     val balance: Double,
     val operations: List<OperationModel>,
-    val createTime: Date
+    val createTime: Date,
+    val banned: Boolean = false
 )
 
 data class CreditAccountShortModel(
@@ -63,7 +65,7 @@ enum class TransferAccountType {
 }
 
 enum class AccountActionType {
-    OPEN_ACCOUNT, CLOSE_ACCOUNT, TRANSFER_RECEIVED, TRANSFER_SENT
+    OPEN_ACCOUNT, CLOSE_ACCOUNT, TRANSFER_RECEIVED, TRANSFER_SENT, ACCOUNT_BANNED, ACCOUNT_UNBANNED
 }
 
 enum class OperationStatus {

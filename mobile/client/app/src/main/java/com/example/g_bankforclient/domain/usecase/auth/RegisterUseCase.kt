@@ -1,11 +1,12 @@
 package com.example.g_bankforclient.domain.usecase.auth
 
 import com.example.g_bankforclient.domain.repository.AuthRepository
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetAuthStateUseCase @Inject constructor(
+class RegisterUseCase @Inject constructor(
     private val repository: AuthRepository
 ) {
-    operator fun invoke(): Flow<Boolean> = repository.getAuthState()
+    suspend operator fun invoke(name: String, phone: String, password: String): Boolean =
+        repository.register(name, phone, password)
 }
+
