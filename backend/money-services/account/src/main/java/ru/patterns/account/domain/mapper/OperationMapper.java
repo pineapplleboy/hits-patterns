@@ -26,15 +26,17 @@ public class OperationMapper {
 
     public OperationModel toModel(Operation operation, UUID requestingUser) {
         AccountActionType actionType = operation.getActionType();
-        String accountNumberFrom = operation.getActionType() != AccountActionType.TRANSFER ? null : operation.getAccountNumberFrom();
+        String accountNumberFrom = operation.getAccountNumberFrom();
 
         if (actionType == AccountActionType.TRANSFER) {
-            actionType = operation.getUserIdFrom().equals(requestingUser) ? AccountActionType.TRANSFER_SENT : AccountActionType.TRANSFER_RECEIVED;
+            actionType = requestingUser != null && requestingUser.equals(operation.getUserIdFrom())
+                    ? AccountActionType.TRANSFER_SENT
+                    : AccountActionType.TRANSFER_RECEIVED;
         }
 
         return new OperationModel()
                 .setOperationId(operation.getOperationId())
-                .setAccountNumberFrom(accountNumberFrom)
+                .setAccountNumberFrom(operation.getActionType() == AccountActionType.TRANSFER ? accountNumberFrom : null)
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
                 .setAmount(operation.getAmount())
