@@ -100,7 +100,7 @@ private fun UsersListScreenContent(
                     Icon(Icons.Filled.Person, contentDescription = null)
                     Text(
                         text = stringResource(R.string.tab_users),
-                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 14.sp, lineHeight = 18.sp),
+                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 12.sp, lineHeight = 16.sp),
                     )
                 }
                 Button(
@@ -110,7 +110,7 @@ private fun UsersListScreenContent(
                     Icon(Icons.Filled.Percent, contentDescription = null)
                     Text(
                         text = stringResource(R.string.tab_tariffs),
-                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 14.sp, lineHeight = 18.sp),
+                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 12.sp, lineHeight = 16.sp),
                     )
                 }
             }
