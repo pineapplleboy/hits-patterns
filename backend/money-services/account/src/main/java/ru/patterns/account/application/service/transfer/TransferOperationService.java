@@ -1,5 +1,6 @@
 package ru.patterns.account.application.service.transfer;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TransferOperationService {
 
     private final BankAccountRepository bankAccountRepository;
