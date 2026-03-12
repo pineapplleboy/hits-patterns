@@ -22,7 +22,7 @@ namespace ClassLibrary.BaseSetup
 
         public static async Task RunMigrations<TContext>(
             WebApplication app,
-            Func<TContext, Task> seederAction
+            Func<TContext, Task>? seederAction = null
         ) where TContext : DbContext
         {
             using var serviceScope = app.Services.CreateScope();
@@ -30,7 +30,7 @@ namespace ClassLibrary.BaseSetup
             var applicationContext = serviceScope.ServiceProvider.GetRequiredService<TContext>();
 
             applicationContext?.Database.Migrate();
-            if (applicationContext != null)
+            if (applicationContext != null && seederAction != null)
             {
                 await seederAction(applicationContext);
             }
