@@ -130,6 +130,25 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  patterns-user-setting:
+    image: ghcr.io/pineapplleboy/hits-patterns-patterns-user-setting:latest
+    container_name: patterns-user-setting
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DbConnection: Host=postgres;Port=5432;Database=patternsUserSetting;Username=postgres;Password=postgres
+    ports:
+      - "127.0.0.1:5176:8080"
+    restart: unless-stopped
+    mem_limit: 250m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   account-service:
     image: ghcr.io/pineapplleboy/hits-patterns-account-service:latest
     container_name: account-service

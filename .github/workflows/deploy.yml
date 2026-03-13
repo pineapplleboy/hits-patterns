@@ -50,6 +50,17 @@ jobs:
             ghcr.io/pineapplleboy/hits-patterns-patterns-users:latest
             ghcr.io/pineapplleboy/hits-patterns-patterns-users:${{ github.sha }}
 
+      # patterns-user-setting (.NET)
+      - name: Build & push patterns-user-setting
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/DotNet
+          file: ./backend/DotNet/patternsUserSetting/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/pineapplleboy/hits-patterns-patterns-user-setting:latest
+            ghcr.io/pineapplleboy/hits-patterns-patterns-user-setting:${{ github.sha }}
+
       # account-service (Java)
       - name: Build & push account-service
         uses: docker/build-push-action@v6
