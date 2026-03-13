@@ -1,5 +1,6 @@
 ﻿using ClassLibrary;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json.Serialization;
 
@@ -11,6 +12,15 @@ namespace ClassLibrary.BaseSetup
         {
             builder.Services.AddExceptionHandler<ExceptionHandler>();
             builder.Services.AddProblemDetails();
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor |
+                    ForwardedHeaders.XForwardedProto |
+                    ForwardedHeaders.XForwardedHost;
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -24,6 +34,7 @@ namespace ClassLibrary.BaseSetup
         public static void UseAspNet(WebApplication app)
         {
             app.UseExceptionHandler();
+            app.UseForwardedHeaders();
 
             app.UseHttpsRedirection();
 

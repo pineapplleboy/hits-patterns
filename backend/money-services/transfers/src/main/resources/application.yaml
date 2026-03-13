@@ -7,6 +7,15 @@ spring:
 
 server:
   port: 8083
+  forward-headers-strategy: framework
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+  api-docs:
+    path: /v3/api-docs
+  cache:
+    disabled: true
 
 kafka:
   url: ${KAFKA_URL:localhost:29092}

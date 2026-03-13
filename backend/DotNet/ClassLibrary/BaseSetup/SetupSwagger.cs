@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System.Collections.Generic;
 
 namespace ClassLibrary.BaseSetup
 {
@@ -45,11 +45,35 @@ namespace ClassLibrary.BaseSetup
 
         public static void UseSwagger(WebApplication app)
         {
-            if (app.Environment.IsDevelopment())
+            app.UseSwagger(options =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                options.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+                {
+                    var scheme = string.IsNullOrWhiteSpace(httpReq.Headers["X-Forwarded-Proto"])
+                        ? httpReq.Scheme
+                        : httpReq.Headers["X-Forwarded-Proto"].ToString();
+                    var host = string.IsNullOrWhiteSpace(httpReq.Headers["X-Forwarded-Host"])
+                        ? httpReq.Host.Value
+                        : httpReq.Headers["X-Forwarded-Host"].ToString();
+                    var pathBase = httpReq.Headers["X-Forwarded-Prefix"].ToString();
+
+                    if (string.IsNullOrWhiteSpace(pathBase))
+                    {
+                        pathBase = httpReq.PathBase.Value ?? string.Empty;
+                    }
+
+                    swaggerDoc.Servers = new List<OpenApiServer>
+                    {
+                        new() { Url = $"{scheme}://{host}{pathBase}" }
+                    };
+                });
+            });
+
+            app.UseSwaggerUI(options =>
+            {
+                options.RoutePrefix = "swagger";
+                options.SwaggerEndpoint("./v1/swagger.json", "API v1");
+            });
         }
     }
 }
