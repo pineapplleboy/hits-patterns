@@ -26,6 +26,6 @@ public class CreditAccountController {
 
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return creditAccountService.takeCredit(userId, rateId, sum, bankAccountNum);
+        return creditAccountService.takeCredit(userId, rateId, sum, bankAccountNum, authorization);
     }
 }

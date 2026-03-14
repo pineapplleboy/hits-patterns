@@ -2,7 +2,7 @@ package ru.patterns.credit.application.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.patterns.credit.application.kafka.CreditProvider;
+import ru.patterns.credit.application.kafka.provider.CreditProvider;
 import ru.patterns.credit.domain.entity.CreditRate;
 import ru.patterns.credit.domain.repository.CreditRateRepository;
 import ru.patterns.shared.exception.BadRequestException;
@@ -23,7 +23,7 @@ public class CreditAccountService {
 
     private final BigDecimal maxCreditAmount = BigDecimal.valueOf(500000);
 
-    public OperationStatusResponseModel takeCredit(UUID userId, UUID rateId, BigDecimal sum, String bankAccountNum) {
+    public OperationStatusResponseModel takeCredit(UUID userId, UUID rateId, BigDecimal sum, String bankAccountNum, String token) {
         if (maxCreditAmount.compareTo(sum) <= 0) {
             throw new BadRequestException("Exceeded credit limit");
         }
@@ -31,7 +31,7 @@ public class CreditAccountService {
         CreditRate creditRate = creditRateRepository.findById(rateId)
                 .orElseThrow(() -> new NotFoundException("Credit rate not found"));
 
-        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum, bankAccountNum));
+        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum, bankAccountNum), token);
 
         return new OperationStatusResponseModel(OperationStatus.SUCCESS);
     }

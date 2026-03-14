@@ -16,8 +16,8 @@ public class TransferRequestService {
     @Value("${accounts.master-account-number}")
     private String masterAccountNumber;
 
-    public void processTransferRequest(TransferRequestMessage message) {
-        transferAssignmentProvider.send(enrichTransfer(message));
+    public void processTransferRequest(TransferRequestMessage message, String token) {
+        transferAssignmentProvider.send(enrichTransfer(message), token);
     }
 
     private TransferAssignmentMessage enrichTransfer(TransferRequestMessage message) {

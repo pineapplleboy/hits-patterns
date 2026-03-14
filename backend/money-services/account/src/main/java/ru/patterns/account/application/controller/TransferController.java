@@ -26,7 +26,7 @@ public class TransferController {
                                                        @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return transferService.replenishMoney(userId, bankAccountNumber, requestModel);
+        return transferService.replenishMoney(userId, bankAccountNumber, requestModel, authorization);
     }
 
     @PostMapping("/withdraw")
@@ -37,7 +37,7 @@ public class TransferController {
                                                       @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return transferService.withdrawMoney(userId, bankAccountNumber, requestModel);
+        return transferService.withdrawMoney(userId, bankAccountNumber, requestModel, authorization);
     }
 
     @PostMapping("/credit-payments/{creditAccountNumber}")
@@ -49,6 +49,6 @@ public class TransferController {
                                                   @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel);
+        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel, authorization);
     }
 }

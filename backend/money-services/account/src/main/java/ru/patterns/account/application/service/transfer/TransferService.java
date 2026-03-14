@@ -22,32 +22,38 @@ public class TransferService {
     private final TransferOperationService transferOperationService;
     private final TransferRequestProvider transferRequestProvider;
 
-    public OperationStatusResponseModel replenishMoney(UUID userId, String bankAccountNumber, MoneyAmountRequestModel requestModel) {
+    public OperationStatusResponseModel replenishMoney(UUID userId, String bankAccountNumber,
+                                                       MoneyAmountRequestModel requestModel,
+                                                       String token) {
         Operation operation = createOperationTransferRequest(null, userId, null, bankAccountNumber, requestModel,
                 TransferAccountType.BANK_ACCOUNT);
 
-        sendRequest(operation);
+        sendRequest(operation, token);
 
         return new OperationStatusResponseModel(operation.getStatus());
     }
 
-    public OperationStatusResponseModel withdrawMoney(UUID userId, String bankAccountNumber, MoneyAmountRequestModel requestModel) {
+    public OperationStatusResponseModel withdrawMoney(UUID userId, String bankAccountNumber,
+                                                      MoneyAmountRequestModel requestModel,
+                                                      String token) {
         Operation operation = createOperationTransferRequest(userId, null, bankAccountNumber, null, requestModel,
                 TransferAccountType.BANK_ACCOUNT);
 
-        sendRequest(operation);
+        sendRequest(operation, token);
 
         return new OperationStatusResponseModel(operation.getStatus());
     }
 
     public OperationStatusResponseModel payCredit(UUID userId, String bankAccountNumber,
-                                                  String creditAccountNumber, MoneyAmountRequestModel requestModel) {
+                                                  String creditAccountNumber,
+                                                  MoneyAmountRequestModel requestModel,
+                                                  String token) {
         transferOperationService.validateAccountRemainder(bankAccountNumber, requestModel);
 
         Operation operation = createOperationTransferRequest(userId, userId, bankAccountNumber, creditAccountNumber, requestModel,
                 TransferAccountType.CREDIT_ACCOUNT);
 
-        sendRequest(operation);
+        sendRequest(operation, token);
 
         return new OperationStatusResponseModel(operation.getStatus());
     }
@@ -74,8 +80,8 @@ public class TransferService {
         return operation;
     }
 
-    private void sendRequest(Operation operation) {
-        transferRequestProvider.send(createRequestContext(operation));
+    private void sendRequest(Operation operation, String token) {
+        transferRequestProvider.send(createRequestContext(operation), token);
     }
 
     private TransferRequestMessage createRequestContext(Operation operation) {
