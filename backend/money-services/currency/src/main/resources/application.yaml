@@ -26,3 +26,23 @@ springdoc:
     path: /v3/api-docs
   cache:
     disabled: true
+
+currency:
+  list:
+    url: https://api.fxratesapi.com/latest
+    processed:
+      - id: 643
+        name: "Российский рубль"
+        charCode: RUB
+      - id: 840
+        name: "Доллар США"
+        charCode: USD
+      - id: 156
+        name: "Китайский юань"
+        charCode: CNY
+      - id: 398
+        name: "Казахстанский тенге"
+        charCode: KZT
+      - id: 0
+        name: "Биткоин"
+        charCode: BTC
