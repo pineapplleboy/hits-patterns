@@ -43,7 +43,7 @@ public class BankAccountController {
         return bankAccountService.getAllUserBankAccounts(userId, hidden, authorization);
     }
 
-    @GetMapping("/users/{userId}/bank-accounts")
+    @GetMapping("/users/{userId}/bank-accounts/all")
     @Operation(summary = "Для работника")
     public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId,
                                                            @RequestHeader String authorization) {
