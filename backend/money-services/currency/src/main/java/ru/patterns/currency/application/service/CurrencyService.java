@@ -18,6 +18,7 @@ import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.exception.NotFoundException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -73,7 +74,7 @@ public class CurrencyService {
                 .setFromCurrency(currencyFrom.toModel())
                 .setToCurrency(currencyTo.toModel())
                 .setAmount(amount)
-                .setAmountFinal(null);
+                .setAmountFinal(calculateFinalAmount(currencyFrom, currencyTo, amount));
     }
 
     private Currency createCurrency(ProcessedCurrencyModel currencyModel) {
@@ -81,7 +82,15 @@ public class CurrencyService {
                 .setId(currencyModel.getId())
                 .setName(currencyModel.getName())
                 .setCharCode(currencyModel.getCharCode())
-                .setSymbol(currencyModel.getSymbol());
+                .setSymbol(currencyModel.getSymbol())
+                .setRate(BigDecimal.ZERO);
+    }
+
+    private BigDecimal calculateFinalAmount(Currency from, Currency to, BigDecimal amount) {
+        return amount
+                .multiply(from.getRate())
+                .divide(to.getRate(), 10, RoundingMode.HALF_EVEN)
+                .setScale(2, RoundingMode.HALF_EVEN);
     }
 
     private void throwServiceUnavailableException() {

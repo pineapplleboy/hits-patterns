@@ -28,7 +28,7 @@ public class CurrencyController {
     }
 
     @GetMapping("/calculate")
-    @Operation(summary = "Получение  [Все]")
+    @Operation(summary = "Конвертация валюты [Все]")
     public AmountModel calculateTransferBetweenCurrencies(@RequestBody CalculatorRequestModel calculatorRequest,
                                                           @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.isAuthorized(authorization);

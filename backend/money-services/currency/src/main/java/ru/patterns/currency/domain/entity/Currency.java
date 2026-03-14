@@ -23,7 +23,7 @@ public class Currency {
 
     private String symbol;
 
-    private BigDecimal rate = null;
+    private BigDecimal rate = BigDecimal.ZERO;
 
     private boolean active = true;
 }
