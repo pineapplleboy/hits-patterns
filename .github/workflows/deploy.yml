@@ -100,6 +100,19 @@ jobs:
             ghcr.io/pineapplleboy/hits-patterns-transfers-service:latest
             ghcr.io/pineapplleboy/hits-patterns-transfers-service:${{ github.sha }}
 
+      # currency-service (Java)
+      - name: Build & push currency-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/money-services
+          file: ./backend/money-services/Dockerfile
+          push: true
+          build-args: |
+            SERVICE_NAME=currency
+          tags: |
+            ghcr.io/pineapplleboy/hits-patterns-currency-service:latest
+            ghcr.io/pineapplleboy/hits-patterns-currency-service:${{ github.sha }}
+
   deploy:
     runs-on: ubuntu-latest
     needs: build_and_push

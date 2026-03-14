@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: currency
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/patterns_currency
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+server:
+  port: 8084
+  forward-headers-strategy: framework
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+  api-docs:
+    path: /v3/api-docs
+  cache:
+    disabled: true
