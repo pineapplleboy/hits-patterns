@@ -32,17 +32,17 @@ namespace patternsUserSetting.Controllers
             return Ok(await _userSettingService.ChangeUserSettings(UserDescriptor.GetUserId(User)));
         }
 
-        [Authorize(Roles = "Сlient")]
-        [HttpGet("my-hidden-accounts")]
+        [Authorize]
+        [HttpGet("hidden-accounts/{accountId}")]
         [ProducesResponseType(typeof(List<Guid>), 200)]
-        public async Task<IActionResult> GetMyHiddenAccounts()
+        public async Task<IActionResult> GetHiddenAccounts([FromRoute] Guid accountId)
         {
-            return Ok(await _userSettingService.GetUserHiddenAccounts(UserDescriptor.GetUserId(User)));
+            return Ok(await _userSettingService.GetUserHiddenAccounts(accountId));
         }
 
         [Authorize(Roles = "Сlient")]
         [HttpPut("account-visibility/{accountId}")]
-        public async Task<IActionResult> GetMyHiddenAccounts([FromRoute] Guid accountId)
+        public async Task<IActionResult> ChangeMyHiddenAccount([FromRoute] Guid accountId)
         {
             await _userSettingService.ChangeAccountVisibility(UserDescriptor.GetUserId(User), accountId);
             return Ok();
