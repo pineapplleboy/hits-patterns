@@ -4,11 +4,13 @@ import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.patterns.currency.application.client.RestClientConfig;
 import ru.patterns.currency.application.common.model.AmountModel;
 import ru.patterns.currency.application.common.model.CurrencyResponseModel;
+import ru.patterns.currency.application.common.model.FxRatesResponseModel;
 import ru.patterns.currency.application.common.model.ProcessedCurrencyModel;
 import ru.patterns.currency.application.config.CurrencyConfig;
 import ru.patterns.currency.domain.entity.Currency;
@@ -21,6 +23,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @ExtensionMethod(CurrencyMapper.class)
@@ -44,11 +47,34 @@ public class CurrencyService {
 
     @Scheduled(fixedRate = 5 * 60000) // каждые 5 минут
     public void updateCurrenciesRate() {
+        FxRatesResponseModel response = restConfig.settingsClient()
+                .get()
+                .retrieve()
+                .body(FxRatesResponseModel.class);
 
+        if (response == null || !response.isSuccess() || response.getRates() == null) {
+            return;
+        }
+
+        for (ProcessedCurrencyModel currencyModel : config.getProcessed()) {
+
+            var actualRate = response.getRates().get(currencyModel.getCharCode());
+
+            if (actualRate == null) {
+                log.error("Can not update currency {}", currencyModel.getCharCode());
+                continue;
+            }
+
+            var currency = currencyRepository.findById(currencyModel.getId()).
+                    orElseThrow(() -> new NotFoundException("Currency with id " + currencyModel.getId() + " not found"));
+
+            currency.setRate(actualRate);
+            currencyRepository.save(currency);
+        }
     }
 
     public List<CurrencyResponseModel> getCurrencies() {
-        List<Currency> currencies = currencyRepository.findAll();
+        List<Currency> currencies = currencyRepository.findAllByActiveTrue();
 
         if (currencies.isEmpty() || currencies.stream()
                 .anyMatch(currency -> currency.getRate().equals(BigDecimal.ZERO))) {
@@ -60,10 +86,21 @@ public class CurrencyService {
                 .toList();
     }
 
+    public CurrencyResponseModel getCurrencyInfo(Integer currencyId) {
+        var currency = currencyRepository.findByIdAndActiveTrue(currencyId)
+                .orElseThrow(() -> new NotFoundException("Currency not found"));
+
+        if (currency.getRate().equals(BigDecimal.ZERO)) {
+            throwServiceUnavailableException();
+        }
+
+        return currency.toResponseModel();
+    }
+
     public AmountModel calculateAmount(Integer currencyIdFrom, Integer currencyIdTo, BigDecimal amount) {
-        Currency currencyFrom = currencyRepository.findById(currencyIdFrom)
+        Currency currencyFrom = currencyRepository.findByIdAndActiveTrue(currencyIdFrom)
                 .orElseThrow(() -> new NotFoundException("Currency with id " + currencyIdFrom + " not found"));
-        Currency currencyTo = currencyRepository.findById(currencyIdTo)
+        Currency currencyTo = currencyRepository.findByIdAndActiveTrue(currencyIdTo)
                 .orElseThrow(() -> new NotFoundException("Currency with id " + currencyIdTo + " not found"));
 
         if (currencyFrom.getRate().equals(BigDecimal.ZERO) || currencyTo.getRate().equals(BigDecimal.ZERO)) {
@@ -88,8 +125,8 @@ public class CurrencyService {
 
     private BigDecimal calculateFinalAmount(Currency from, Currency to, BigDecimal amount) {
         return amount
-                .multiply(from.getRate())
-                .divide(to.getRate(), 10, RoundingMode.HALF_EVEN)
+                .multiply(to.getRate())
+                .divide(from.getRate(), 10, RoundingMode.HALF_EVEN)
                 .setScale(2, RoundingMode.HALF_EVEN);
     }
 

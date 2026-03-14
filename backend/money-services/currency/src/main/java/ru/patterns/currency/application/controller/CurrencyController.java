@@ -27,7 +27,16 @@ public class CurrencyController {
         return currencyService.getCurrencies();
     }
 
-    @GetMapping("/calculate")
+    @GetMapping("/all-rates/{currencyId}")
+    @Operation(summary = "Получение информации о конкретной валюте [Все]")
+    public CurrencyResponseModel getCurrency(@PathVariable("currencyId") Integer currencyId,
+                                             @Parameter(hidden = true) @RequestHeader String authorization) {
+        AuthUtility.isAuthorized(authorization);
+
+        return currencyService.getCurrencyInfo(currencyId);
+    }
+
+    @PostMapping("/calculate")
     @Operation(summary = "Конвертация валюты [Все]")
     public AmountModel calculateTransferBetweenCurrencies(@RequestBody CalculatorRequestModel calculatorRequest,
                                                           @Parameter(hidden = true) @RequestHeader String authorization) {
