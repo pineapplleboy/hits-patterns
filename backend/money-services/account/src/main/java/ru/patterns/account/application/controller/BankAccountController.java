@@ -21,6 +21,7 @@ public class BankAccountController {
     private final BankAccountService bankAccountService;
 
     @PostMapping("/users/{userId}/bank-accounts")
+    @Operation(summary = "Открытие счёта [Пользователь]")
     public AccountNumberResponseModel createBankAccount(@PathVariable UUID userId,
                                                         @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
@@ -29,6 +30,7 @@ public class BankAccountController {
     }
 
     @DeleteMapping("/users/{userId}/bank-accounts/{accountNumber}")
+    @Operation(summary = "Закрытие счёта [Пользователь]")
     public void closeBankAccount(@PathVariable UUID userId, @PathVariable String accountNumber,
                                  @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
@@ -37,7 +39,7 @@ public class BankAccountController {
     }
 
     @GetMapping("/users/{userId}/bank-accounts")
-    @Operation(summary = "Для пользователя")
+    @Operation(summary = "Получение всех счетов (скрытые/нескрытые) [Пользователь]")
     public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId, @RequestParam boolean hidden,
                                                            @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
@@ -46,7 +48,7 @@ public class BankAccountController {
     }
 
     @GetMapping("/users/{userId}/bank-accounts/all")
-    @Operation(summary = "Для работника")
+    @Operation(summary = "Получение всех счетов (скрытые + нескрытые) [Работник]")
     public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId,
                                                            @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIfEmployee(authorization);
@@ -55,6 +57,7 @@ public class BankAccountController {
     }
 
     @GetMapping("/users/{userId}/bank-accounts/{accountNumber}")
+    @Operation(summary = "Получение детальной информации о счёте [Работник или Пользователь]")
     public BankAccountFullModel getBankAccountInfo(@PathVariable UUID userId, @PathVariable String accountNumber,
                                                    @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);

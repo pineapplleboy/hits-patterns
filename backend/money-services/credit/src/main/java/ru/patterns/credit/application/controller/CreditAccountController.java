@@ -1,5 +1,6 @@
 package ru.patterns.credit.application.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ public class CreditAccountController {
     private final CreditAccountService creditAccountService;
 
     @PostMapping("/take/{userId}/{rateId}")
+    @Operation(summary = "Взятие кредита [Пользователь]")
     public OperationStatusResponseModel takeCredit(@PathVariable UUID userId, @PathVariable UUID rateId,
                                                    @RequestParam BigDecimal sum, @RequestParam String bankAccountNum,
                                                    @Parameter(hidden = true) @RequestHeader String authorization) {

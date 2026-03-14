@@ -1,5 +1,6 @@
 package ru.patterns.account.application.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ public class TransferController {
     private final TransferService transferService;
 
     @PostMapping("/replenish")
+    @Operation(summary = "Пополнить счёт [Пользователь]")
     public OperationStatusResponseModel replenishMoney(@PathVariable UUID userId,
                                                        @PathVariable String bankAccountNumber,
                                                        @RequestBody MoneyAmountRequestModel requestModel,
@@ -28,6 +30,7 @@ public class TransferController {
     }
 
     @PostMapping("/withdraw")
+    @Operation(summary = "Снять деньги со счёта [Пользователь]")
     public OperationStatusResponseModel withdrawMoney(@PathVariable UUID userId,
                                                       @PathVariable String bankAccountNumber,
                                                       @RequestBody MoneyAmountRequestModel requestModel,
@@ -38,6 +41,7 @@ public class TransferController {
     }
 
     @PostMapping("/credit-payments/{creditAccountNumber}")
+    @Operation(summary = "Перевести деньги на кредит [Пользователь]")
     public OperationStatusResponseModel payCredit(@PathVariable UUID userId,
                                                   @PathVariable String bankAccountNumber,
                                                   @PathVariable String creditAccountNumber,

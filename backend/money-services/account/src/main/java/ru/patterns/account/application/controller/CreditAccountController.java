@@ -1,5 +1,6 @@
 package ru.patterns.account.application.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ public class CreditAccountController {
     private final CreditAccountService creditAccountService;
 
     @GetMapping
+    @Operation(summary = "Получение информации о кредитах пользователя [Сотрудник или Пользователь]")
     public List<CreditAccountShortModel> getUsersCreditsHistory(@PathVariable UUID userId,
                                                                 @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
@@ -27,6 +29,7 @@ public class CreditAccountController {
     }
 
     @GetMapping("/{accountNumber}")
+    @Operation(summary = "Получение детальной информации о кредите пользователя [Сотрудник или Пользователь]")
     public CreditAccountFullModel getUserCreditFullInfo(@PathVariable UUID userId, @PathVariable String accountNumber,
                                                         @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
