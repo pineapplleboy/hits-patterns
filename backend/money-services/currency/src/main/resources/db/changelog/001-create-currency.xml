@@ -19,6 +19,10 @@
                 <constraints nullable="false" unique="true" uniqueConstraintName="uk_currency_char_code"/>
             </column>
 
+            <column name="symbol" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="rate" type="DECIMAL(38,16)" defaultValueNumeric="0.00">
                 <constraints nullable="false"/>
             </column>

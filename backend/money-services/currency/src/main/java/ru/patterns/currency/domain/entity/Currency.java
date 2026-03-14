@@ -21,6 +21,8 @@ public class Currency {
 
     private String charCode;
 
+    private String symbol;
+
     private BigDecimal rate = null;
 
     private boolean active = true;

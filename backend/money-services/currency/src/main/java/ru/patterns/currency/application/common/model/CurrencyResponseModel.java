@@ -3,9 +3,11 @@ package ru.patterns.currency.application.common.model;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
+
 @Data
 @Accessors(chain=true)
-public class ProcessedCurrencyModel {
+public class CurrencyResponseModel {
 
     private Integer id;
 
@@ -14,4 +16,6 @@ public class ProcessedCurrencyModel {
     private String charCode;
 
     private String symbol;
+
+    private BigDecimal rate;
 }
