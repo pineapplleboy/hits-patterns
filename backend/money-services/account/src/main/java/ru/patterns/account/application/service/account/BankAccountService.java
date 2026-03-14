@@ -7,6 +7,7 @@ import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.model.AccountNumberResponseModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
+import ru.patterns.account.application.service.external.SettingsService;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
 import ru.patterns.account.application.service.operation.OperationService;
 import ru.patterns.account.domain.entity.BankAccount;
@@ -17,7 +18,9 @@ import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -29,6 +32,7 @@ public class BankAccountService {
     private final BankAccountRepository bankAccountRepository;
     private final OperationService operationService;
     private final OperationHistoryService operationHistoryService;
+    private final SettingsService settingsService;
 
     public AccountNumberResponseModel createBankAccount(UUID userId) {
         BankAccount bankAccount = BankAccountFactory.createBankAccount(userId);
@@ -49,18 +53,38 @@ public class BankAccountService {
         operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(bankAccount, AccountActionType.CLOSE_ACCOUNT);
     }
 
-    public List<BankAccountShortModel> getAllBankAccounts() {
-        return bankAccountRepository.findAll()
+    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, boolean hidden, String token) {
+        List<BankAccount> accountsToShow;
+
+        if (hidden) {
+            accountsToShow = settingsService.getListOfHiddenBankAccounts(userId, token);
+        }
+        else {
+            var userBankAccounts = bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true);
+            var hiddenUserBankAccounts = settingsService.getHiddenAccountIds(userId, token);
+
+            accountsToShow = userBankAccounts
+                    .stream()
+                    .filter(account -> !hiddenUserBankAccounts.contains(account.getId()))
+                    .toList();
+        }
+
+        return accountsToShow
                 .stream()
-                .filter(BankAccount::isActive)
-                .map(account -> account.toShortModel())
+                .map(account -> account.toShortModel(hidden))
                 .toList();
     }
 
-    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId) {
-        return bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true)
+    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, String token) {
+        var userBankAccounts = bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true);
+
+        Set<UUID> hiddenAccountIds = new HashSet<>(
+                settingsService.getHiddenAccountIds(userId, token)
+        );
+
+        return userBankAccounts
                 .stream()
-                .map(account -> account.toShortModel())
+                .map(account -> account.toShortModel(hiddenAccountIds.contains(account.getId())))
                 .toList();
     }
 

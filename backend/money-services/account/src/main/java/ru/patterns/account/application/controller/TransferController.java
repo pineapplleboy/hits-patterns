@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/patterns/api/v1/users/{userId}/transfers/bank-account/{bankAccountNumber}")
+@RequestMapping("/patterns/api/v2/users/{userId}/transfers/bank-account/{bankAccountNumber}")
 public class TransferController {
 
     private final TransferService transferService;

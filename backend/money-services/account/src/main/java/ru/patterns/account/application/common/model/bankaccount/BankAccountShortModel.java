@@ -17,4 +17,6 @@ public class BankAccountShortModel {
     private BigDecimal balance;
 
     private boolean banned = false;
+
+    private boolean hidden = false;
 }

@@ -1,5 +1,6 @@
 package ru.patterns.account.application.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.patterns.account.application.common.model.AccountNumberResponseModel;
@@ -13,7 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/patterns/api/v1")
+@RequestMapping("/patterns/api/v2")
 public class BankAccountController {
 
     private final BankAccountService bankAccountService;
@@ -33,18 +34,22 @@ public class BankAccountController {
         bankAccountService.closeBankAccount(userId, accountNumber);
     }
 
-    @GetMapping("/bank-accounts")
-    public List<BankAccountShortModel> getAllBankAccounts(@RequestHeader String authorization) {
-        AuthUtility.checkUserIfEmployee(authorization);
+    @GetMapping("/users/{userId}/bank-accounts")
+    @Operation(summary = "Для пользователя")
+    public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId, @RequestParam boolean hidden,
+                                                           @RequestHeader String authorization) {
+        AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return bankAccountService.getAllBankAccounts();
+        return bankAccountService.getAllUserBankAccounts(userId, hidden, authorization);
     }
 
     @GetMapping("/users/{userId}/bank-accounts")
-    public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId, @RequestHeader String authorization) {
-        AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
+    @Operation(summary = "Для работника")
+    public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId,
+                                                           @RequestHeader String authorization) {
+        AuthUtility.checkUserIfEmployee(authorization);
 
-        return bankAccountService.getAllUserBankAccounts(userId);
+        return bankAccountService.getAllUserBankAccounts(userId, authorization);
     }
 
     @GetMapping("/users/{userId}/bank-accounts/{accountNumber}")

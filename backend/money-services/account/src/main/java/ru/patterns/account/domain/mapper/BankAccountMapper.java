@@ -8,12 +8,13 @@ import ru.patterns.account.domain.entity.BankAccount;
 @UtilityClass
 public class BankAccountMapper {
 
-    public BankAccountShortModel toShortModel(BankAccount bankAccount) {
+    public BankAccountShortModel toShortModel(BankAccount bankAccount, boolean hidden) {
         return new BankAccountShortModel()
                 .setAccountNumber(bankAccount.getAccountNumber())
                 .setId(bankAccount.getId())
                 .setBalance(bankAccount.getBalance())
-                .setBanned(bankAccount.isBanned());
+                .setBanned(bankAccount.isBanned())
+                .setHidden(hidden);
     }
 
     public BankAccountFullModel toFullModelWithoutComments(BankAccount bankAccount) {

@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/patterns/api/v1/users/{userId}/credit-accounts")
+@RequestMapping("/patterns/api/v2/users/{userId}/credit-accounts")
 public class CreditAccountController {
 
     private final CreditAccountService creditAccountService;

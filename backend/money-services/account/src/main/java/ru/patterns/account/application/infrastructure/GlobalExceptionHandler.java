@@ -11,6 +11,7 @@ import ru.patterns.shared.model.response.ErrorResponse;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> catchNotFoundException(NotFoundException exception) {
         return new ResponseEntity<>(new ErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage()),

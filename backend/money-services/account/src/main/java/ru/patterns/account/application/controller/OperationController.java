@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/patterns/api/v1")
+@RequestMapping("/patterns/api/v2")
 public class OperationController {
 
     private final OperationService operationService;
