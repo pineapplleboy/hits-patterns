@@ -1,5 +1,6 @@
 package ru.patterns.credit.application.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.patterns.credit.application.common.model.request.CreditRateDataModel;
@@ -23,28 +24,32 @@ public class CreditRateController {
     }
 
     @GetMapping("/available-plans/{id}")
-    public CreditRateModel getAvailablePlan(@PathVariable UUID id, @RequestHeader String authorization) {
+    public CreditRateModel getAvailablePlan(@PathVariable UUID id,
+                                            @Parameter(hidden = true) @RequestHeader String authorization) {
         JwtAuthUtility.parseAuthorizationHeader(authorization);
 
         return creditRateCRUDService.getCreditRateById(id);
     }
 
     @PostMapping()
-    public UuidResponseModel createCreditRate(@RequestBody CreditRateDataModel creditRateDataModel, @RequestHeader String authorization) {
+    public UuidResponseModel createCreditRate(@RequestBody CreditRateDataModel creditRateDataModel,
+                                              @Parameter(hidden = true) @RequestHeader String authorization) {
         JwtAuthUtility.parseAuthorizationHeader(authorization);
 
         return creditRateCRUDService.createCreditRate(creditRateDataModel);
     }
 
     @PutMapping("/{id}")
-    public void updateCreateRate(@PathVariable UUID id, @RequestBody CreditRateDataModel creditRateDataModel, @RequestHeader String authorization) {
+    public void updateCreateRate(@PathVariable UUID id, @RequestBody CreditRateDataModel creditRateDataModel,
+                                 @Parameter(hidden = true) @RequestHeader String authorization) {
         JwtAuthUtility.parseAuthorizationHeader(authorization);
 
         creditRateCRUDService.updateCreditRateModel(id, creditRateDataModel);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCreateRate(@PathVariable UUID id, @RequestHeader String authorization) {
+    public void deleteCreateRate(@PathVariable UUID id,
+                                 @Parameter(hidden = true) @RequestHeader String authorization) {
         JwtAuthUtility.parseAuthorizationHeader(authorization);
 
         creditRateCRUDService.deactivateCreditRateById(id);
