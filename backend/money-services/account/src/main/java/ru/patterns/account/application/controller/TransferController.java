@@ -1,5 +1,6 @@
 package ru.patterns.account.application.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
@@ -20,7 +21,7 @@ public class TransferController {
     public OperationStatusResponseModel replenishMoney(@PathVariable UUID userId,
                                                        @PathVariable String bankAccountNumber,
                                                        @RequestBody MoneyAmountRequestModel requestModel,
-                                                       @RequestHeader String authorization) {
+                                                       @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
         return transferService.replenishMoney(userId, bankAccountNumber, requestModel);
@@ -29,8 +30,8 @@ public class TransferController {
     @PostMapping("/withdraw")
     public OperationStatusResponseModel withdrawMoney(@PathVariable UUID userId,
                                                       @PathVariable String bankAccountNumber,
-                                                       @RequestBody MoneyAmountRequestModel requestModel,
-                                                       @RequestHeader String authorization) {
+                                                      @RequestBody MoneyAmountRequestModel requestModel,
+                                                      @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
         return transferService.withdrawMoney(userId, bankAccountNumber, requestModel);
@@ -41,7 +42,7 @@ public class TransferController {
                                                   @PathVariable String bankAccountNumber,
                                                   @PathVariable String creditAccountNumber,
                                                   @RequestBody MoneyAmountRequestModel requestModel,
-                                                  @RequestHeader String authorization) {
+                                                  @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
         return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel);
