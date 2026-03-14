@@ -11,7 +11,7 @@ public class RestClientConfig {
     @Bean
     public RestClient settingsClient() {
         return RestClient.builder()
-                .baseUrl(UrlConstants.BASE_URL + "/settings/patterns" + UrlConstants.SETTINGS_API_VERSION + "/user/setting")
+                .baseUrl(UrlConstants.BASE_URL + "/settings/patterns/api" + UrlConstants.SETTINGS_API_VERSION + "/user/setting")
                 .defaultHeader("Accept", "application/json")
                 .build();
     }
