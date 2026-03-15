@@ -89,8 +89,6 @@ public class TransferService {
                 .setOperationId(operation.getOperationId())
                 .setAccountNumberFrom(operation.getAccountNumberFrom())
                 .setAccountNumberTo(operation.getRecipientAccountNumber())
-                .setUserIdFrom(operation.getUserIdFrom())
-                .setUserIdTo(operation.getRecipientId())
                 .setTransferType(operation.getTransferAccountType())
                 .setAmount(operation.getAmount());
     }

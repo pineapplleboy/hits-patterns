@@ -36,9 +36,14 @@ public class CreditAccount {
 
     private Instant nextWriteOffDate;
 
-    private boolean active;
+    @Column(nullable = false)
+    private boolean active = false;
 
-    private boolean closed;
+    @Column(nullable = false)
+    private boolean closed = false;
+
+    @Column(nullable = false)
+    private boolean currentlyTransactional = false;
 
     @Column(nullable = false, updatable = false)
     private Instant createTime = Instant.now();

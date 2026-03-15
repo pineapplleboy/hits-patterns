@@ -15,16 +15,11 @@ public class TransferRequestMessage {
 
     private UUID operationId;
 
-    private UUID userIdFrom;
-
     private String accountNumberFrom;
-
-    private UUID userIdTo;
 
     private String accountNumberTo;
 
     private BigDecimal amount;
 
     private TransferAccountType transferType;
-
 }

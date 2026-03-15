@@ -9,8 +9,11 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+import ru.patterns.account.application.common.enums.TransactionFinishStatus;
+import ru.patterns.account.application.kafka.provider.TransferRequestProvider;
 import ru.patterns.account.application.service.transfer.TransferOperationService;
 import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
+import ru.patterns.shared.model.kafka.TransferRequestMessage;
 import ru.patterns.shared.utility.AuthUtility;
 
 @Slf4j
@@ -20,6 +23,7 @@ public class TransferAssignmentListener {
 
     private final TransferOperationService transferOperationService;
     private final ObjectMapper objectMapper;
+    private final TransferRequestProvider transferRequestProvider;
 
     @Value("${kafka.consumer.transfer-assignment}")
     private String topic;
@@ -33,7 +37,11 @@ public class TransferAssignmentListener {
 
             AuthUtility.isAuthorized(token);
 
-            transferOperationService.makeTransfer(msg);
+            var transferResult = transferOperationService.makeTransfer(msg);
+
+            if (transferResult == TransactionFinishStatus.TRANSACTION_PAUSED) {
+                transferRequestProvider.send(makeTransferRequest(msg), token);
+            }
 
             ack.acknowledge();
         } catch (Exception exception) {
@@ -41,5 +49,15 @@ public class TransferAssignmentListener {
 
             ack.acknowledge();
         }
+    }
+
+    private TransferRequestMessage makeTransferRequest(TransferAssignmentMessage msg) {
+        return new TransferRequestMessage()
+                .setRequestId(msg.getRequestId())
+                .setOperationId(msg.getOperationId())
+                .setTransferType(msg.getTransferAccountType())
+                .setAmount(msg.getAmount())
+                .setAccountNumberFrom(msg.getAccountNumberFrom())
+                .setAccountNumberTo(msg.getAccountNumberTo());
     }
 }
