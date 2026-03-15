@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.account.application.common.model.AccountNumberResponseModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
+import ru.patterns.account.application.common.model.response.AccountNumberResponseModel;
+import ru.patterns.account.application.service.currency.CurrencyService;
 import ru.patterns.account.application.service.external.SettingsService;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
 import ru.patterns.account.application.service.operation.OperationService;
@@ -34,6 +35,7 @@ public class BankAccountService {
     private final OperationService operationService;
     private final OperationHistoryService operationHistoryService;
     private final SettingsService settingsService;
+    private final CurrencyService currencyService;
 
     public AccountNumberResponseModel createBankAccount(UUID userId, Integer currencyId) {
         if (CurrencySymbolUtility.hasCurrency(currencyId)) {
@@ -93,11 +95,13 @@ public class BankAccountService {
                 .toList();
     }
 
-    public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber) {
+    public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber, String token) {
         var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
-        var accountFullModel = account.toFullModelWithoutComments();
+        var currency = currencyService.getCurrencyById(account.getCurrencyId(), token);
+
+        var accountFullModel = account.toFullModelWithoutComments(currency);
         var bankOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.BANK_ACCOUNT);
 
         var creditOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);

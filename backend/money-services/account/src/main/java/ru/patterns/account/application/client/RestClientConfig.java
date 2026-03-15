@@ -15,4 +15,12 @@ public class RestClientConfig {
                 .defaultHeader("Accept", "application/json")
                 .build();
     }
+
+    @Bean
+    public RestClient currencyClient() {
+        return RestClient.builder()
+                .baseUrl(UrlConstants.BASE_URL + "/currency/patterns/api" + UrlConstants.CURRENCY_API_VERSION)
+                .defaultHeader("Accept", "application/json")
+                .build();
+    }
 }

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.patterns.account.application.common.model.AccountNumberResponseModel;
+import ru.patterns.account.application.common.model.response.AccountNumberResponseModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
 import ru.patterns.account.application.service.account.BankAccountService;
@@ -63,6 +63,6 @@ public class BankAccountController {
                                                    @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
 
-        return bankAccountService.getBankAccountFullModel(userId, accountNumber);
+        return bankAccountService.getBankAccountFullModel(userId, accountNumber, authorization);
     }
 }

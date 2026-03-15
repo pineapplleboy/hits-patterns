@@ -1,4 +1,4 @@
-package ru.patterns.account.application.common.model;
+package ru.patterns.account.application.common.model.operation;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

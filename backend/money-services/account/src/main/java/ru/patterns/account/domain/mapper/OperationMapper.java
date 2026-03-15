@@ -2,7 +2,7 @@ package ru.patterns.account.domain.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.account.application.common.model.OperationModel;
+import ru.patterns.account.application.common.model.operation.OperationModel;
 import ru.patterns.account.domain.entity.Operation;
 
 @UtilityClass

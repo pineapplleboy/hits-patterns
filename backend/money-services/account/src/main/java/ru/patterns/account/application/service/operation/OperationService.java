@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
 import ru.patterns.shared.model.enums.TransferAccountType;
-import ru.patterns.account.application.common.model.OperationModel;
+import ru.patterns.account.application.common.model.operation.OperationModel;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.mapper.OperationMapper;
 import ru.patterns.account.domain.repository.OperationRepository;
