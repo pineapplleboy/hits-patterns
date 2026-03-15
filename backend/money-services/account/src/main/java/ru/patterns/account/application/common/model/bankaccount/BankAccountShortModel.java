@@ -3,7 +3,6 @@ package ru.patterns.account.application.common.model.bankaccount;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
@@ -14,7 +13,7 @@ public class BankAccountShortModel {
 
     private String accountNumber;
 
-    private BigDecimal balance;
+    private String balance;
 
     private boolean banned = false;
 

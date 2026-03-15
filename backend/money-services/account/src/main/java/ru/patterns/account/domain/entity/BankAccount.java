@@ -47,6 +47,9 @@ public class BankAccount {
     @Column(nullable = false)
     private boolean currentlyTransactional = false;
 
+    @Column(nullable = false)
+    private Integer currencyId = 643;
+
     @Column(nullable = false, updatable = false)
     private Instant createTime = Instant.now();
 

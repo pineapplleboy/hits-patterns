@@ -20,5 +20,6 @@
     <include file="/db/changelog/011-fix-operation-schema.xml"/>
     <include file="/db/changelog/012-add-banned-field-to-bank-account.xml"/>
     <include file="/db/changelog/013-add-currently-transactional-fields.xml"/>
+    <include file="/db/changelog/014-add-currency-id-to-accounts.xml"/>
 
 </databaseChangeLog>

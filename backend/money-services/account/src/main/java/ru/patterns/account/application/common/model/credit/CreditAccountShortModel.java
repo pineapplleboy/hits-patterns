@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import ru.patterns.shared.infrastructure.DurationSerializer;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -18,7 +17,7 @@ public class CreditAccountShortModel {
 
     private String accountNumber;
 
-    private BigDecimal dept;
+    private String dept;
 
     private String creditRateName;
 

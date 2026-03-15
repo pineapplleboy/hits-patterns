@@ -3,6 +3,7 @@ package ru.patterns.account.domain.mapper;
 import lombok.experimental.UtilityClass;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
+import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.BankAccount;
 
 @UtilityClass
@@ -12,7 +13,7 @@ public class BankAccountMapper {
         return new BankAccountShortModel()
                 .setAccountNumber(bankAccount.getAccountNumber())
                 .setId(bankAccount.getId())
-                .setBalance(bankAccount.getBalance())
+                .setBalance(bankAccount.getBalance().toString() + CurrencySymbolUtility.getCurrencySymbol(bankAccount.getCurrencyId()))
                 .setBanned(bankAccount.isBanned())
                 .setHidden(hidden);
     }

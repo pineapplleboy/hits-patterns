@@ -3,6 +3,7 @@ package ru.patterns.account.domain.mapper;
 import lombok.experimental.UtilityClass;
 import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
 import ru.patterns.account.application.common.model.credit.CreditAccountShortModel;
+import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.CreditAccount;
 
 @UtilityClass
@@ -13,7 +14,7 @@ public class CreditAccountMapper {
                 .setId(creditAccount.getId())
                 .setAccountNumber(creditAccount.getAccountNumber())
                 .setCreditRateName(creditAccount.getCreditRateName())
-                .setDept(creditAccount.getDept())
+                .setDept(creditAccount.getDept().toString() + CurrencySymbolUtility.getCurrencySymbol(creditAccount.getCurrencyId()))
                 .setCreditRatePercent(creditAccount.getCreditRatePercent())
                 .setNextWriteOffDate(creditAccount.getNextWriteOffDate())
                 .setWriteOffPeriod(creditAccount.getWriteOffPeriod())
@@ -25,7 +26,7 @@ public class CreditAccountMapper {
                 .setId(creditAccount.getId())
                 .setAccountNumber(creditAccount.getAccountNumber())
                 .setCreditRateName(creditAccount.getCreditRateName())
-                .setDept(creditAccount.getDept())
+                .setDept(creditAccount.getDept().toString() + CurrencySymbolUtility.getCurrencySymbol(creditAccount.getCurrencyId()))
                 .setCreditRatePercent(creditAccount.getCreditRatePercent())
                 .setNextWriteOffDate(creditAccount.getNextWriteOffDate())
                 .setWriteOffPeriod(creditAccount.getWriteOffPeriod())
