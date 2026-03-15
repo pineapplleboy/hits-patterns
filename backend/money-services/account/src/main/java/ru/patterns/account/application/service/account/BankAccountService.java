@@ -10,6 +10,7 @@ import ru.patterns.account.application.common.model.bankaccount.BankAccountShort
 import ru.patterns.account.application.service.external.SettingsService;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
 import ru.patterns.account.application.service.operation.OperationService;
+import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.factory.BankAccountFactory;
 import ru.patterns.account.domain.mapper.BankAccountMapper;
@@ -34,8 +35,12 @@ public class BankAccountService {
     private final OperationHistoryService operationHistoryService;
     private final SettingsService settingsService;
 
-    public AccountNumberResponseModel createBankAccount(UUID userId) {
-        BankAccount bankAccount = BankAccountFactory.createBankAccount(userId);
+    public AccountNumberResponseModel createBankAccount(UUID userId, Integer currencyId) {
+        if (CurrencySymbolUtility.hasCurrency(currencyId)) {
+            throw new NotFoundException("Currency is not supportable");
+        }
+
+        BankAccount bankAccount = BankAccountFactory.createBankAccount(userId, currencyId);
         bankAccountRepository.save(bankAccount);
 
         operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(bankAccount, AccountActionType.OPEN_ACCOUNT);

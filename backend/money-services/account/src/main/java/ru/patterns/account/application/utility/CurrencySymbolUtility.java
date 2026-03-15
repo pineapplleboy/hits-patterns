@@ -18,4 +18,8 @@ public class CurrencySymbolUtility {
     public String getCurrencySymbol(Integer id) {
         return CURRENCY_SYMBOLS.get(id);
     }
+
+    public boolean hasCurrency(Integer id) {
+        return CURRENCY_SYMBOLS.containsKey(id);
+    }
 }

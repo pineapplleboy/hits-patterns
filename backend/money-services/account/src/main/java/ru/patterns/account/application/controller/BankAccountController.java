@@ -23,10 +23,11 @@ public class BankAccountController {
     @PostMapping("/users/{userId}/bank-accounts")
     @Operation(summary = "Открытие счёта [Пользователь]")
     public AccountNumberResponseModel createBankAccount(@PathVariable UUID userId,
+                                                        @RequestParam Integer currencyId,
                                                         @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return bankAccountService.createBankAccount(userId);
+        return bankAccountService.createBankAccount(userId, currencyId);
     }
 
     @DeleteMapping("/users/{userId}/bank-accounts/{accountNumber}")
