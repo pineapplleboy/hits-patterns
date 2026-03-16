@@ -102,7 +102,7 @@ public class TransferService {
 
     private TransferRequestMessage createRequestContext(Operation operation) {
         return new TransferRequestMessage()
-                .setUserIdTo(operation.getUserIdFrom())
+                .setUserIdFrom(operation.getUserIdFrom())
                 .setUserIdTo(operation.getRecipientId())
                 .setOperationId(operation.getOperationId())
                 .setAccountNumberFrom(operation.getAccountNumberFrom())
