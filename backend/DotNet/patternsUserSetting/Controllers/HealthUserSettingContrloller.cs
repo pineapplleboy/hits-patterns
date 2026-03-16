@@ -1,9 +1,11 @@
 ﻿using ClassLibrary;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace patternsUserSetting.Controllers
 {
     [ApiController]
+    [AllowAnonymous]
     [Route("actuator/health")]
     public class HealthUserSettingContrloller : ControllerBase
     {

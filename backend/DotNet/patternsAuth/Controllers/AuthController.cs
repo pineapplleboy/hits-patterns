@@ -19,34 +19,34 @@ namespace patternsAuth.Controllers
 
         [Authorize(Roles = "Employee")]
         [HttpPost("employee-register-user")]
-        public async Task<IActionResult> EmployeeRegisterUser(RegisterUserDTO user)
+        public async Task<IActionResult> EmployeeRegisterUser(RegisterUserDTO user) // не будет
         {
             await _authService.EmployeeRegisterUser(UserDescriptor.GetUserId(User),user);
             return Ok();
         }
 
-        [HttpPost("employee-login")]
+        [HttpPost("employee-login")] // не будет
         [ProducesResponseType(typeof(string), 200)]
         public async Task<IActionResult> LoginEmployee(UserLoginDTO user)
         {
             return Ok(await _authService.LoginEmployee(user));
         }
-
-        [HttpPost("client-login")]
+         
+        [HttpPost("client-login")] // не будет
         [ProducesResponseType(typeof(string), 200)]
         public async Task<IActionResult> LoginСlient(UserLoginDTO user)
         {
             return Ok(await _authService.LoginСlient(user));
         }
 
-        [HttpPost("employee-register")]
+        [HttpPost("employee-register")] // не будет
         [ProducesResponseType(typeof(string), 200)]
         public async Task<IActionResult> RegisterEmployee(RegisterDTO user)
         {
             return Ok(await _authService.UserRegister(user, UserRole.EMPLOYEE));
         }
 
-        [HttpPost("client-register")]
+        [HttpPost("client-register")] // не будет
         [ProducesResponseType(typeof(string), 200)]
         public async Task<IActionResult> RegisterСlient(RegisterDTO user)
         {

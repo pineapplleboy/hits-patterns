@@ -12,32 +12,32 @@ namespace ClassLibrary.BaseSetup
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
-                    In = ParameterLocation.Header,
-                    Description = "Please enter token",
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    BearerFormat = "JWT",
-                    Scheme = "Bearer"
+                    Type = SecuritySchemeType.OAuth2,
+                    Flows = new OpenApiOAuthFlows
+                    {
+                        AuthorizationCode = new OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri("https://localhost:5001/connect/authorize"),
+                            TokenUrl = new Uri("https://localhost:5001/connect/token"),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                {"SampleAPI", "Sample API - full access"}
+                            }
+                        },
+                    }
                 });
 
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                // Apply Scheme globally
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
                         new OpenApiSecurityScheme
                         {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
-
-                            Scheme = "oauth2",
-                            Name = "Bearer",
-                            In = ParameterLocation.Header
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
                         },
-                        new List<string>()
+                        new[] { "SampleAPI" }
                     }
                 });
             });
@@ -73,6 +73,8 @@ namespace ClassLibrary.BaseSetup
             {
                 options.RoutePrefix = "swagger";
                 options.SwaggerEndpoint("./v1/swagger.json", "API v1");
+
+                options.OAuthUsePkce();
             });
         }
     }

@@ -30,7 +30,7 @@ namespace patternsUsers.Controllers
         //    return Ok(await _userService.GetUserById(id));
         //}
 
-        [Authorize(Roles = "Employee")]
+        [Authorize(Roles = "EMPLOYEE")]
         [HttpGet("get-users")]
         [ProducesResponseType(typeof(List<UserDTO>), 200)]
         public async Task<IActionResult> GetUsers([FromQuery] bool? isClient)
@@ -38,7 +38,7 @@ namespace patternsUsers.Controllers
             return Ok(await _userService.GetUsers(UserDescriptor.GetUserId(User), isClient));
         }
 
-        [Authorize(Roles = "Employee")]
+        [Authorize(Roles = "EMPLOYEE")]
         [HttpPost("ban-user/{id}")]
         public async Task<IActionResult> BanUser([FromRoute] Guid id)
         {
@@ -46,7 +46,7 @@ namespace patternsUsers.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Employee")]
+        [Authorize(Roles = "EMPLOYEE")]
         [HttpPost("unban-user/{id}")]
         public async Task<IActionResult> UnbanUsers([FromRoute] Guid id)
         {

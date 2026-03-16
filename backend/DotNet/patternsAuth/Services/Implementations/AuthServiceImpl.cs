@@ -22,7 +22,7 @@ namespace patternsAuth.Services.Implementations
             _userRepository = userRepository;
         }
 
-        public async Task EmployeeRegisterUser(Guid employeeId, RegisterUserDTO user)
+        public async Task EmployeeRegisterUser(Guid employeeId, RegisterUserDTO user)  ///
         {
             bool userExists = await _context.AuthUsers.AnyAsync(u => u.Phone == user.Phone);
             if(userExists) { throw new BadRequestException(ErrorMessages.PHONE_IS_ALREADY_IN_USE); }
@@ -49,7 +49,7 @@ namespace patternsAuth.Services.Implementations
 
         }
 
-        public async Task<string> UserRegister(RegisterDTO user, UserRole userRole)
+        public async Task<string> UserRegister(RegisterDTO user, UserRole userRole) ///
         {
             bool userExists = await _context.AuthUsers.AnyAsync(u => u.Phone == user.Phone);
             if (userExists) { throw new BadRequestException(ErrorMessages.PHONE_IS_ALREADY_IN_USE); }

@@ -38,7 +38,7 @@ namespace ClassLibrary.BaseSetup
 
             app.UseHttpsRedirection();
 
-            app.MapControllers();
+            app.MapControllers().RequireAuthorization("ApiScope"); ;
         }
     }
 }

@@ -9,24 +9,49 @@ namespace ClassLibrary.BaseSetup
     {
         public static void AddAuth(WebApplicationBuilder builder)
         {
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+            builder.Services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", options =>
                 {
+                    options.Authority = "https://localhost:5001"; // Our API app will call to the IdentityServer to get the authority
                     options.RequireHttpsMetadata = false;
-                    options.SaveToken = true;
-                    options.TokenValidationParameters = new TokenValidationParameters
+                    options.BackchannelHttpHandler = new HttpClientHandler
                     {
-                        ValidateIssuer = true,
-                        ValidIssuer = AuthOptions.ISSUER,
-                        ValidateAudience = true,
-                        ValidAudience = AuthOptions.AUDIENCE,
-                        ValidateLifetime = true,
-                        IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
-                        ValidateIssuerSigningKey = true,
+                        ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator // Только для разработки!
+                    };
+
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateAudience = false, // Validate 
+                        ValidateIssuer = false,
+                        ValidateIssuerSigningKey = false,
                     };
                 });
+            //.AddJwtBearer(options =>
+            //{
+            //    options.RequireHttpsMetadata = false;
+            //    options.SaveToken = true;
+            //    options.TokenValidationParameters = new TokenValidationParameters
+            //    {
+            //        ValidateIssuer = true,
+            //        ValidIssuer = AuthOptions.ISSUER,
+            //        ValidateAudience = true,
+            //        ValidAudience = AuthOptions.AUDIENCE,
+            //        ValidateLifetime = true,
+            //        IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
+            //        ValidateIssuerSigningKey = true,
+            //    };
+            //});
 
-            builder.Services.AddAuthorization();
+            //builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ApiScope", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("scope", "SampleAPI");
+                });
+            });
             builder.Services.AddCors(options =>
             {
                 options.AddDefaultPolicy(policy =>

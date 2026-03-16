@@ -9,6 +9,6 @@ namespace ClassLibrary
     public enum UserRole
     {
         CLIENT,
-        EMPLOYEE
+        EMPLOYEE // это и клиент и сотрудник
     }
 }

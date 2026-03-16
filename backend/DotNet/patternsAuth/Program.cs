@@ -16,7 +16,7 @@ builder.Services.AddScoped<ITokenService, TokenServiceImpl>();
 builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
 
 //Консьюмер
-builder.Services.AddHostedService<BanConsumer>();
+//builder.Services.AddHostedService<BanConsumer>();
 
 ClassLibrary.BaseSetup.SetupAuth.AddAuth(builder);
 

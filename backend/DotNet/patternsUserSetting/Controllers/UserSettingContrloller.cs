@@ -14,7 +14,7 @@ namespace patternsUserSetting.Controllers
         {
             _userSettingService = userSettingService;
         }
-
+        
         [Authorize]
         [HttpGet("my-settings")]
         [ProducesResponseType(typeof(UserSettingsDTO), 200)]
@@ -40,7 +40,7 @@ namespace patternsUserSetting.Controllers
             return Ok(await _userSettingService.GetUserHiddenAccounts(accountId));
         }
 
-        [Authorize(Roles = "Сlient")]
+        [Authorize(Roles = "CLIENT, EMPLOYEE")]
         [HttpPut("account-visibility/{accountId}")]
         public async Task<IActionResult> ChangeMyHiddenAccount([FromRoute] Guid accountId)
         {
