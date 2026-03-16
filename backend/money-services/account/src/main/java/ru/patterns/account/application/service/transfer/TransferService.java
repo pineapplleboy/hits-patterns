@@ -48,7 +48,7 @@ public class TransferService {
                                                   String creditAccountNumber,
                                                   MoneyAmountRequestModel requestModel,
                                                   String token) {
-        transferOperationService.validateAccountRemainder(bankAccountNumber, requestModel);
+        transferOperationService.validateAccountRemainder(bankAccountNumber, requestModel, true);
 
         Operation operation = createOperationTransferRequest(userId, userId, bankAccountNumber, creditAccountNumber, requestModel,
                 TransferAccountType.CREDIT_ACCOUNT);
@@ -62,7 +62,7 @@ public class TransferService {
                                                      String accountNumberTo, MoneyAmountRequestModel amount,
                                                      TransferAccountType transferAccountType) {
         if (accountNumberFrom != null) {
-            transferOperationService.validateAccountRemainder(accountNumberFrom, amount);
+            transferOperationService.validateAccountRemainder(accountNumberFrom, amount, false);
         }
 
         Operation operation = new Operation()
@@ -86,6 +86,8 @@ public class TransferService {
 
     private TransferRequestMessage createRequestContext(Operation operation) {
         return new TransferRequestMessage()
+                .setUserIdTo(operation.getUserIdFrom())
+                .setUserIdTo(operation.getRecipientId())
                 .setOperationId(operation.getOperationId())
                 .setAccountNumberFrom(operation.getAccountNumberFrom())
                 .setAccountNumberTo(operation.getRecipientAccountNumber())

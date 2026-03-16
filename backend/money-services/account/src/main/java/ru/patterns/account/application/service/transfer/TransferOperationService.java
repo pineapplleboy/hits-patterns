@@ -14,6 +14,7 @@ import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.account.domain.repository.OperationRepository;
+import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
@@ -35,7 +36,7 @@ public class TransferOperationService {
     @Value("${master-bank.account-number}")
     private String masterBankAccountNumber;
 
-    public void validateAccountRemainder(String accountNumber, MoneyAmountRequestModel requestModel) {
+    public void validateAccountRemainder(String accountNumber, MoneyAmountRequestModel requestModel, boolean isForCredit) {
         BankAccount bankAccount = bankAccountRepository
                 .getBankAccountByAccountNumberAndActiveTrue(accountNumber)
                 .orElseThrow(() -> new BadRequestException("Account number not found"));
@@ -46,6 +47,10 @@ public class TransferOperationService {
 
         if (bankAccount.getBalance().compareTo(requestModel.getAmount()) < 0) {
             throw new BadRequestException("Incorrect request amount");
+        }
+
+        if (isForCredit && !bankAccount.getCurrencyId().equals(CurrencyConstants.BASE_CURRENCY_ID)) {
+            throw new BadRequestException("Transfers to credit supported for only RUB account");
         }
     }
 

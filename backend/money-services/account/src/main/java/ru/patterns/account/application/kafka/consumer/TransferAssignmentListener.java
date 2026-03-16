@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 import ru.patterns.account.application.common.enums.TransactionFinishStatus;
 import ru.patterns.account.application.kafka.provider.TransferRequestProvider;
 import ru.patterns.account.application.service.transfer.TransferOperationService;
+import ru.patterns.shared.factory.TransferMessageFactory;
 import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
-import ru.patterns.shared.model.kafka.TransferRequestMessage;
 import ru.patterns.shared.utility.AuthUtility;
 
 @Slf4j
@@ -40,7 +40,7 @@ public class TransferAssignmentListener {
             var transferResult = transferOperationService.makeTransfer(msg);
 
             if (transferResult == TransactionFinishStatus.TRANSACTION_PAUSED) {
-                transferRequestProvider.send(makeTransferRequest(msg), token);
+                transferRequestProvider.send(TransferMessageFactory.createRepeatRequest(msg), token);
             }
 
             ack.acknowledge();
@@ -49,15 +49,5 @@ public class TransferAssignmentListener {
 
             ack.acknowledge();
         }
-    }
-
-    private TransferRequestMessage makeTransferRequest(TransferAssignmentMessage msg) {
-        return new TransferRequestMessage()
-                .setRequestId(msg.getRequestId())
-                .setOperationId(msg.getOperationId())
-                .setTransferType(msg.getTransferAccountType())
-                .setAmount(msg.getAmount())
-                .setAccountNumberFrom(msg.getAccountNumberFrom())
-                .setAccountNumberTo(msg.getAccountNumberTo());
     }
 }

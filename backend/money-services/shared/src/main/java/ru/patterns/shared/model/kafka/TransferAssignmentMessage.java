@@ -22,4 +22,6 @@ public class TransferAssignmentMessage {
     private TransferAccountType transferAccountType;
 
     private BigDecimal amount;
+
+    private int repeatAmount = 0;
 }

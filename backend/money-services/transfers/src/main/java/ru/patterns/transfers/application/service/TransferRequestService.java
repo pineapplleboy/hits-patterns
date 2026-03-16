@@ -3,6 +3,7 @@ package ru.patterns.transfers.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.patterns.shared.factory.TransferMessageFactory;
 import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 import ru.patterns.shared.model.kafka.TransferRequestMessage;
 import ru.patterns.transfers.application.kafka.provider.TransferAssignmentProvider;
@@ -21,11 +22,11 @@ public class TransferRequestService {
     }
 
     private TransferAssignmentMessage enrichTransfer(TransferRequestMessage message) {
-        TransferAssignmentMessage assignment = new TransferAssignmentMessage()
-                .setRequestId(message.getRequestId())
-                .setOperationId(message.getOperationId())
-                .setTransferAccountType(message.getTransferType())
-                .setAmount(message.getAmount());
+        TransferAssignmentMessage assignment = TransferMessageFactory.createAssignment(message);
+
+        if (assignment.getRepeatAmount() > 0) {
+            return assignment;
+        }
 
         if (message.getAccountNumberTo() == null) {
             assignment.setAccountNumberTo(masterAccountNumber);
