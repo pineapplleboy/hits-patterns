@@ -57,4 +57,19 @@ public class TransferController {
 //
 //        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel, authorization);
     }
+
+    @PostMapping("/bankAccountTo/{bankAccountTo}")
+    @Operation(summary = "Перевод на другой счёт")
+    public OperationStatusResponseModel transferToBankAccount(@PathVariable UUID userId,
+                                                              @PathVariable String bankAccountNumber,
+                                                              @PathVariable String bankAccountTo,
+                                                              @RequestBody MoneyAmountRequestModel requestModel,
+                                                              @Parameter(hidden = true) @RequestHeader String authorization) {
+        return null;
+
+//        AuthUtility.checkUserIdEquality(authorization, userId);
+//
+//        return transferService.transferToBankAccount(userId, bankAccountNumber, bankAccountTo, requestModel, authorization);
+    }
+
 }

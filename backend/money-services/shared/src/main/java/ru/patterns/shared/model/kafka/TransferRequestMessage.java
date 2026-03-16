@@ -17,15 +17,15 @@ public class TransferRequestMessage {
 
     private String accountNumberFrom;
 
-     private UUID userIdFrom;
+    private UUID userIdFrom;
 
     private String accountNumberTo;
 
-     private UUID userIdTo;
+    private UUID userIdTo;
 
     private BigDecimal amount;
 
     private TransferAccountType transferType;
 
-     private int repeatAmount = 0;
+    private int repeatAmount = 0;
 }

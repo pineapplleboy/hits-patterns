@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.enums.TransactionFinishStatus;
-import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
 import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.entity.CreditAccount;
@@ -14,7 +13,6 @@ import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.account.domain.repository.OperationRepository;
-import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
@@ -35,24 +33,6 @@ public class TransferOperationService {
 
     @Value("${master-bank.account-number}")
     private String masterBankAccountNumber;
-
-    public void validateAccountRemainder(String accountNumber, MoneyAmountRequestModel requestModel, boolean isForCredit) {
-        BankAccount bankAccount = bankAccountRepository
-                .getBankAccountByAccountNumberAndActiveTrue(accountNumber)
-                .orElseThrow(() -> new BadRequestException("Account number not found"));
-
-        if (bankAccount.isBanned()) {
-            throw new BadRequestException("Account is banned");
-        }
-
-        if (bankAccount.getBalance().compareTo(requestModel.getAmount()) < 0) {
-            throw new BadRequestException("Incorrect request amount");
-        }
-
-        if (isForCredit && !bankAccount.getCurrencyId().equals(CurrencyConstants.BASE_CURRENCY_ID)) {
-            throw new BadRequestException("Transfers to credit supported for only RUB account");
-        }
-    }
 
     @Transactional
     public TransactionFinishStatus makeTransfer(TransferAssignmentMessage assignment) {
