@@ -86,7 +86,7 @@ public class TransferService {
                 .setRecipientId(userIdTo)
                 .setAccountNumberFrom(accountNumberFrom)
                 .setRecipientAccountNumber(accountNumberTo)
-                .setAmount(amount.getAmount())
+//                .setAmount(amount.getAmount())
                 .setTransferAccountType(transferAccountType)
                 .setActionType(AccountActionType.TRANSFER)
                 .setStatus(OperationStatus.CREATED);
@@ -108,7 +108,7 @@ public class TransferService {
                 .setAccountNumberFrom(operation.getAccountNumberFrom())
                 .setAccountNumberTo(operation.getRecipientAccountNumber())
                 .setTransferType(operation.getTransferAccountType())
-                .setAmount(operation.getAmount());
+                .setAmount(operation.getAmountFrom());
     }
 
     private UUID getRecipientId(String bankAccountNumber) {

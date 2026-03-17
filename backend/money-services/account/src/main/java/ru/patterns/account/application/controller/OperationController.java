@@ -40,15 +40,6 @@ public class OperationController {
         return operationService.getAccountOperations(accountNumber, transferType);
     }
 
-    @GetMapping("/users/{userId}/operations/{operationId}")
-    @Operation(summary = "Получение информации об операции пользователя [Сотрудник или Пользователь]")
-    public OperationModel getOperationInfo(@PathVariable UUID userId, @PathVariable UUID operationId,
-                                           @Parameter(hidden = true) @RequestHeader String authorization) {
-        AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
-
-        return operationService.getOperationInfo(operationId);
-    }
-
     @GetMapping("/users/{userId}/operations/{operationId}/status")
     @Operation(summary = "Получение статуса операции [Сотрудник или Пользователь]")
     public OperationStatusResponseModel getOperationStatus(@PathVariable UUID userId, @PathVariable UUID operationId,

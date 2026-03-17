@@ -102,7 +102,7 @@ public class TransferOperationService {
 
         if (creditAccountTo.getDept().compareTo(amount) < 0) {
             amount = creditAccountTo.getDept();
-            operation.setAmount(amount);
+            operation.setAmountFrom(amount);
         }
 
         BankAccount masterBankAccount = findBankAccountByAccountNumber(masterBankAccountNumber);

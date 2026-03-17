@@ -21,7 +21,10 @@ public class OperationHistoryService {
 
     public void createAndSaveOperation(UUID userId,
                                        TransferAccountType transferAccountType,
-                                       BigDecimal sum,
+                                       BigDecimal sumFrom,
+                                       Integer currencyFrom,
+                                       BigDecimal sumTo,
+                                       Integer currencyTo,
                                        AccountActionType actionType,
                                        OperationStatus operationStatus,
                                        String accountNumberFrom) {
@@ -30,7 +33,10 @@ public class OperationHistoryService {
                 .setUserIdFrom(userId)
                 .setRecipientAccountNumber(null)
                 .setRecipientId(null)
-                .setAmount(sum)
+                .setAmountFrom(sumFrom)
+                .setCurrencyFrom(currencyFrom)
+                .setAmountTo(sumTo)
+                .setCurrencyTo(currencyTo)
                 .setTransferAccountType(transferAccountType)
                 .setActionType(actionType)
                 .setStatus(operationStatus);
@@ -44,7 +50,6 @@ public class OperationHistoryService {
                 .setUserIdFrom(account.getUserId())
                 .setRecipientAccountNumber(null)
                 .setRecipientId(null)
-                .setAmount(BigDecimal.ZERO)
                 .setTransferAccountType(TransferAccountType.BANK_ACCOUNT)
                 .setActionType(actionType)
                 .setStatus(OperationStatus.SUCCESS);
@@ -58,7 +63,6 @@ public class OperationHistoryService {
                 .setUserIdFrom(account.getUserId())
                 .setRecipientAccountNumber(null)
                 .setRecipientId(null)
-                .setAmount(BigDecimal.ZERO)
                 .setTransferAccountType(TransferAccountType.BANK_ACCOUNT)
                 .setActionType(actionType)
                 .setStatus(OperationStatus.SUCCESS);

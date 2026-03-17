@@ -1,0 +1,33 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="015-update-operation-amount-fields" author="aleksey.z">
+
+        <dropNotNullConstraint tableName="operation"
+                               columnName="amount"
+                               columnDataType="DECIMAL(19,2)"/>
+
+        <renameColumn tableName="operation"
+                      oldColumnName="amount"
+                      newColumnName="amount_from"
+                      columnDataType="DECIMAL(19,2)"/>
+
+        <addColumn tableName="operation">
+            <column name="currency_from" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="amount_to" type="DECIMAL(19,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="currency_to" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>

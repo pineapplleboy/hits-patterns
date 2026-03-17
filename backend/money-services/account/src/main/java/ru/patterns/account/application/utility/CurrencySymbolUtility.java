@@ -1,6 +1,7 @@
 package ru.patterns.account.application.utility;
 
 import lombok.experimental.UtilityClass;
+import ru.patterns.shared.constants.CurrencyConstants;
 
 import java.util.Map;
 
@@ -16,6 +17,10 @@ public class CurrencySymbolUtility {
     );
 
     public String getCurrencySymbol(Integer id) {
+        if (id == null) {
+            return CURRENCY_SYMBOLS.get(CurrencyConstants.BASE_CURRENCY_ID);
+        }
+
         return CURRENCY_SYMBOLS.get(id);
     }
 

@@ -66,10 +66,6 @@ public class OperationService {
         return Stream.concat(outgoingOperations.stream(), incomingOperations.stream());
     }
 
-    public OperationModel getOperationInfo(UUID operationId) {
-        return getOperationById(operationId).toModel();
-    }
-
     public OperationStatusResponseModel getOperationStatus(UUID operationId) {
         return new OperationStatusResponseModel(getOperationById(operationId).getStatus());
     }
