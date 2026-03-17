@@ -2,7 +2,7 @@ package ru.patterns.currency.domain.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.patterns.currency.application.common.model.CurrencyResponseModel;
-import ru.patterns.currency.application.common.model.ProcessedCurrencyModel;
+import ru.patterns.shared.model.client.ProcessedCurrencyModel;
 import ru.patterns.currency.domain.entity.Currency;
 
 @UtilityClass

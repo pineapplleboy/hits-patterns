@@ -8,10 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.patterns.currency.application.client.RestClientConfig;
-import ru.patterns.currency.application.common.model.AmountModel;
+import ru.patterns.shared.model.client.CurrencyAmountModel;
 import ru.patterns.currency.application.common.model.CurrencyResponseModel;
 import ru.patterns.currency.application.common.model.FxRatesResponseModel;
-import ru.patterns.currency.application.common.model.ProcessedCurrencyModel;
+import ru.patterns.shared.model.client.ProcessedCurrencyModel;
 import ru.patterns.currency.application.config.CurrencyConfig;
 import ru.patterns.currency.domain.entity.Currency;
 import ru.patterns.currency.domain.mapper.CurrencyMapper;
@@ -97,7 +97,7 @@ public class CurrencyService {
         return currency.toResponseModel();
     }
 
-    public AmountModel calculateAmount(Integer currencyIdFrom, Integer currencyIdTo, BigDecimal amount) {
+    public CurrencyAmountModel calculateAmount(Integer currencyIdFrom, Integer currencyIdTo, BigDecimal amount) {
         Currency currencyFrom = currencyRepository.findByIdAndActiveTrue(currencyIdFrom)
                 .orElseThrow(() -> new NotFoundException("Currency with id " + currencyIdFrom + " not found"));
         Currency currencyTo = currencyRepository.findByIdAndActiveTrue(currencyIdTo)
@@ -107,7 +107,7 @@ public class CurrencyService {
             throwServiceUnavailableException();
         }
 
-        return new AmountModel()
+        return new CurrencyAmountModel()
                 .setFromCurrency(currencyFrom.toModel())
                 .setToCurrency(currencyTo.toModel())
                 .setAmount(amount)

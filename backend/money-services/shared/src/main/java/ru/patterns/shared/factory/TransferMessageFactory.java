@@ -12,7 +12,7 @@ public class TransferMessageFactory {
                 .setRequestId(msg.getRequestId())
                 .setOperationId(msg.getOperationId())
                 .setTransferType(msg.getTransferAccountType())
-                .setAmount(msg.getAmount())
+                .setAmount(msg.getAmountFrom())
                 .setAccountNumberFrom(msg.getAccountNumberFrom())
                 .setAccountNumberTo(msg.getAccountNumberTo())
                 .setRepeatAmount(msg.getRepeatAmount() + 1);
@@ -23,7 +23,13 @@ public class TransferMessageFactory {
                 .setRequestId(msg.getRequestId())
                 .setOperationId(msg.getOperationId())
                 .setTransferAccountType(msg.getTransferType())
-                .setAmount(msg.getAmount())
-                .setRepeatAmount(msg.getRepeatAmount());
+                .setAccountNumberFrom(msg.getAccountNumberFrom())
+                .setAccountNumberFrom(msg.getAccountNumberTo())
+                .setCurrencyFrom(msg.getCurrencyFrom())
+                .setCurrencyTo(msg.getCurrencyTo())
+                .setAmountFrom(msg.getAmount())
+                .setRepeatAmount(msg.getRepeatAmount())
+                .setUserIdFrom(msg.getUserIdFrom())
+                .setUserIdTo(msg.getUserIdTo());
     }
 }

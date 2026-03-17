@@ -37,10 +37,14 @@ public class TransferOperationService {
     @Transactional
     public TransactionFinishStatus makeTransfer(TransferAssignmentMessage assignment) {
         BankAccount bankAccountFrom = findBankAccountByAccountNumber(assignment.getAccountNumberFrom());
-        Operation operation = findOperationById(assignment.getOperationId());
+        Operation operation = findOrCreateOperationById(assignment.getOperationId(), assignment);
 
-        operation.setStatus(OperationStatus.IN_PROCESS);
+        operation.setStatus(assignment.getStatus());
         operationRepository.save(operation);
+
+        if (assignment.getStatus() == OperationStatus.REJECTED) {
+            return TransactionFinishStatus.TRANSACTION_REJECTED;
+        }
 
         if (assignment.getTransferAccountType() == TransferAccountType.BANK_ACCOUNT) {
             return makeTransferToBankAccount(assignment, bankAccountFrom, operation);
@@ -60,16 +64,17 @@ public class TransferOperationService {
             return finishRejectedOperation(operation);
         }
 
-        BigDecimal amount = assignment.getAmount();
+        BigDecimal amountFrom = assignment.getAmountFrom();
+        BigDecimal amountTo = assignment.getAmountTo();
 
-        if (bankAccountFrom.getBalance().compareTo(amount) < 0) {
+        if (bankAccountFrom.getBalance().compareTo(amountFrom) < 0) {
             return finishRejectedOperation(operation);
         }
 
         setCurrentlyTransactional(bankAccountFrom, bankAccountTo, null, true);
 
-        bankAccountFrom.setBalance(bankAccountFrom.getBalance().subtract(amount));
-        bankAccountTo.setBalance(bankAccountTo.getBalance().add(amount));
+        bankAccountFrom.setBalance(bankAccountFrom.getBalance().subtract(amountFrom));
+        bankAccountTo.setBalance(bankAccountTo.getBalance().add(amountTo));
         bankAccountRepository.save(bankAccountFrom);
         bankAccountRepository.save(bankAccountTo);
 
@@ -92,7 +97,7 @@ public class TransferOperationService {
             return finishRejectedOperation(operation);
         }
 
-        BigDecimal amount = assignment.getAmount();
+        BigDecimal amount = assignment.getAmountFrom();
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             return finishRejectedOperation(operation);
@@ -160,8 +165,9 @@ public class TransferOperationService {
                 .orElseThrow(() -> new BadRequestException("Credit account not found"));
     }
 
-    private Operation findOperationById(UUID operationId) {
-        return operationRepository.getOperationByOperationId(operationId)
-                .orElseThrow(() -> new BadRequestException("Operation not found"));
+    private Operation findOrCreateOperationById(UUID operationId, TransferAssignmentMessage assignmentMessage) {
+        var operation = operationRepository.getOperationByOperationId(operationId);
+
+        return operation.orElseGet(() -> operationHistoryService.createAndSaveOperation(assignmentMessage));
     }
 }

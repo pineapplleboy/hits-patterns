@@ -1,4 +1,4 @@
-package ru.patterns.currency.application.common.model;
+package ru.patterns.shared.model.client;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

@@ -2,7 +2,7 @@ package ru.patterns.currency.application.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import ru.patterns.currency.application.common.model.ProcessedCurrencyModel;
+import ru.patterns.shared.model.client.ProcessedCurrencyModel;
 
 import java.util.List;
 

@@ -24,11 +24,9 @@ public class TransferController {
                                                        @PathVariable String bankAccountNumber,
                                                        @RequestBody MoneyAmountRequestModel requestModel,
                                                        @Parameter(hidden = true) @RequestHeader String authorization) {
-        return null;
+        AuthUtility.checkUserIdEquality(authorization, userId);
 
-//        AuthUtility.checkUserIdEquality(authorization, userId);
-//
-//        return transferService.replenishMoney(userId, bankAccountNumber, requestModel, authorization);
+        return transferService.replenishMoney(userId, bankAccountNumber, requestModel, authorization);
     }
 
     @PostMapping("/withdraw")
@@ -37,11 +35,9 @@ public class TransferController {
                                                       @PathVariable String bankAccountNumber,
                                                       @RequestBody MoneyAmountRequestModel requestModel,
                                                       @Parameter(hidden = true) @RequestHeader String authorization) {
-        return null;
+        AuthUtility.checkUserIdEquality(authorization, userId);
 
-//        AuthUtility.checkUserIdEquality(authorization, userId);
-
-//        return transferService.withdrawMoney(userId, bankAccountNumber, requestModel, authorization);
+        return transferService.withdrawMoney(userId, bankAccountNumber, requestModel, authorization);
     }
 
     @PostMapping("/credit-payments/{creditAccountNumber}")
@@ -51,11 +47,9 @@ public class TransferController {
                                                   @PathVariable String creditAccountNumber,
                                                   @RequestBody MoneyAmountRequestModel requestModel,
                                                   @Parameter(hidden = true) @RequestHeader String authorization) {
-        return null;
+        AuthUtility.checkUserIdEquality(authorization, userId);
 
-//        AuthUtility.checkUserIdEquality(authorization, userId);
-//
-//        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel, authorization);
+        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel, authorization);
     }
 
     @PostMapping("/bankAccountTo/{bankAccountTo}")
@@ -65,11 +59,9 @@ public class TransferController {
                                                               @PathVariable String bankAccountTo,
                                                               @RequestBody MoneyAmountRequestModel requestModel,
                                                               @Parameter(hidden = true) @RequestHeader String authorization) {
-        return null;
+        AuthUtility.checkUserIdEquality(authorization, userId);
 
-//        AuthUtility.checkUserIdEquality(authorization, userId);
-//
-//        return transferService.transferToBankAccount(userId, bankAccountNumber, bankAccountTo, requestModel, authorization);
+        return transferService.transferToBankAccount(userId, bankAccountNumber, bankAccountTo, requestModel, authorization);
     }
 
 }
