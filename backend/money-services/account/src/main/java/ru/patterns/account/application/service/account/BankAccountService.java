@@ -38,7 +38,7 @@ public class BankAccountService {
     private final CurrencyService currencyService;
 
     public AccountNumberResponseModel createBankAccount(UUID userId, Integer currencyId) {
-        if (CurrencySymbolUtility.hasCurrency(currencyId)) {
+        if (!CurrencySymbolUtility.hasCurrency(currencyId)) {
             throw new NotFoundException("Currency is not supportable");
         }
 
