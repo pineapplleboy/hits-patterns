@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.experimental.UtilityClass;
+import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.UnauthorizedException;
 import ru.patterns.shared.model.external.AuthUser;
 import ru.patterns.shared.model.external.Role;
@@ -13,8 +14,6 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
-
-import static ru.patterns.shared.model.constants.ErrorMessages.UNAUTHORIZED;
 
 @UtilityClass
 public class JwtAuthUtility {
@@ -42,7 +41,7 @@ public class JwtAuthUtility {
 
         Instant expiresTime = claims.getExpiration() != null ? claims.getExpiration().toInstant() : null;
         if (expiresTime == null || expiresTime.isBefore(Instant.now())) {
-            throw new UnauthorizedException(UNAUTHORIZED);
+            throw new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
         }
 
         return new AuthUser(userId, role);
@@ -50,16 +49,16 @@ public class JwtAuthUtility {
 
     private String extractPrefix(String header) {
         if (header == null || header.isBlank()) {
-            throw new UnauthorizedException(UNAUTHORIZED);
+            throw new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
         }
 
         if (!header.regionMatches(true, 0, PREFIX, 0, PREFIX.length())) {
-            throw new UnauthorizedException(UNAUTHORIZED);
+            throw new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
         }
 
         String token = header.substring(PREFIX.length()).trim();
         if (token.isEmpty()) {
-            throw new UnauthorizedException(UNAUTHORIZED);
+            throw new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
         }
 
         return token;
@@ -68,12 +67,12 @@ public class JwtAuthUtility {
     private String getClaim(Claims claims, String claimName) {
         var claimValue = claims.get(claimName);
         if (claimValue == null) {
-            throw new UnauthorizedException(UNAUTHORIZED);
+            throw new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
         }
 
         String claim = String.valueOf(claimValue).trim();
         if (claim.isEmpty()) {
-            throw new UnauthorizedException(UNAUTHORIZED);
+            throw new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
         }
 
         return claim;
@@ -86,6 +85,6 @@ public class JwtAuthUtility {
             return Role.EMPLOYEE;
         }
 
-        throw new UnauthorizedException(UNAUTHORIZED);
+        throw new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
     }
 }

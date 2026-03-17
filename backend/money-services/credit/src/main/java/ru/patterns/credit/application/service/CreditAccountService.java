@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.patterns.credit.application.kafka.provider.CreditProvider;
 import ru.patterns.credit.domain.entity.CreditRate;
 import ru.patterns.credit.domain.repository.CreditRateRepository;
+import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
@@ -25,11 +26,11 @@ public class CreditAccountService {
 
     public OperationStatusResponseModel takeCredit(UUID userId, UUID rateId, BigDecimal sum, String bankAccountNum, String token) {
         if (maxCreditAmount.compareTo(sum) <= 0) {
-            throw new BadRequestException("Exceeded credit limit");
+            throw new BadRequestException(ErrorMessages.INVALID_CREDIT_SUM);
         }
 
         CreditRate creditRate = creditRateRepository.findById(rateId)
-                .orElseThrow(() -> new NotFoundException("Credit rate not found"));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.CREDIT_RATE_NOT_FOUND));
 
         creditProvider.send(createTakeCreditMessage(userId, creditRate, sum, bankAccountNum), token);
 

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.patterns.currency.application.client.RestClientConfig;
+import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.model.client.CurrencyAmountModel;
 import ru.patterns.currency.application.common.model.CurrencyResponseModel;
 import ru.patterns.currency.application.common.model.FxRatesResponseModel;
@@ -61,12 +62,12 @@ public class CurrencyService {
             var actualRate = response.getRates().get(currencyModel.getCharCode());
 
             if (actualRate == null) {
-                log.error("Can not update currency {}", currencyModel.getCharCode());
+                log.error("Не получается обновить валюту {}", currencyModel.getCharCode());
                 continue;
             }
 
             var currency = currencyRepository.findById(currencyModel.getId()).
-                    orElseThrow(() -> new NotFoundException("Currency with id " + currencyModel.getId() + " not found"));
+                    orElseThrow(() -> new NotFoundException("Валюта с айди" + currencyModel.getId() + " не найдена"));
 
             currency.setRate(actualRate);
             currencyRepository.save(currency);
@@ -88,7 +89,7 @@ public class CurrencyService {
 
     public CurrencyResponseModel getCurrencyInfo(Integer currencyId) {
         var currency = currencyRepository.findByIdAndActiveTrue(currencyId)
-                .orElseThrow(() -> new NotFoundException("Currency not found"));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.CURRENCY_NOT_FOUND));
 
         if (currency.getRate().equals(BigDecimal.ZERO)) {
             throwServiceUnavailableException();
@@ -99,9 +100,9 @@ public class CurrencyService {
 
     public CurrencyAmountModel calculateAmount(Integer currencyIdFrom, Integer currencyIdTo, BigDecimal amount) {
         Currency currencyFrom = currencyRepository.findByIdAndActiveTrue(currencyIdFrom)
-                .orElseThrow(() -> new NotFoundException("Currency with id " + currencyIdFrom + " not found"));
+                .orElseThrow(() -> new NotFoundException("Валюта с айди " + currencyIdFrom + " не найдена"));
         Currency currencyTo = currencyRepository.findByIdAndActiveTrue(currencyIdTo)
-                .orElseThrow(() -> new NotFoundException("Currency with id " + currencyIdTo + " not found"));
+                .orElseThrow(() -> new NotFoundException("Валюта с айди " + currencyIdTo + " не найдена"));
 
         if (currencyFrom.getRate().equals(BigDecimal.ZERO) || currencyTo.getRate().equals(BigDecimal.ZERO)) {
             throwServiceUnavailableException();
@@ -131,6 +132,6 @@ public class CurrencyService {
     }
 
     private void throwServiceUnavailableException() {
-        throw new BadRequestException("Service currently unavailable");
+        throw new BadRequestException(ErrorMessages.SERVICE_CURRENTLY_UNAVAILABLE);
     }
 }

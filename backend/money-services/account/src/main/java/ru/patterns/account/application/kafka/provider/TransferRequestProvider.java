@@ -3,6 +3,7 @@ package ru.patterns.account.application.kafka.provider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,7 @@ import ru.patterns.shared.model.kafka.TransferRequestMessage;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TransferRequestProvider {
@@ -39,9 +41,9 @@ public class TransferRequestProvider {
                     .send(record)
                     .get(10, TimeUnit.SECONDS);
         } catch (JsonProcessingException e) {
-            throw new BadRequestException("Failed to serialize TransferRequestMessage: " + e.getOriginalMessage());
+            log.error("Ошибка сериализации: {}", e.getOriginalMessage());
         } catch (Exception e) {
-            throw new BadRequestException("Failed to send TransferRequestMessage to Kafka: " + e.getMessage());
+            log.error("Ошибка отправления сообщения в Кафку: {}", e.getMessage());
         }
     }
 }
