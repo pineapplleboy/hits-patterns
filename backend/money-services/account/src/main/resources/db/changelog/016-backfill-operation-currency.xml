@@ -1,0 +1,22 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="016-backfill-operation-currency" author="aleksey.z">
+
+        <update tableName="operation">
+            <column name="currency_from" valueNumeric="643"/>
+            <where>currency_from IS NULL</where>
+        </update>
+
+        <update tableName="operation">
+            <column name="currency_to" valueNumeric="643"/>
+            <where>currency_to IS NULL</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>
