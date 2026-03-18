@@ -52,6 +52,17 @@ namespace ClassLibrary.BaseSetup
 
         public static void UseSwagger(WebApplication app)
         {
+            app.Use((context, next) =>
+            {
+                if (context.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var prefix)
+                    && !string.IsNullOrWhiteSpace(prefix))
+                {
+                    context.Request.PathBase = prefix.ToString();
+                }
+
+                return next();
+            });
+
             app.UseSwagger(options =>
             {
                 options.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
@@ -79,12 +90,18 @@ namespace ClassLibrary.BaseSetup
             app.UseSwaggerUI(options =>
             {
                 var clientId = app.Configuration["Swagger:OAuth:ClientId"];
+                var redirectUrl = app.Configuration["Swagger:OAuth:RedirectUrl"];
                 options.RoutePrefix = "swagger";
                 options.SwaggerEndpoint("./v1/swagger.json", "API v1");
 
                 if (!string.IsNullOrWhiteSpace(clientId))
                 {
                     options.OAuthClientId(clientId);
+                }
+
+                if (!string.IsNullOrWhiteSpace(redirectUrl))
+                {
+                    options.OAuth2RedirectUrl(redirectUrl);
                 }
 
                 options.OAuthUsePkce();

@@ -131,6 +131,7 @@ services:
       Swagger__OAuth__ClientId: api_swagger_users
       Swagger__OAuth__AuthorizationUrl: http://91.227.18.176/identity/connect/authorize
       Swagger__OAuth__TokenUrl: http://91.227.18.176/identity/connect/token
+      Swagger__OAuth__RedirectUrl: http://91.227.18.176/users/swagger/oauth2-redirect.html
       Swagger__OAuth__Scope: SampleAPI
       Swagger__OAuth__ScopeDescription: Sample API - full access
     ports:
@@ -157,6 +158,7 @@ services:
       Swagger__OAuth__ClientId: api_swagger_settings
       Swagger__OAuth__AuthorizationUrl: http://91.227.18.176/identity/connect/authorize
       Swagger__OAuth__TokenUrl: http://91.227.18.176/identity/connect/token
+      Swagger__OAuth__RedirectUrl: http://91.227.18.176/settings/swagger/oauth2-redirect.html
       Swagger__OAuth__Scope: SampleAPI
       Swagger__OAuth__ScopeDescription: Sample API - full access
     ports:
@@ -186,6 +188,7 @@ services:
       SWAGGER_CLIENT_ID: api_swagger_account
       SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
       SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/core/swagger/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx320m"
     ports:
       - "127.0.0.1:8082:8082"
@@ -214,6 +217,7 @@ services:
       SWAGGER_CLIENT_ID: api_swagger_credit
       SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
       SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/credit/swagger/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx300m"
     ports:
       - "127.0.0.1:8081:8081"
@@ -237,6 +241,7 @@ services:
       SWAGGER_CLIENT_ID: api_swagger_transfers
       SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
       SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/transfers/swagger/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx250m"
     ports:
       - "127.0.0.1:8083:8083"
@@ -265,6 +270,7 @@ services:
       SWAGGER_CLIENT_ID: api_swagger_currency
       SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
       SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/currency/swagger/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx300m"
     ports:
       - "127.0.0.1:8084:8084"

@@ -35,6 +35,16 @@ namespace ClassLibrary.BaseSetup
         {
             app.UseExceptionHandler();
             app.UseForwardedHeaders();
+            app.Use((context, next) =>
+            {
+                if (context.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var prefix)
+                    && !string.IsNullOrWhiteSpace(prefix))
+                {
+                    context.Request.PathBase = prefix.ToString();
+                }
+
+                return next();
+            });
 
             app.UseHttpsRedirection();
 
