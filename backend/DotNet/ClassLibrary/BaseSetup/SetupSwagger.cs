@@ -9,6 +9,13 @@ namespace ClassLibrary.BaseSetup
     {
         public static void AddSwagger(WebApplicationBuilder builder)
         {
+            var authorizationUrl = builder.Configuration["Swagger:OAuth:AuthorizationUrl"]
+                ?? "https://localhost:5001/connect/authorize";
+            var tokenUrl = builder.Configuration["Swagger:OAuth:TokenUrl"]
+                ?? "https://localhost:5001/connect/token";
+            var scope = builder.Configuration["Swagger:OAuth:Scope"] ?? "SampleAPI";
+            var scopeDescription = builder.Configuration["Swagger:OAuth:ScopeDescription"] ?? "Sample API - full access";
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
@@ -19,11 +26,11 @@ namespace ClassLibrary.BaseSetup
                     {
                         AuthorizationCode = new OpenApiOAuthFlow
                         {
-                            AuthorizationUrl = new Uri("https://localhost:5001/connect/authorize"),
-                            TokenUrl = new Uri("https://localhost:5001/connect/token"),
+                            AuthorizationUrl = new Uri(authorizationUrl),
+                            TokenUrl = new Uri(tokenUrl),
                             Scopes = new Dictionary<string, string>
                             {
-                                {"SampleAPI", "Sample API - full access"}
+                                {scope, scopeDescription}
                             }
                         },
                     }
@@ -37,7 +44,7 @@ namespace ClassLibrary.BaseSetup
                         {
                             Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
                         },
-                        new[] { "SampleAPI" }
+                        new[] { scope }
                     }
                 });
             });
@@ -71,8 +78,14 @@ namespace ClassLibrary.BaseSetup
 
             app.UseSwaggerUI(options =>
             {
+                var clientId = app.Configuration["Swagger:OAuth:ClientId"];
                 options.RoutePrefix = "swagger";
                 options.SwaggerEndpoint("./v1/swagger.json", "API v1");
+
+                if (!string.IsNullOrWhiteSpace(clientId))
+                {
+                    options.OAuthClientId(clientId);
+                }
 
                 options.OAuthUsePkce();
             });

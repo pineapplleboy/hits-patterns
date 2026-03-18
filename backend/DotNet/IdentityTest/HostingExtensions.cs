@@ -1,6 +1,7 @@
 using Duende.IdentityServer;
 using IdentityTest.Data;
 using IdentityTest.Models;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +14,15 @@ namespace IdentityTest
         public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
         {
             builder.Services.AddRazorPages();
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor |
+                    ForwardedHeaders.XForwardedProto |
+                    ForwardedHeaders.XForwardedHost;
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -58,6 +68,17 @@ namespace IdentityTest
         public static WebApplication ConfigurePipeline(this WebApplication app)
         {
             app.UseSerilogRequestLogging();
+            app.UseForwardedHeaders();
+            app.Use((context, next) =>
+            {
+                if (context.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var prefix)
+                    && !string.IsNullOrWhiteSpace(prefix))
+                {
+                    context.Request.PathBase = prefix.ToString();
+                }
+
+                return next();
+            });
 
             if (app.Environment.IsDevelopment())
             {

@@ -28,16 +28,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # patterns-auth (.NET)
-      - name: Build & push patterns-auth
+      # identity-server (.NET)
+      - name: Build & push identity-server
         uses: docker/build-push-action@v6
         with:
           context: ./backend/DotNet
-          file: ./backend/DotNet/patternsAuth/Dockerfile
+          file: ./backend/DotNet/IdentityTest/Dockerfile
           push: true
           tags: |
-            ghcr.io/pineapplleboy/hits-patterns-patterns-auth:latest
-            ghcr.io/pineapplleboy/hits-patterns-patterns-auth:${{ github.sha }}
+            ghcr.io/pineapplleboy/hits-patterns-identity-server:latest
+            ghcr.io/pineapplleboy/hits-patterns-identity-server:${{ github.sha }}
 
       # patterns-users (.NET)
       - name: Build & push patterns-users
@@ -123,21 +123,19 @@ jobs:
       - name: Setup SSH key
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "${VPS_PORT:-22}" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
 
       - name: Deploy (pull only)
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          ssh -p "${VPS_PORT:-22}" "$VPS_USER@$VPS_HOST" << 'EOF'
+          ssh "$VPS_USER@$VPS_HOST" <<'EOF'
             set -e
             flock -n /tmp/deploy.lock bash -lc '
               set -e

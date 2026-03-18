@@ -9,11 +9,16 @@ namespace ClassLibrary.BaseSetup
     {
         public static void AddAuth(WebApplicationBuilder builder)
         {
+            var authority = builder.Configuration["Auth:Authority"] ?? "https://localhost:5001";
+            var requireHttpsMetadataRaw = builder.Configuration["Auth:RequireHttpsMetadata"];
+            var requireHttpsMetadata = bool.TryParse(requireHttpsMetadataRaw, out var parsedRequireHttpsMetadata)
+                && parsedRequireHttpsMetadata;
+
             builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
-                    options.Authority = "https://localhost:5001"; // Our API app will call to the IdentityServer to get the authority
-                    options.RequireHttpsMetadata = false;
+                    options.Authority = authority;
+                    options.RequireHttpsMetadata = requireHttpsMetadata;
                     options.BackchannelHttpHandler = new HttpClientHandler
                     {
                         ServerCertificateCustomValidationCallback =
