@@ -41,6 +41,25 @@ namespace IdentityTest
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             });
 
+            builder.Services.Configure<CookiePolicyOptions>(options =>
+            {
+                options.MinimumSameSitePolicy = SameSiteMode.Lax;
+                options.OnAppendCookie = cookieContext =>
+                {
+                    if (cookieContext.CookieOptions.SameSite == SameSiteMode.None)
+                    {
+                        cookieContext.CookieOptions.SameSite = SameSiteMode.Lax;
+                    }
+                };
+                options.OnDeleteCookie = cookieContext =>
+                {
+                    if (cookieContext.CookieOptions.SameSite == SameSiteMode.None)
+                    {
+                        cookieContext.CookieOptions.SameSite = SameSiteMode.Lax;
+                    }
+                };
+            });
+
             builder.Services
                 .AddIdentityServer(options =>
                 {
@@ -79,6 +98,7 @@ namespace IdentityTest
         {
             app.UseSerilogRequestLogging();
             app.UseForwardedHeaders();
+            app.UseCookiePolicy();
             app.Use((context, next) =>
             {
                 if (context.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var prefix)
