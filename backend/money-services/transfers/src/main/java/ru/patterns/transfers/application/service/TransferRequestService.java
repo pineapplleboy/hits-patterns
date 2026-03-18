@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.factory.TransferMessageFactory;
 import ru.patterns.shared.model.client.CurrencyAmountModel;
 import ru.patterns.shared.model.enums.OperationStatus;
@@ -49,6 +50,12 @@ public class TransferRequestService {
         }
 
         if (message.getAccountNumberFrom() == null) {
+            assignment.setAmountFrom(calculateCurrency(message.getCurrencyTo(), CurrencyConstants.BASE_CURRENCY_ID, message.getAmount(), token).getAmount());
+        } else {
+            assignment.setAmountFrom(message.getAmount());
+        }
+
+        if (message.getAccountNumberFrom() == null) {
             assignment.setAccountNumberFrom(masterAccountNumber);
         } else {
             assignment.setAccountNumberFrom(message.getAccountNumberFrom());
@@ -62,7 +69,7 @@ public class TransferRequestService {
                 assignment.setAmountTo(calculateAmountTo(message.getCurrencyFrom(), message.getCurrencyTo(), message.getAmount(), token));
             }
             catch (Exception e) {
-                log.error("Error enriching transfer request", e);
+                log.error("Ошибка при обогащении запроса на перевод", e);
                 assignment.setStatus(OperationStatus.REJECTED);
             }
         }

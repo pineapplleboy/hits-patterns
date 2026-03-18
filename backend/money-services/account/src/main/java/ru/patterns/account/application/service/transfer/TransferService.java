@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
 import ru.patterns.account.application.kafka.provider.TransferRequestProvider;
-import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.constants.ErrorMessages;
@@ -77,24 +76,13 @@ public class TransferService {
                 .setAccountNumberTo(accountNumberTo)
                 .setUserIdTo(userIdTo)
                 .setAmount(amount.getAmount())
-                .setCurrencyFrom(getAccountCurrency(accountNumberFrom))
+                .setCurrencyFrom(accountNumberFrom == null ? CurrencyConstants.BASE_CURRENCY_ID : getAccountCurrency(accountNumberFrom))
                 .setCurrencyTo(transferAccountType == TransferAccountType.CREDIT_ACCOUNT ? CurrencyConstants.BASE_CURRENCY_ID : getAccountCurrency(accountNumberTo))
                 .setTransferType(transferAccountType);
     }
 
     private void sendRequest(TransferRequestMessage request, String token) {
         transferRequestProvider.send(request, token);
-    }
-
-    private TransferRequestMessage createRequestContext(Operation operation) {
-        return new TransferRequestMessage()
-                .setUserIdFrom(operation.getUserIdFrom())
-                .setUserIdTo(operation.getRecipientId())
-                .setOperationId(operation.getOperationId())
-                .setAccountNumberFrom(operation.getAccountNumberFrom())
-                .setAccountNumberTo(operation.getRecipientAccountNumber())
-                .setTransferType(operation.getTransferAccountType())
-                .setAmount(operation.getAmountFrom());
     }
 
     private UUID getRecipientId(String bankAccountNumber) {

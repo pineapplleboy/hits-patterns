@@ -27,7 +27,6 @@ public class TransferMessageFactory {
                 .setAccountNumberFrom(msg.getAccountNumberTo())
                 .setCurrencyFrom(msg.getCurrencyFrom())
                 .setCurrencyTo(msg.getCurrencyTo())
-                .setAmountFrom(msg.getAmount())
                 .setRepeatAmount(msg.getRepeatAmount())
                 .setUserIdFrom(msg.getUserIdFrom())
                 .setUserIdTo(msg.getUserIdTo());
