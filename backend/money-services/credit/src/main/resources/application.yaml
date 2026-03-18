@@ -22,7 +22,7 @@ server:
 springdoc:
   swagger-ui:
     path: /swagger
-    oauth2-redirect-url: ${SWAGGER_OAUTH2_REDIRECT_URL:http://localhost:8081/swagger/oauth2-redirect.html}
+    oauth2-redirect-url: ${SWAGGER_OAUTH2_REDIRECT_URL:http://localhost:8081/swagger-ui/oauth2-redirect.html}
     oauth:
       client-id: ${SWAGGER_CLIENT_ID:api_swagger_credit}
       use-pkce-with-authorization-code-grant: true

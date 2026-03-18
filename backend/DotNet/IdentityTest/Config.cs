@@ -75,7 +75,7 @@ namespace IdentityTest
                     RequirePkce = true,
                     RequireClientSecret = false,
 
-                    RedirectUris = {$"{AccountSwaggerUrl}/swagger/oauth2-redirect.html"},
+                    RedirectUris = {$"{AccountSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {AccountSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
@@ -91,7 +91,7 @@ namespace IdentityTest
                     RequirePkce = true,
                     RequireClientSecret = false,
 
-                    RedirectUris = {$"{TransfersSwaggerUrl}/swagger/oauth2-redirect.html"},
+                    RedirectUris = {$"{TransfersSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {TransfersSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
@@ -107,7 +107,7 @@ namespace IdentityTest
                     RequirePkce = true,
                     RequireClientSecret = false,
 
-                    RedirectUris = {$"{CurrencySwaggerUrl}/swagger/oauth2-redirect.html"},
+                    RedirectUris = {$"{CurrencySwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {CurrencySwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
@@ -123,7 +123,7 @@ namespace IdentityTest
                     RequirePkce = true,
                     RequireClientSecret = false,
 
-                    RedirectUris = {$"{CreditSwaggerUrl}/swagger/oauth2-redirect.html"},
+                    RedirectUris = {$"{CreditSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {CreditSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
