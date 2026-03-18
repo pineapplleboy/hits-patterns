@@ -31,10 +31,10 @@ namespace IdentityTest
                 {
                     ClientId = "api_swagger_users",
                     ClientName = "Swagger UI for Sample API",
-                    ClientSecrets = {new Secret("secret".Sha256())}, // change me!
 
                     AllowedGrantTypes = GrantTypes.Code,
-                    RequirePkce = false,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
 
                     RedirectUris = {$"{UsersSwaggerUrl}/swagger/oauth2-redirect.html"},
                     AllowedCorsOrigins = {UsersSwaggerUrl},
@@ -48,10 +48,10 @@ namespace IdentityTest
                 {
                     ClientId = "api_swagger_settings",
                     ClientName = "Swagger UI for Sample API",
-                    ClientSecrets = {new Secret("secret".Sha256())}, // change me!
 
                     AllowedGrantTypes = GrantTypes.Code,
-                    RequirePkce = false,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
 
                     RedirectUris = {$"{UserSettingsSwaggerUrl}/swagger/oauth2-redirect.html"},
                     AllowedCorsOrigins = {UserSettingsSwaggerUrl},
@@ -64,10 +64,10 @@ namespace IdentityTest
                 {
                     ClientId = "api_swagger_account",
                     ClientName = "Swagger UI for Account API",
-                    ClientSecrets = {new Secret("secret".Sha256())},
 
                     AllowedGrantTypes = GrantTypes.Code,
-                    RequirePkce = false,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
 
                     RedirectUris = {$"{AccountSwaggerUrl}/swagger/oauth2-redirect.html"},
                     AllowedCorsOrigins = {AccountSwaggerUrl},
@@ -80,10 +80,10 @@ namespace IdentityTest
                 {
                     ClientId = "api_swagger_transfers",
                     ClientName = "Swagger UI for Transfers API",
-                    ClientSecrets = {new Secret("secret".Sha256())},
 
                     AllowedGrantTypes = GrantTypes.Code,
-                    RequirePkce = false,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
 
                     RedirectUris = {$"{TransfersSwaggerUrl}/swagger/oauth2-redirect.html"},
                     AllowedCorsOrigins = {TransfersSwaggerUrl},
@@ -96,10 +96,10 @@ namespace IdentityTest
                 {
                     ClientId = "api_swagger_currency",
                     ClientName = "Swagger UI for Currency API",
-                    ClientSecrets = {new Secret("secret".Sha256())},
 
                     AllowedGrantTypes = GrantTypes.Code,
-                    RequirePkce = false,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
 
                     RedirectUris = {$"{CurrencySwaggerUrl}/swagger/oauth2-redirect.html"},
                     AllowedCorsOrigins = {CurrencySwaggerUrl},
@@ -112,10 +112,10 @@ namespace IdentityTest
                 {
                     ClientId = "api_swagger_credit",
                     ClientName = "Swagger UI for Credit API",
-                    ClientSecrets = {new Secret("secret".Sha256())},
 
                     AllowedGrantTypes = GrantTypes.Code,
-                    RequirePkce = false,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
 
                     RedirectUris = {$"{CreditSwaggerUrl}/swagger/oauth2-redirect.html"},
                     AllowedCorsOrigins = {CreditSwaggerUrl},
