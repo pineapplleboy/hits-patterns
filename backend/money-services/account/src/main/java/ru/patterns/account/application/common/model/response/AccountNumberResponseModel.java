@@ -1,4 +1,4 @@
-package ru.patterns.account.application.common.model;
+package ru.patterns.account.application.common.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
+import ru.patterns.account.application.common.enums.TransactionFinishStatus;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
 import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.entity.CreditAccount;
@@ -13,6 +13,7 @@ import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.account.domain.repository.OperationRepository;
+import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
@@ -34,72 +35,80 @@ public class TransferOperationService {
     @Value("${master-bank.account-number}")
     private String masterBankAccountNumber;
 
-    public void validateAccountRemainder(String accountNumber, MoneyAmountRequestModel requestModel) {
-        BankAccount bankAccount = bankAccountRepository
-                .getBankAccountByAccountNumberAndActiveTrue(accountNumber)
-                .orElseThrow(() -> new BadRequestException("Account number not found"));
-
-        if (bankAccount.isBanned()) {
-            throw new BadRequestException("Account is banned");
-        }
-
-        if (bankAccount.getBalance().compareTo(requestModel.getAmount()) < 0) {
-            throw new BadRequestException("Incorrect request amount");
-        }
-    }
-
-    public void makeTransfer(TransferAssignmentMessage assignment) {
+    @Transactional
+    public TransactionFinishStatus makeTransfer(TransferAssignmentMessage assignment) {
         BankAccount bankAccountFrom = findBankAccountByAccountNumber(assignment.getAccountNumberFrom());
-        Operation operation = findOperationById(assignment.getOperationId());
+        Operation operation = findOrCreateOperationById(assignment.getOperationId(), assignment);
 
-        operation.setStatus(OperationStatus.IN_PROCESS);
+        operation.setStatus(assignment.getStatus());
         operationRepository.save(operation);
 
-        if (assignment.getTransferAccountType() == TransferAccountType.BANK_ACCOUNT) {
-            makeTransferToBankAccount(assignment, bankAccountFrom, operation);
-            return;
+        if (assignment.getStatus() == OperationStatus.REJECTED) {
+            return TransactionFinishStatus.TRANSACTION_REJECTED;
         }
 
-        makeTransferToCreditAccount(assignment, bankAccountFrom, operation);
+        if (assignment.getTransferAccountType() == TransferAccountType.BANK_ACCOUNT) {
+            return makeTransferToBankAccount(assignment, bankAccountFrom, operation);
+        }
+
+        return makeTransferToCreditAccount(assignment, bankAccountFrom, operation);
     }
 
-    private void makeTransferToBankAccount(TransferAssignmentMessage assignment, BankAccount bankAccountFrom, Operation operation) {
+    private TransactionFinishStatus makeTransferToBankAccount(TransferAssignmentMessage assignment, BankAccount bankAccountFrom, Operation operation) {
         BankAccount bankAccountTo = findBankAccountByAccountNumber(assignment.getAccountNumberTo());
 
-        if (bankAccountTo.isBanned()) {
-            throw new BadRequestException("Receiver bank account is banned");
+        if (bankAccountFrom.isCurrentlyTransactional() || bankAccountTo.isCurrentlyTransactional()) {
+            return TransactionFinishStatus.TRANSACTION_PAUSED;
         }
 
-        BigDecimal amount = assignment.getAmount();
+        if (bankAccountTo.isBanned()) {
+            return finishRejectedOperation(operation);
+        }
 
-        bankAccountFrom.setBalance(bankAccountFrom.getBalance().subtract(amount));
-        bankAccountTo.setBalance(bankAccountTo.getBalance().add(amount));
+        BigDecimal amountFrom = assignment.getAmountFrom();
+        BigDecimal amountTo = assignment.getAmountTo();
 
+        if (bankAccountFrom.getBalance().compareTo(amountFrom) < 0) {
+            return finishRejectedOperation(operation);
+        }
+
+        setCurrentlyTransactional(bankAccountFrom, bankAccountTo, null, true);
+
+        bankAccountFrom.setBalance(bankAccountFrom.getBalance().subtract(amountFrom));
+        bankAccountTo.setBalance(bankAccountTo.getBalance().add(amountTo));
         bankAccountRepository.save(bankAccountFrom);
         bankAccountRepository.save(bankAccountTo);
 
         operation.setStatus(OperationStatus.SUCCESS);
         operationRepository.save(operation);
+
+        setCurrentlyTransactional(bankAccountFrom, bankAccountTo, null, false);
+
+        return TransactionFinishStatus.TRANSACTION_FINISHED;
     }
 
-    private void makeTransferToCreditAccount(TransferAssignmentMessage assignment, BankAccount bankAccountFrom, Operation operation) {
+    private TransactionFinishStatus makeTransferToCreditAccount(TransferAssignmentMessage assignment, BankAccount bankAccountFrom, Operation operation) {
         CreditAccount creditAccountTo = findCreditAccountByAccountNumber(assignment.getAccountNumberTo());
 
-        if (!creditAccountTo.isActive()) {
-            throw new BadRequestException("Credit account is banned");
+        if (bankAccountFrom.isCurrentlyTransactional() || creditAccountTo.isCurrentlyTransactional()) {
+            return TransactionFinishStatus.TRANSACTION_PAUSED;
         }
 
-        BigDecimal amount = assignment.getAmount();
+        if (!creditAccountTo.isActive()) {
+            return finishRejectedOperation(operation);
+        }
+
+        BigDecimal amount = assignment.getAmountFrom();
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            operation.setStatus(OperationStatus.REJECTED);
-            operationRepository.save(operation);
-            return;
+            return finishRejectedOperation(operation);
         }
+
+        setCurrentlyTransactional(bankAccountFrom, null, creditAccountTo, true);
 
         if (creditAccountTo.getDept().compareTo(amount) < 0) {
             amount = creditAccountTo.getDept();
-            operation.setAmount(amount);
+            operation.setAmountFrom(amount);
         }
 
         BankAccount masterBankAccount = findBankAccountByAccountNumber(masterBankAccountNumber);
@@ -119,20 +128,47 @@ public class TransferOperationService {
 
         operation.setStatus(OperationStatus.SUCCESS);
         operationRepository.save(operation);
+
+        setCurrentlyTransactional(bankAccountFrom, null, creditAccountTo, false);
+
+        return TransactionFinishStatus.TRANSACTION_FINISHED;
+    }
+
+    private TransactionFinishStatus finishRejectedOperation(Operation operation) {
+        operation.setStatus(OperationStatus.REJECTED);
+        operationRepository.save(operation);
+        return TransactionFinishStatus.TRANSACTION_REJECTED;
+    }
+
+    private void setCurrentlyTransactional(BankAccount bankAccountFrom, BankAccount bankAccountTo,
+                                           CreditAccount creditAccountTo, boolean currentlyTransactional) {
+        bankAccountFrom.setCurrentlyTransactional(currentlyTransactional);
+        bankAccountRepository.save(bankAccountFrom);
+
+        if (bankAccountTo != null) {
+            bankAccountTo.setCurrentlyTransactional(currentlyTransactional);
+            bankAccountRepository.save(bankAccountTo);
+        }
+
+        if (creditAccountTo != null) {
+            creditAccountTo.setCurrentlyTransactional(currentlyTransactional);
+            creditAccountRepository.save(creditAccountTo);
+        }
     }
 
     private BankAccount findBankAccountByAccountNumber(String accountNumber) {
         return bankAccountRepository.getBankAccountByAccountNumberAndActiveTrue(accountNumber)
-                .orElseThrow(() -> new BadRequestException("Bank account not found"));
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.ACCOUNT_NOT_FOUND));
     }
 
     private CreditAccount findCreditAccountByAccountNumber(String accountNumber) {
         return creditAccountRepository.findCreditAccountByAccountNumberAndActiveTrueAndClosedFalse(accountNumber)
-                .orElseThrow(() -> new BadRequestException("Credit account not found"));
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.CREDIT_NOT_FOUND));
     }
 
-    private Operation findOperationById(UUID operationId) {
-        return operationRepository.getOperationByOperationId(operationId)
-                .orElseThrow(() -> new BadRequestException("Operation not found"));
+    private Operation findOrCreateOperationById(UUID operationId, TransferAssignmentMessage assignmentMessage) {
+        var operation = operationRepository.getOperationByOperationId(operationId);
+
+        return operation.orElseGet(() -> operationHistoryService.createAndSaveOperation(assignmentMessage));
     }
 }

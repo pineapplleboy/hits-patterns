@@ -9,6 +9,7 @@ import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.model.enums.OperationStatus;
+import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -21,7 +22,10 @@ public class OperationHistoryService {
 
     public void createAndSaveOperation(UUID userId,
                                        TransferAccountType transferAccountType,
-                                       BigDecimal sum,
+                                       BigDecimal sumFrom,
+                                       Integer currencyFrom,
+                                       BigDecimal sumTo,
+                                       Integer currencyTo,
                                        AccountActionType actionType,
                                        OperationStatus operationStatus,
                                        String accountNumberFrom) {
@@ -30,7 +34,10 @@ public class OperationHistoryService {
                 .setUserIdFrom(userId)
                 .setRecipientAccountNumber(null)
                 .setRecipientId(null)
-                .setAmount(sum)
+                .setAmountFrom(sumFrom)
+                .setCurrencyFrom(currencyFrom)
+                .setAmountTo(sumTo)
+                .setCurrencyTo(currencyTo)
                 .setTransferAccountType(transferAccountType)
                 .setActionType(actionType)
                 .setStatus(operationStatus);
@@ -44,7 +51,6 @@ public class OperationHistoryService {
                 .setUserIdFrom(account.getUserId())
                 .setRecipientAccountNumber(null)
                 .setRecipientId(null)
-                .setAmount(BigDecimal.ZERO)
                 .setTransferAccountType(TransferAccountType.BANK_ACCOUNT)
                 .setActionType(actionType)
                 .setStatus(OperationStatus.SUCCESS);
@@ -58,11 +64,32 @@ public class OperationHistoryService {
                 .setUserIdFrom(account.getUserId())
                 .setRecipientAccountNumber(null)
                 .setRecipientId(null)
-                .setAmount(BigDecimal.ZERO)
                 .setTransferAccountType(TransferAccountType.BANK_ACCOUNT)
                 .setActionType(actionType)
                 .setStatus(OperationStatus.SUCCESS);
 
         operationRepository.save(operation);
+    }
+
+    public Operation createAndSaveOperation(TransferAssignmentMessage assignmentMessage) {
+        Operation operation = new Operation()
+                .setOperationId(assignmentMessage.getOperationId())
+                .setAccountNumberFrom(assignmentMessage.getAccountNumberFrom())
+                .setRecipientAccountNumber(assignmentMessage.getAccountNumberTo())
+                .setTransferAccountType(assignmentMessage.getTransferAccountType())
+                .setAmountFrom(assignmentMessage.getAmountFrom())
+                .setCurrencyFrom(assignmentMessage.getCurrencyFrom())
+                .setAmountTo(assignmentMessage.getAmountTo())
+                .setCurrencyTo(assignmentMessage.getCurrencyTo())
+                .setStatus(assignmentMessage.getStatus())
+                .setUserIdFrom(assignmentMessage.getUserIdFrom())
+                .setRecipientId(assignmentMessage.getUserIdTo())
+                .setActionType(assignmentMessage.getTransferAccountType() == TransferAccountType.BANK_ACCOUNT ?
+                        AccountActionType.TRANSFER :
+                        AccountActionType.CREDIT_DEPT_PERCENT);
+
+        operationRepository.save(operation);
+
+        return operation;
     }
 }

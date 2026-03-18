@@ -219,5 +219,30 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  currency-service:
+    image: ghcr.io/pineapplleboy/hits-patterns-currency-service:latest
+    container_name: currency-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_currency
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      KAFKA_URL: kafka:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx300m"
+    ports:
+      - "127.0.0.1:8084:8084"
+    restart: unless-stopped
+    mem_limit: 400m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres-data:

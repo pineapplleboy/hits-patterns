@@ -11,12 +11,13 @@ import java.util.UUID;
 @UtilityClass
 public class BankAccountFactory {
 
-    public BankAccount createBankAccount(UUID userId) {
+    public BankAccount createBankAccount(UUID userId, Integer currencyId) {
         return new BankAccount()
                 .setUserId(userId)
                 .setAccountNumber(generateAccountNumber())
                 .setAccountType(BankAccountType.CLIENT)
-                .setBalance(BigDecimal.valueOf(0));
+                .setBalance(BigDecimal.valueOf(0))
+                .setCurrencyId(currencyId);
     }
 
     public String generateAccountNumber() {

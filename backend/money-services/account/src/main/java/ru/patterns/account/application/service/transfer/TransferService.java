@@ -2,11 +2,13 @@ package ru.patterns.account.application.service.transfer;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
 import ru.patterns.account.application.kafka.provider.TransferRequestProvider;
 import ru.patterns.account.domain.entity.Operation;
-import ru.patterns.account.domain.repository.OperationRepository;
+import ru.patterns.account.domain.repository.BankAccountRepository;
+import ru.patterns.shared.constants.CurrencyConstants;
+import ru.patterns.shared.constants.ErrorMessages;
+import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.kafka.TransferRequestMessage;
@@ -18,74 +20,94 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TransferService {
 
-    private final OperationRepository operationRepository;
-    private final TransferOperationService transferOperationService;
     private final TransferRequestProvider transferRequestProvider;
+    private final BankAccountRepository bankAccountRepository;
+    private final TransferValidationService transferValidationService;
 
-    public OperationStatusResponseModel replenishMoney(UUID userId, String bankAccountNumber, MoneyAmountRequestModel requestModel) {
-        Operation operation = createOperationTransferRequest(null, userId, null, bankAccountNumber, requestModel,
-                TransferAccountType.BANK_ACCOUNT);
+    public OperationStatusResponseModel replenishMoney(UUID userId, String bankAccountNumber,
+                                                       MoneyAmountRequestModel requestModel,
+                                                       String token) {
+        sendRequest(createOperationTransferRequestContext(null, userId, null, bankAccountNumber, requestModel,
+                TransferAccountType.BANK_ACCOUNT), token);
 
-        sendRequest(operation);
-
-        return new OperationStatusResponseModel(operation.getStatus());
+        return new OperationStatusResponseModel(OperationStatus.CREATED);
     }
 
-    public OperationStatusResponseModel withdrawMoney(UUID userId, String bankAccountNumber, MoneyAmountRequestModel requestModel) {
-        Operation operation = createOperationTransferRequest(userId, null, bankAccountNumber, null, requestModel,
-                TransferAccountType.BANK_ACCOUNT);
+    public OperationStatusResponseModel withdrawMoney(UUID userId, String bankAccountNumber,
+                                                      MoneyAmountRequestModel requestModel,
+                                                      String token) {
+        transferValidationService.checkIfTransferToBankAccountAvailable(bankAccountNumber, null, userId, null, requestModel);
 
-        sendRequest(operation);
+        sendRequest(createOperationTransferRequestContext(userId, null, bankAccountNumber, null, requestModel,
+                TransferAccountType.BANK_ACCOUNT), token);
 
-        return new OperationStatusResponseModel(operation.getStatus());
+        return new OperationStatusResponseModel(OperationStatus.CREATED);
     }
+
+    public OperationStatusResponseModel transferToBankAccount(UUID userId, String bankAccountFrom,
+                                                              String bankAccountTo, MoneyAmountRequestModel requestModel,
+                                                              String token) {
+        var recipientId = getRecipientId(bankAccountTo);
+
+        sendRequest(createOperationTransferRequestContext(userId, recipientId, bankAccountFrom, bankAccountTo,
+                requestModel, TransferAccountType.BANK_ACCOUNT), token);
+
+        return new OperationStatusResponseModel(OperationStatus.CREATED);
+    }
+
 
     public OperationStatusResponseModel payCredit(UUID userId, String bankAccountNumber,
-                                                  String creditAccountNumber, MoneyAmountRequestModel requestModel) {
-        transferOperationService.validateAccountRemainder(bankAccountNumber, requestModel);
+                                                  String creditAccountNumber,
+                                                  MoneyAmountRequestModel requestModel,
+                                                  String token) {
+        transferValidationService.checkIfTransferToCreditAccountAvailable(bankAccountNumber, requestModel);
 
-        Operation operation = createOperationTransferRequest(userId, userId, bankAccountNumber, creditAccountNumber, requestModel,
-                TransferAccountType.CREDIT_ACCOUNT);
+        sendRequest(createOperationTransferRequestContext(userId, userId, bankAccountNumber, creditAccountNumber, requestModel,
+                        TransferAccountType.CREDIT_ACCOUNT), token);
 
-        sendRequest(operation);
-
-        return new OperationStatusResponseModel(operation.getStatus());
+        return new OperationStatusResponseModel(OperationStatus.CREATED);
     }
 
-    private Operation createOperationTransferRequest(UUID userIdFrom, UUID userIdTo, String accountNumberFrom,
-                                                     String accountNumberTo, MoneyAmountRequestModel amount,
-                                                     TransferAccountType transferAccountType) {
-        if (accountNumberFrom != null) {
-            transferOperationService.validateAccountRemainder(accountNumberFrom, amount);
-        }
-
-        Operation operation = new Operation()
-                .setUserIdFrom(userIdFrom)
-                .setRecipientId(userIdTo)
+    private TransferRequestMessage createOperationTransferRequestContext(UUID userIdFrom, UUID userIdTo, String accountNumberFrom,
+                                                            String accountNumberTo, MoneyAmountRequestModel amount,
+                                                            TransferAccountType transferAccountType) {
+        return new TransferRequestMessage()
                 .setAccountNumberFrom(accountNumberFrom)
-                .setRecipientAccountNumber(accountNumberTo)
+                .setUserIdFrom(userIdFrom)
+                .setAccountNumberTo(accountNumberTo)
+                .setUserIdTo(userIdTo)
                 .setAmount(amount.getAmount())
-                .setTransferAccountType(transferAccountType)
-                .setActionType(AccountActionType.TRANSFER)
-                .setStatus(OperationStatus.CREATED);
-
-        operationRepository.save(operation);
-
-        return operation;
+                .setCurrencyFrom(getAccountCurrency(accountNumberFrom))
+                .setCurrencyTo(transferAccountType == TransferAccountType.CREDIT_ACCOUNT ? CurrencyConstants.BASE_CURRENCY_ID : getAccountCurrency(accountNumberTo))
+                .setTransferType(transferAccountType);
     }
 
-    private void sendRequest(Operation operation) {
-        transferRequestProvider.send(createRequestContext(operation));
+    private void sendRequest(TransferRequestMessage request, String token) {
+        transferRequestProvider.send(request, token);
     }
 
     private TransferRequestMessage createRequestContext(Operation operation) {
         return new TransferRequestMessage()
+                .setUserIdFrom(operation.getUserIdFrom())
+                .setUserIdTo(operation.getRecipientId())
                 .setOperationId(operation.getOperationId())
                 .setAccountNumberFrom(operation.getAccountNumberFrom())
                 .setAccountNumberTo(operation.getRecipientAccountNumber())
-                .setUserIdFrom(operation.getUserIdFrom())
-                .setUserIdTo(operation.getRecipientId())
                 .setTransferType(operation.getTransferAccountType())
-                .setAmount(operation.getAmount());
+                .setAmount(operation.getAmountFrom());
+    }
+
+    private UUID getRecipientId(String bankAccountNumber) {
+        var bankAccount = bankAccountRepository.getBankAccountByAccountNumberAndActiveTrue(bankAccountNumber)
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
+
+        return bankAccount.getUserId();
+    }
+
+    private Integer getAccountCurrency(String accountNumberFrom) {
+        var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveTrue(accountNumberFrom)
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
+
+        return account.getCurrencyId();
     }
 }

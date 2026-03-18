@@ -1,5 +1,7 @@
 package ru.patterns.credit.application.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.patterns.credit.application.common.model.request.CreditRateDataModel;
@@ -18,33 +20,42 @@ public class CreditRateController {
     private final CreditRateCRUDService creditRateCRUDService;
 
     @GetMapping("/available-plans")
+    @Operation(summary = "Получение доступных кредитных тарифов [Все]")
     public List<CreditRateModel> getAvailablePlans() {
         return creditRateCRUDService.getCreditRates();
     }
 
     @GetMapping("/available-plans/{id}")
-    public CreditRateModel getAvailablePlan(@PathVariable UUID id, @RequestHeader String authorization) {
+    @Operation(summary = "Получение детальной информации о кредитном тарифе [Все]")
+    public CreditRateModel getAvailablePlan(@PathVariable UUID id,
+                                            @Parameter(hidden = true) @RequestHeader String authorization) {
         JwtAuthUtility.parseAuthorizationHeader(authorization);
 
         return creditRateCRUDService.getCreditRateById(id);
     }
 
     @PostMapping()
-    public UuidResponseModel createCreditRate(@RequestBody CreditRateDataModel creditRateDataModel, @RequestHeader String authorization) {
+    @Operation(summary = "Создание кредитного тарифа [Сотрудник]")
+    public UuidResponseModel createCreditRate(@RequestBody CreditRateDataModel creditRateDataModel,
+                                              @Parameter(hidden = true) @RequestHeader String authorization) {
         JwtAuthUtility.parseAuthorizationHeader(authorization);
 
         return creditRateCRUDService.createCreditRate(creditRateDataModel);
     }
 
     @PutMapping("/{id}")
-    public void updateCreateRate(@PathVariable UUID id, @RequestBody CreditRateDataModel creditRateDataModel, @RequestHeader String authorization) {
+    @Operation(summary = "Обновление кредитного тарифа [Сотрудник]")
+    public void updateCreateRate(@PathVariable UUID id, @RequestBody CreditRateDataModel creditRateDataModel,
+                                 @Parameter(hidden = true) @RequestHeader String authorization) {
         JwtAuthUtility.parseAuthorizationHeader(authorization);
 
         creditRateCRUDService.updateCreditRateModel(id, creditRateDataModel);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCreateRate(@PathVariable UUID id, @RequestHeader String authorization) {
+    @Operation(summary = "Удаление кредитного тарифа [Сотрудник]")
+    public void deleteCreateRate(@PathVariable UUID id,
+                                 @Parameter(hidden = true) @RequestHeader String authorization) {
         JwtAuthUtility.parseAuthorizationHeader(authorization);
 
         creditRateCRUDService.deactivateCreditRateById(id);

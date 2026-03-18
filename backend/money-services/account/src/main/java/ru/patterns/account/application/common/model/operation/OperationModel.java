@@ -1,12 +1,11 @@
-package ru.patterns.account.application.common.model;
+package ru.patterns.account.application.common.model.operation;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.enums.OperationStatus;
+import ru.patterns.shared.model.enums.TransferAccountType;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -22,7 +21,7 @@ public class OperationModel {
 
     private String recipientAccountNumber;
 
-    private BigDecimal amount;
+    private String amount;
 
     private TransferAccountType transferAccountType;
 

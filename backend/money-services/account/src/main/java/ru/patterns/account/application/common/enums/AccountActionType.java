@@ -7,5 +7,6 @@ public enum AccountActionType {
     TRANSFER_RECEIVED, // для возвращения в модельке
     TRANSFER_SENT, // для возвращения в модельке
     ACCOUNT_BANNED,
-    ACCOUNT_UNBANNED
+    ACCOUNT_UNBANNED,
+    CREDIT_DEPT_PERCENT
 }

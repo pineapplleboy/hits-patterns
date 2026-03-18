@@ -1,31 +1,46 @@
 package ru.patterns.transfers.application.service;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import ru.patterns.shared.factory.TransferMessageFactory;
+import ru.patterns.shared.model.client.CurrencyAmountModel;
+import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 import ru.patterns.shared.model.kafka.TransferRequestMessage;
+import ru.patterns.transfers.application.common.client.CalculatorRequestModel;
 import ru.patterns.transfers.application.kafka.provider.TransferAssignmentProvider;
 
+import java.math.BigDecimal;
+
+@Slf4j
 @Service
-@RequiredArgsConstructor
 public class TransferRequestService {
 
     private final TransferAssignmentProvider transferAssignmentProvider;
+    private final RestClient currencyClient;
 
     @Value("${accounts.master-account-number}")
     private String masterAccountNumber;
 
-    public void processTransferRequest(TransferRequestMessage message) {
-        transferAssignmentProvider.send(enrichTransfer(message));
+    public TransferRequestService(@Qualifier("currencyClient") RestClient currencyClient, TransferAssignmentProvider transferAssignmentProvider) {
+        this.currencyClient = currencyClient;
+        this.transferAssignmentProvider = transferAssignmentProvider;
     }
 
-    private TransferAssignmentMessage enrichTransfer(TransferRequestMessage message) {
-        TransferAssignmentMessage assignment = new TransferAssignmentMessage()
-                .setRequestId(message.getRequestId())
-                .setOperationId(message.getOperationId())
-                .setTransferAccountType(message.getTransferType())
-                .setAmount(message.getAmount());
+    public void processTransferRequest(TransferRequestMessage message, String token) {
+        transferAssignmentProvider.send(enrichTransfer(message, token), token);
+    }
+
+    private TransferAssignmentMessage enrichTransfer(TransferRequestMessage message, String token) {
+        TransferAssignmentMessage assignment = TransferMessageFactory.createAssignment(message);
+
+        if (assignment.getRepeatAmount() > 0) {
+            return assignment;
+        }
 
         if (message.getAccountNumberTo() == null) {
             assignment.setAccountNumberTo(masterAccountNumber);
@@ -39,6 +54,32 @@ public class TransferRequestService {
             assignment.setAccountNumberFrom(message.getAccountNumberFrom());
         }
 
+        if (message.getCurrencyFrom().equals(message.getCurrencyTo())) {
+            assignment.setAmountTo(message.getAmount());
+        } else {
+
+            try {
+                assignment.setAmountTo(calculateAmountTo(message.getCurrencyFrom(), message.getCurrencyTo(), message.getAmount(), token));
+            }
+            catch (Exception e) {
+                log.error("Error enriching transfer request", e);
+                assignment.setStatus(OperationStatus.REJECTED);
+            }
+        }
+
         return assignment;
+    }
+
+    private BigDecimal calculateAmountTo(Integer currencyFrom, Integer currencyTo, BigDecimal amount, String token) {
+        return calculateCurrency(currencyFrom, currencyTo, amount, token).getAmount();
+    }
+
+    private CurrencyAmountModel calculateCurrency(Integer currencyFrom, Integer currencyTo, BigDecimal amount, String token) {
+        return currencyClient.post()
+                .uri("/calculate")
+                .body(new CalculatorRequestModel(currencyFrom, currencyTo, amount))
+                .header("Authorization", token)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
     }
 }

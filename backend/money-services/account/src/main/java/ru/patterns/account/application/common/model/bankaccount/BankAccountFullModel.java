@@ -2,7 +2,8 @@ package ru.patterns.account.application.common.model.bankaccount;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
-import ru.patterns.account.application.common.model.OperationModel;
+import ru.patterns.account.application.common.model.currency.CurrencyModel;
+import ru.patterns.account.application.common.model.operation.OperationModel;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -24,4 +25,6 @@ public class BankAccountFullModel {
     private Instant createTime;
 
     private boolean banned = false;
+
+    private CurrencyModel currency;
 }

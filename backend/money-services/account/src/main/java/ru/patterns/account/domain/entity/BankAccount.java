@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import ru.patterns.account.application.common.enums.BankAccountType;
+import ru.patterns.shared.constants.CurrencyConstants;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -35,12 +36,20 @@ public class BankAccount {
     /*
     Активность счёта, данное поле может измениться только в одну сторону на false при закрытии счёта клиентом
      */
+    @Column(nullable = false)
     private boolean active = true;
 
     /*
     Относится ли счёт к заблокированному клиенту. Может меняться в обе стороны
      */
+    @Column(nullable = false)
     private boolean banned = false;
+
+    @Column(nullable = false)
+    private boolean currentlyTransactional = false;
+
+    @Column(nullable = false)
+    private Integer currencyId = CurrencyConstants.BASE_CURRENCY_ID;
 
     @Column(nullable = false, updatable = false)
     private Instant createTime = Instant.now();

@@ -3,6 +3,8 @@ package ru.patterns.account.domain.mapper;
 import lombok.experimental.UtilityClass;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
+import ru.patterns.account.application.common.model.currency.CurrencyModel;
+import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.BankAccount;
 
 @UtilityClass
@@ -12,17 +14,18 @@ public class BankAccountMapper {
         return new BankAccountShortModel()
                 .setAccountNumber(bankAccount.getAccountNumber())
                 .setId(bankAccount.getId())
-                .setBalance(bankAccount.getBalance())
+                .setBalance(bankAccount.getBalance().toString() + CurrencySymbolUtility.getCurrencySymbol(bankAccount.getCurrencyId()))
                 .setBanned(bankAccount.isBanned())
                 .setHidden(hidden);
     }
 
-    public BankAccountFullModel toFullModelWithoutComments(BankAccount bankAccount) {
+    public BankAccountFullModel toFullModelWithoutComments(BankAccount bankAccount, CurrencyModel currency) {
         return new BankAccountFullModel()
                 .setId(bankAccount.getId())
                 .setAccountNumber(bankAccount.getAccountNumber())
                 .setBalance(bankAccount.getBalance())
                 .setCreateTime(bankAccount.getCreateTime())
-                .setBanned(bankAccount.isBanned());
+                .setBanned(bankAccount.isBanned())
+                .setCurrency(currency != null ? currency : new CurrencyModel(bankAccount.getCurrencyId()));
     }
 }

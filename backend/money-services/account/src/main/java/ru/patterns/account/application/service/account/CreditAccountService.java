@@ -37,7 +37,7 @@ public class CreditAccountService {
     private final OperationHistoryService operationHistoryService;
     private final TransferService transferService;
 
-    public void takeCredit(TakeCreditMessage takeCreditMessage) {
+    public void takeCredit(TakeCreditMessage takeCreditMessage, String token) {
         Optional<BankAccount> bankAccount = bankAccountRepository.
                 getBankAccountByAccountNumberAndActiveAndUserId(takeCreditMessage.getBankAccountNumber(), true, takeCreditMessage.getUserId());
 
@@ -52,7 +52,7 @@ public class CreditAccountService {
         operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(creditAccount, AccountActionType.OPEN_ACCOUNT);
 
         transferService.replenishMoney(takeCreditMessage.getUserId(), takeCreditMessage.getBankAccountNumber(),
-                new MoneyAmountRequestModel(takeCreditMessage.getCreditAmount()));
+                new MoneyAmountRequestModel(takeCreditMessage.getCreditAmount()), token);
     }
 
     public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {

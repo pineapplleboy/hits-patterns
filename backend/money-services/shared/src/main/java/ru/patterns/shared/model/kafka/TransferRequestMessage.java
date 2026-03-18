@@ -13,18 +13,23 @@ public class TransferRequestMessage {
 
     private UUID requestId = UUID.randomUUID();
 
-    private UUID operationId;
-
-    private UUID userIdFrom;
+    private UUID operationId = UUID.randomUUID();
 
     private String accountNumberFrom;
 
-    private UUID userIdTo;
+    private UUID userIdFrom;
 
     private String accountNumberTo;
 
+    private UUID userIdTo;
+
     private BigDecimal amount;
+
+    private Integer currencyFrom;
+
+    private Integer currencyTo;
 
     private TransferAccountType transferType;
 
+    private int repeatAmount = 0;
 }

@@ -39,7 +39,7 @@ public class SettingsService {
     public List<UUID> getHiddenAccountIds(UUID userId, String token) {
         return settingsClient.get()
                 .uri("/hidden-accounts/{userId}", userId)
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", token)
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {});
     }

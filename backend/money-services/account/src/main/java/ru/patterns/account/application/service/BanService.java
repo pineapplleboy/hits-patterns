@@ -4,12 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
-import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.shared.model.enums.OperationStatus;
+import ru.patterns.shared.model.enums.TransferAccountType;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -48,7 +47,10 @@ public class BanService {
     private void callOperationHistoryService(UUID userId, String accountNumber, TransferAccountType transferAccountType, boolean ban) {
         operationHistoryService.createAndSaveOperation(userId,
                 transferAccountType,
-                BigDecimal.ZERO,
+                null,
+                null,
+                null,
+                null,
                 ban ? AccountActionType.ACCOUNT_BANNED : AccountActionType.ACCOUNT_UNBANNED,
                 OperationStatus.SUCCESS,
                 accountNumber);

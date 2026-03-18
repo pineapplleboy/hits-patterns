@@ -1,9 +1,10 @@
 package ru.patterns.account.application.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.patterns.account.application.common.model.AccountNumberResponseModel;
+import ru.patterns.account.application.common.model.response.AccountNumberResponseModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountFullModel;
 import ru.patterns.account.application.common.model.bankaccount.BankAccountShortModel;
 import ru.patterns.account.application.service.account.BankAccountService;
@@ -20,42 +21,48 @@ public class BankAccountController {
     private final BankAccountService bankAccountService;
 
     @PostMapping("/users/{userId}/bank-accounts")
-    public AccountNumberResponseModel createBankAccount(@PathVariable UUID userId, @RequestHeader String authorization) {
+    @Operation(summary = "Открытие счёта [Пользователь]")
+    public AccountNumberResponseModel createBankAccount(@PathVariable UUID userId,
+                                                        @RequestParam Integer currencyId,
+                                                        @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return bankAccountService.createBankAccount(userId);
+        return bankAccountService.createBankAccount(userId, currencyId);
     }
 
     @DeleteMapping("/users/{userId}/bank-accounts/{accountNumber}")
+    @Operation(summary = "Закрытие счёта [Пользователь]")
     public void closeBankAccount(@PathVariable UUID userId, @PathVariable String accountNumber,
-                                                       @RequestHeader String authorization) {
+                                 @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
         bankAccountService.closeBankAccount(userId, accountNumber);
     }
 
     @GetMapping("/users/{userId}/bank-accounts")
-    @Operation(summary = "Для пользователя")
+    @Operation(summary = "Получение всех счетов (скрытые/нескрытые) [Пользователь]")
     public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId, @RequestParam boolean hidden,
-                                                           @RequestHeader String authorization) {
+                                                           @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
         return bankAccountService.getAllUserBankAccounts(userId, hidden, authorization);
     }
 
     @GetMapping("/users/{userId}/bank-accounts/all")
-    @Operation(summary = "Для работника")
+    @Operation(summary = "Получение всех счетов (скрытые + нескрытые) [Работник]")
     public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId,
-                                                           @RequestHeader String authorization) {
+                                                           @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIfEmployee(authorization);
 
         return bankAccountService.getAllUserBankAccounts(userId, authorization);
     }
 
     @GetMapping("/users/{userId}/bank-accounts/{accountNumber}")
-    public BankAccountFullModel getBankAccountInfo(@PathVariable UUID userId, @PathVariable String accountNumber, @RequestHeader String authorization) {
+    @Operation(summary = "Получение детальной информации о счёте [Работник или Пользователь]")
+    public BankAccountFullModel getBankAccountInfo(@PathVariable UUID userId, @PathVariable String accountNumber,
+                                                   @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
 
-        return bankAccountService.getBankAccountFullModel(userId, accountNumber);
+        return bankAccountService.getBankAccountFullModel(userId, accountNumber, authorization);
     }
 }

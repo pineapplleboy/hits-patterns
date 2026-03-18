@@ -1,5 +1,7 @@
 package ru.patterns.account.application.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
@@ -17,33 +19,49 @@ public class TransferController {
     private final TransferService transferService;
 
     @PostMapping("/replenish")
+    @Operation(summary = "Пополнить счёт [Пользователь]")
     public OperationStatusResponseModel replenishMoney(@PathVariable UUID userId,
                                                        @PathVariable String bankAccountNumber,
                                                        @RequestBody MoneyAmountRequestModel requestModel,
-                                                       @RequestHeader String authorization) {
+                                                       @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return transferService.replenishMoney(userId, bankAccountNumber, requestModel);
+        return transferService.replenishMoney(userId, bankAccountNumber, requestModel, authorization);
     }
 
     @PostMapping("/withdraw")
+    @Operation(summary = "Снять деньги со счёта [Пользователь]")
     public OperationStatusResponseModel withdrawMoney(@PathVariable UUID userId,
                                                       @PathVariable String bankAccountNumber,
-                                                       @RequestBody MoneyAmountRequestModel requestModel,
-                                                       @RequestHeader String authorization) {
+                                                      @RequestBody MoneyAmountRequestModel requestModel,
+                                                      @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return transferService.withdrawMoney(userId, bankAccountNumber, requestModel);
+        return transferService.withdrawMoney(userId, bankAccountNumber, requestModel, authorization);
     }
 
     @PostMapping("/credit-payments/{creditAccountNumber}")
+    @Operation(summary = "Перевести деньги на кредит [Пользователь]")
     public OperationStatusResponseModel payCredit(@PathVariable UUID userId,
                                                   @PathVariable String bankAccountNumber,
                                                   @PathVariable String creditAccountNumber,
                                                   @RequestBody MoneyAmountRequestModel requestModel,
-                                                  @RequestHeader String authorization) {
+                                                  @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEquality(authorization, userId);
 
-        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel);
+        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel, authorization);
     }
+
+    @PostMapping("/bankAccountTo/{bankAccountTo}")
+    @Operation(summary = "Перевод на другой счёт")
+    public OperationStatusResponseModel transferToBankAccount(@PathVariable UUID userId,
+                                                              @PathVariable String bankAccountNumber,
+                                                              @PathVariable String bankAccountTo,
+                                                              @RequestBody MoneyAmountRequestModel requestModel,
+                                                              @Parameter(hidden = true) @RequestHeader String authorization) {
+        AuthUtility.checkUserIdEquality(authorization, userId);
+
+        return transferService.transferToBankAccount(userId, bankAccountNumber, bankAccountTo, requestModel, authorization);
+    }
+
 }
