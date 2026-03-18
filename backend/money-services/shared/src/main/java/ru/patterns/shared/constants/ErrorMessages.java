@@ -7,6 +7,7 @@ public class ErrorMessages {
     public final String USER_NOT_FOUND = "Пользователь не найден";
     public final String FORBIDDEN = "Доступ запрещён";
     public final String ACCOUNT_NOT_FOUND = "Счёт не найден";
+    public final String CREDIT_NOT_FOUND = "Кредит не найден";
     public final String UNAUTHORIZED = "Ошибка авторизации!";
     public final String INCORRECT_REQUEST_AMOUNT = "Некорректная сумма запроса";
     public final String ACCOUNT_BANNED = "Счёт заблокирован";
@@ -17,4 +18,5 @@ public class ErrorMessages {
     public final String CURRENCY_NOT_FOUND = "Валюта не найдена";
     public final String INVALID_CREDIT_SUM = "Некорректный лимит";
     public final String CURRENCY_NOT_SUPPORTABLE = "Валюта не поддерживается";
+    public final String OPERATION_NOT_FOUND = "Операция не найдена";
 }

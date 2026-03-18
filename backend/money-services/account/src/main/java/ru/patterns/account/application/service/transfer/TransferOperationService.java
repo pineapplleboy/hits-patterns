@@ -13,6 +13,7 @@ import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.account.domain.repository.CreditAccountRepository;
 import ru.patterns.account.domain.repository.OperationRepository;
+import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
@@ -157,12 +158,12 @@ public class TransferOperationService {
 
     private BankAccount findBankAccountByAccountNumber(String accountNumber) {
         return bankAccountRepository.getBankAccountByAccountNumberAndActiveTrue(accountNumber)
-                .orElseThrow(() -> new BadRequestException("Bank account not found"));
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.ACCOUNT_NOT_FOUND));
     }
 
     private CreditAccount findCreditAccountByAccountNumber(String accountNumber) {
         return creditAccountRepository.findCreditAccountByAccountNumberAndActiveTrueAndClosedFalse(accountNumber)
-                .orElseThrow(() -> new BadRequestException("Credit account not found"));
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.CREDIT_NOT_FOUND));
     }
 
     private Operation findOrCreateOperationById(UUID operationId, TransferAssignmentMessage assignmentMessage) {

@@ -7,6 +7,7 @@ import ru.patterns.account.application.kafka.provider.TransferRequestProvider;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.repository.BankAccountRepository;
 import ru.patterns.shared.constants.CurrencyConstants;
+import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
@@ -98,14 +99,14 @@ public class TransferService {
 
     private UUID getRecipientId(String bankAccountNumber) {
         var bankAccount = bankAccountRepository.getBankAccountByAccountNumberAndActiveTrue(bankAccountNumber)
-                .orElseThrow(() -> new NotFoundException("Bank account not found"));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         return bankAccount.getUserId();
     }
 
     private Integer getAccountCurrency(String accountNumberFrom) {
         var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveTrue(accountNumberFrom)
-                .orElseThrow(() -> new NotFoundException("Bank account not found"));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         return account.getCurrencyId();
     }

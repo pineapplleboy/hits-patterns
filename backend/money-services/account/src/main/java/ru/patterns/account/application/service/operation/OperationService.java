@@ -3,6 +3,7 @@ package ru.patterns.account.application.service.operation;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
+import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.operation.OperationModel;
 import ru.patterns.account.domain.entity.Operation;
@@ -72,6 +73,6 @@ public class OperationService {
 
     private Operation getOperationById(UUID operationId) {
         return operationRepository.findById(operationId)
-                .orElseThrow(() -> new NotFoundException("Operation not found!"));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.OPERATION_NOT_FOUND));
     }
 }
