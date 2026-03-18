@@ -1,6 +1,8 @@
 using Duende.IdentityServer;
 using IdentityTest.Data;
 using IdentityTest.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +32,14 @@ namespace IdentityTest
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.Name = "patterns.identity";
+                options.Cookie.Path = "/";
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            });
 
             builder.Services
                 .AddIdentityServer(options =>
