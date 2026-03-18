@@ -1,4 +1,4 @@
-using ClassLibrary;
+п»їusing ClassLibrary;
 using IdentityTest.Data;
 using IdentityTest.Models;
 using IdentityTest.Pages.Account.Register;
@@ -6,72 +6,101 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace IdentityTest.Pages.Account.Create
 {
-
     [Authorize(Roles = "EMPLOYEE")]
     public class IndexModel : PageModel
     {
-
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        public IndexModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        private readonly ILogger<IndexModel> _logger;
+
+        public IndexModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILogger<IndexModel> logger)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
+            _logger = logger;
         }
 
-        
         [BindProperty]
         public CreateViewModel Input { get; set; }
-        public async Task<IActionResult> OnGet()
+
+        public Task<IActionResult> OnGet()
         {
-            IsEmployee();
-            return Page();
+            var employeeCheck = IsEmployee();
+            if (employeeCheck != null)
+            {
+                return Task.FromResult(employeeCheck);
+            }
+
+            return Task.FromResult<IActionResult>(Page());
         }
 
         public async Task<IActionResult> OnPost()
         {
-            IsEmployee();
-            if (ModelState.IsValid)
+            var employeeCheck = IsEmployee();
+            if (employeeCheck != null)
             {
-                var existingUser = await _userManager.FindByNameAsync(Input.Phone);
-                if (existingUser != null)
-                {
-                    ModelState.AddModelError("Input.Phone", "Этот телефон уже зарегистрирован");
-                    return Page();
-                }
-
-                var user = new ApplicationUser()
-                {
-                    UserName = Input.Phone,
-                    Email = Input.Name,
-                    Ban = false,
-                    UserRole = Input.UserRole
-                };
-                var result = await _userManager.CreateAsync(user, Input.Password);
-                await _userManager.AddToRoleAsync(user, user.UserRole.ToString());
-                if (result.Succeeded)
-                {
-                    await KafkaManager.SendNewUserMessage(new UserDB
-                    {
-                        Id = Guid.Parse(user.Id),
-                        Phone = Input.Phone,
-                        Name = Input.Name,
-                        UserRole = Input.UserRole,
-                        Ban = false,
-                        //Author = 
-                    });
-                    TempData["SuccessMessage"] = $"Пользователь {Input.Phone} успешно создан!";
-                    Input = new CreateViewModel();
-                    
-                    return RedirectToPage();
-                }
+                return employeeCheck;
             }
 
-            return Page();
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
+            var existingUser = await _userManager.FindByNameAsync(Input.Phone);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError("Input.Phone", "Р­С‚РѕС‚ С‚РµР»РµС„РѕРЅ СѓР¶Рµ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ");
+                return Page();
+            }
+
+            var user = new ApplicationUser
+            {
+                UserName = Input.Phone,
+                Email = Input.Name,
+                Ban = false,
+                UserRole = Input.UserRole
+            };
+
+            var result = await _userManager.CreateAsync(user, Input.Password);
+            if (!result.Succeeded)
+            {
+                AddErrors(result);
+                return Page();
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, user.UserRole.ToString());
+            if (!roleResult.Succeeded)
+            {
+                await _userManager.DeleteAsync(user);
+                AddErrors(roleResult);
+                return Page();
+            }
+
+            try
+            {
+                await KafkaManager.SendNewUserMessage(new UserDB
+                {
+                    Id = Guid.Parse(user.Id),
+                    Phone = Input.Phone,
+                    Name = Input.Name,
+                    UserRole = Input.UserRole,
+                    Ban = false,
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish created user {Phone}", Input.Phone);
+                await _userManager.DeleteAsync(user);
+                ModelState.AddModelError(string.Empty, "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р· РїРѕР·Р¶Рµ.");
+                return Page();
+            }
+
+            TempData["SuccessMessage"] = $"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ {Input.Phone} СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅ!";
+            Input = new CreateViewModel();
+            return RedirectToPage();
         }
 
         private IActionResult IsEmployee()
@@ -82,8 +111,15 @@ namespace IdentityTest.Pages.Account.Create
                 return RedirectToPage("/Account/AccessDenied");
             }
 
-            return null; 
+            return null;
+        }
+
+        private void AddErrors(IdentityResult result)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
         }
     }
 }
- 
