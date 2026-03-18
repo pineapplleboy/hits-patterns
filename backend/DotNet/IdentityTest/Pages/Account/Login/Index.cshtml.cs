@@ -66,7 +66,7 @@ namespace IdentityTest.Pages.Login
             var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
 
             // the user clicked the "cancel" button
-            if (Input.Button != "login")
+            if (string.Equals(Input.Button, "cancel", StringComparison.OrdinalIgnoreCase))
             {
                 if (context != null)
                 {
