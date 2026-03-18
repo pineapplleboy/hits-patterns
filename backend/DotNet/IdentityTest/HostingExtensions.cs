@@ -3,6 +3,7 @@ using IdentityTest.Data;
 using IdentityTest.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 namespace IdentityTest

@@ -11,7 +11,7 @@ namespace IdentityTest
 {
     public class SeedData
     {
-        public static void EnsureSeedData(WebApplication app)
+        public static async void EnsureSeedData(WebApplication app)
         {
             using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
@@ -19,6 +19,24 @@ namespace IdentityTest
                 context.Database.Migrate();
 
                 var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+                var roles = new[] { UserRole.CLIENT.ToString(), UserRole.EMPLOYEE.ToString()}; 
+
+
+                foreach (var role in roles)
+                {
+                    if (!await roleManager.RoleExistsAsync(role))
+                    {
+                        await roleManager.CreateAsync(new IdentityRole(role));
+                        Console.WriteLine($"Role '{role}' created successfully.");
+                    }
+                }
+
+
+
+
+
                 var employee = userMgr.FindByNameAsync("89992223311").Result;
                 if (employee == null)
                 {
@@ -32,6 +50,7 @@ namespace IdentityTest
                         UserRole = UserRole.EMPLOYEE
                     };
                     var result = userMgr.CreateAsync(employee, "String1!").Result;
+                    await userMgr.AddToRoleAsync(employee, employee.UserRole.ToString());
                     if (!result.Succeeded)
                     {
                         throw new Exception(result.Errors.First().Description);
@@ -56,6 +75,7 @@ namespace IdentityTest
                         UserRole = UserRole.CLIENT
                     };
                     var result = userMgr.CreateAsync(client, "String1!").Result;
+                    await userMgr.AddToRoleAsync(client, client.UserRole.ToString());
                     if (!result.Succeeded)
                     {
                         throw new Exception(result.Errors.First().Description);

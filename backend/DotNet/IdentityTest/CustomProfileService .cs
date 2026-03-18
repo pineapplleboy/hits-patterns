@@ -33,7 +33,7 @@ namespace IdentityTest
 
 
                 claims.Add(new System.Security.Claims.Claim("role", user.UserRole.ToString()));
-
+                //claims.Add(new Claim(ClaimTypes.Role, user.UserRole.ToString()));
 
                 context.IssuedClaims = claims;
             }
