@@ -90,19 +90,19 @@ jobs:
             add_service 'patterns-user-setting' 'hits-patterns-patterns-user-setting' './backend/DotNet' './backend/DotNet/patternsUserSetting/Dockerfile' 'patterns-user-setting'
           fi
 
-          if has_change '^backend/money-services/(account|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+          if has_change '^backend/money-services/(account|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
             add_service 'account-service' 'hits-patterns-account-service' './backend/money-services' './backend/money-services/Dockerfile' 'account-service' 'SERVICE_NAME=account'
           fi
 
-          if has_change '^backend/money-services/(credit|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+          if has_change '^backend/money-services/(credit|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
             add_service 'credit-service' 'hits-patterns-credit-service' './backend/money-services' './backend/money-services/Dockerfile' 'credit-service' 'SERVICE_NAME=credit'
           fi
 
-          if has_change '^backend/money-services/(transfers|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+          if has_change '^backend/money-services/(transfers|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
             add_service 'transfers-service' 'hits-patterns-transfers-service' './backend/money-services' './backend/money-services/Dockerfile' 'transfers-service' 'SERVICE_NAME=transfers'
           fi
 
-          if has_change '^backend/money-services/(currency|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+          if has_change '^backend/money-services/(currency|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
             add_service 'currency-service' 'hits-patterns-currency-service' './backend/money-services' './backend/money-services/Dockerfile' 'currency-service' 'SERVICE_NAME=currency'
           fi
 
@@ -191,4 +191,5 @@ jobs:
               fi
             ' || { echo "Another deploy is already running (lock /tmp/deploy.lock)."; exit 1; }
           EOF
+
 
