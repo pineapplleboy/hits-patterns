@@ -10,6 +10,12 @@ namespace IdentityTest
         private static readonly string TransfersSwaggerUrl = GetEnvironmentVariable("SWAGGER_TRANSFERS_URL", "http://localhost:8083");
         private static readonly string CurrencySwaggerUrl = GetEnvironmentVariable("SWAGGER_CURRENCY_URL", "http://localhost:8084");
         private static readonly string CreditSwaggerUrl = GetEnvironmentVariable("SWAGGER_CREDIT_URL", "http://localhost:8081");
+        private static readonly string UsersSwaggerOrigin = GetOrigin(UsersSwaggerUrl);
+        private static readonly string UserSettingsSwaggerOrigin = GetOrigin(UserSettingsSwaggerUrl);
+        private static readonly string AccountSwaggerOrigin = GetOrigin(AccountSwaggerUrl);
+        private static readonly string TransfersSwaggerOrigin = GetOrigin(TransfersSwaggerUrl);
+        private static readonly string CurrencySwaggerOrigin = GetOrigin(CurrencySwaggerUrl);
+        private static readonly string CreditSwaggerOrigin = GetOrigin(CreditSwaggerUrl);
 
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[]
@@ -37,7 +43,7 @@ namespace IdentityTest
                     RequireClientSecret = false,
 
                     RedirectUris = {$"{UsersSwaggerUrl}/swagger/oauth2-redirect.html"},
-                    AllowedCorsOrigins = {UsersSwaggerUrl},
+                    AllowedCorsOrigins = {UsersSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {  
                         "SampleAPI"
@@ -54,7 +60,7 @@ namespace IdentityTest
                     RequireClientSecret = false,
 
                     RedirectUris = {$"{UserSettingsSwaggerUrl}/swagger/oauth2-redirect.html"},
-                    AllowedCorsOrigins = {UserSettingsSwaggerUrl},
+                    AllowedCorsOrigins = {UserSettingsSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
                         "SampleAPI"
@@ -70,7 +76,7 @@ namespace IdentityTest
                     RequireClientSecret = false,
 
                     RedirectUris = {$"{AccountSwaggerUrl}/swagger/oauth2-redirect.html"},
-                    AllowedCorsOrigins = {AccountSwaggerUrl},
+                    AllowedCorsOrigins = {AccountSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
                         "SampleAPI"
@@ -86,7 +92,7 @@ namespace IdentityTest
                     RequireClientSecret = false,
 
                     RedirectUris = {$"{TransfersSwaggerUrl}/swagger/oauth2-redirect.html"},
-                    AllowedCorsOrigins = {TransfersSwaggerUrl},
+                    AllowedCorsOrigins = {TransfersSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
                         "SampleAPI"
@@ -102,7 +108,7 @@ namespace IdentityTest
                     RequireClientSecret = false,
 
                     RedirectUris = {$"{CurrencySwaggerUrl}/swagger/oauth2-redirect.html"},
-                    AllowedCorsOrigins = {CurrencySwaggerUrl},
+                    AllowedCorsOrigins = {CurrencySwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
                         "SampleAPI"
@@ -118,7 +124,7 @@ namespace IdentityTest
                     RequireClientSecret = false,
 
                     RedirectUris = {$"{CreditSwaggerUrl}/swagger/oauth2-redirect.html"},
-                    AllowedCorsOrigins = {CreditSwaggerUrl},
+                    AllowedCorsOrigins = {CreditSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
                         "SampleAPI"
@@ -131,6 +137,12 @@ namespace IdentityTest
         {
             var value = Environment.GetEnvironmentVariable(variableName);
             return string.IsNullOrWhiteSpace(value) ? fallback : value.TrimEnd('/');
+        }
+
+        private static string GetOrigin(string url)
+        {
+            var uri = new Uri(url);
+            return uri.GetLeftPart(UriPartial.Authority);
         }
     }
 }
