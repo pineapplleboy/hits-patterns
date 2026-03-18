@@ -43,6 +43,16 @@ public class TransferRequestService {
             return assignment;
         }
 
+        if (message.getAccountNumberFrom().equals(message.getAccountNumberTo())) {
+            assignment.setStatus(OperationStatus.REJECTED);
+            return assignment;
+        }
+
+        if (message.getAccountNumberTo() == null) {
+            assignment.setAmountTo(calculateCurrency(message.getCurrencyFrom(), CurrencyConstants.BASE_CURRENCY_ID, message.getAmount(), token)
+                    .getAmountFinal());
+        }
+
         if (message.getAccountNumberTo() == null) {
             assignment.setAccountNumberTo(masterAccountNumber);
         } else {
@@ -50,7 +60,8 @@ public class TransferRequestService {
         }
 
         if (message.getAccountNumberFrom() == null) {
-            assignment.setAmountFrom(calculateCurrency(message.getCurrencyTo(), CurrencyConstants.BASE_CURRENCY_ID, message.getAmount(), token).getAmount());
+            assignment.setAmountFrom(calculateCurrency(message.getCurrencyTo(), CurrencyConstants.BASE_CURRENCY_ID, message.getAmount(), token)
+                    .getAmountFinal());
         } else {
             assignment.setAmountFrom(message.getAmount());
         }
@@ -78,7 +89,7 @@ public class TransferRequestService {
     }
 
     private BigDecimal calculateAmountTo(Integer currencyFrom, Integer currencyTo, BigDecimal amount, String token) {
-        return calculateCurrency(currencyFrom, currencyTo, amount, token).getAmount();
+        return calculateCurrency(currencyFrom, currencyTo, amount, token).getAmountFinal();
     }
 
     private CurrencyAmountModel calculateCurrency(Integer currencyFrom, Integer currencyTo, BigDecimal amount, String token) {

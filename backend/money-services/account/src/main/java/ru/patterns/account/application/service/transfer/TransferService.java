@@ -77,7 +77,8 @@ public class TransferService {
                 .setUserIdTo(userIdTo)
                 .setAmount(amount.getAmount())
                 .setCurrencyFrom(accountNumberFrom == null ? CurrencyConstants.BASE_CURRENCY_ID : getAccountCurrency(accountNumberFrom))
-                .setCurrencyTo(transferAccountType == TransferAccountType.CREDIT_ACCOUNT ? CurrencyConstants.BASE_CURRENCY_ID : getAccountCurrency(accountNumberTo))
+                .setCurrencyTo(transferAccountType == TransferAccountType.CREDIT_ACCOUNT || accountNumberTo == null
+                        ? CurrencyConstants.BASE_CURRENCY_ID : getAccountCurrency(accountNumberTo))
                 .setTransferType(transferAccountType);
     }
 
