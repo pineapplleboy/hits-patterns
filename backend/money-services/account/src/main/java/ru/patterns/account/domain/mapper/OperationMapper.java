@@ -10,15 +10,16 @@ import ru.patterns.account.domain.entity.Operation;
 public class OperationMapper {
 
     public OperationModel toModel(Operation operation, String requestingAccountNumber) {
-        boolean isIncomingOperation = operation.getRecipientAccountNumber().equals(requestingAccountNumber);
+        boolean isIncomingOperation = requestingAccountNumber != null
+                && requestingAccountNumber.equals(operation.getRecipientAccountNumber());
 
         AccountActionType actionType = operation.getActionType();
         String accountNumberFrom = operation.getAccountNumberFrom();
 
         if (actionType == AccountActionType.TRANSFER) {
-            actionType = requestingAccountNumber != null && requestingAccountNumber.equals(operation.getAccountNumberFrom())
-                    ? AccountActionType.TRANSFER_SENT
-                    : AccountActionType.TRANSFER_RECEIVED;
+            actionType = isIncomingOperation
+                    ? AccountActionType.TRANSFER_RECEIVED
+                    : AccountActionType.TRANSFER_SENT;
         }
 
         return new OperationModel()
