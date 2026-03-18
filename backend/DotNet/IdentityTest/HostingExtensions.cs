@@ -87,6 +87,7 @@ namespace IdentityTest
 
             app.UseStaticFiles();
             app.UseRouting();
+            app.UseAuthentication();
             app.UseIdentityServer();
             app.UseAuthorization();
 
