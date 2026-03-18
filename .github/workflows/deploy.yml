@@ -69,7 +69,7 @@ jobs:
                 "$image_name" "$context" "$file" "$cache_scope")
             fi
 
-            matrix=$(jq --argjson item "$item" '.include += [$item]' <<< "$matrix")
+            matrix=$(jq -c --argjson item "$item" '.include += [$item]' <<< "$matrix")
             services+=("$service_name")
             has_builds=true
           }
@@ -191,3 +191,4 @@ jobs:
               fi
             ' || { echo "Another deploy is already running (lock /tmp/deploy.lock)."; exit 1; }
           EOF
+
