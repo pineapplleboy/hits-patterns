@@ -34,8 +34,8 @@ public class JwtAuthUtility {
     private static final String NAME_ID_CLAIM = "nameid";
     private static final String ROLE_CLAIM = "role";
     private static final String DEFAULT_JWKS_URL = "http://localhost:5001/.well-known/openid-configuration/jwks";
-    private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(5);
-    private static final Duration KEYS_CACHE_TTL = Duration.ofMinutes(10);
+    private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(20);
+    private static final Duration KEYS_CACHE_TTL = Duration.ofMinutes(1000);
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
