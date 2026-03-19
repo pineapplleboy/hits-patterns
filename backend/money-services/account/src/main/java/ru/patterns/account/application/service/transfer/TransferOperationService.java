@@ -83,6 +83,8 @@ public class TransferOperationService {
         bankAccountRepository.save(bankAccountFrom);
         bankAccountRepository.save(bankAccountTo);
 
+        sendMoneyUpdateMessages(bankAccountFrom, bankAccountTo);
+
         saveOperationWithStatus(operation, OperationStatus.SUCCESS);
 
         setCurrentlyTransactional(bankAccountFrom, bankAccountTo, null, false);
@@ -129,6 +131,8 @@ public class TransferOperationService {
         bankAccountRepository.save(bankAccountFrom);
         creditAccountRepository.save(creditAccountTo);
 
+        sendMoneyUpdateMessages(bankAccountFrom, creditAccountTo);
+
         saveOperationWithStatus(operation, OperationStatus.SUCCESS);
 
         setCurrentlyTransactional(bankAccountFrom, null, creditAccountTo, false);
@@ -147,6 +151,16 @@ public class TransferOperationService {
         operationRepository.save(operation);
 
         operationWebSocketPublisher.publishOperationUpdated(operation);
+    }
+
+    private void sendMoneyUpdateMessages(BankAccount bankAccountFrom, BankAccount bankAccountTo) {
+        operationWebSocketPublisher.publishAccountMoneyReceiving(bankAccountFrom);
+        operationWebSocketPublisher.publishAccountMoneyReceiving(bankAccountTo);
+    }
+
+    private void sendMoneyUpdateMessages(BankAccount bankAccountFrom, CreditAccount creditAccountTo) {
+        operationWebSocketPublisher.publishAccountMoneyReceiving(bankAccountFrom);
+        operationWebSocketPublisher.publishAccountMoneyReceiving(creditAccountTo);
     }
 
     private void setCurrentlyTransactional(BankAccount bankAccountFrom, BankAccount bankAccountTo,

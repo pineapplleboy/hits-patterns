@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
+import ru.patterns.account.application.service.websocket.OperationWebSocketPublisher;
 import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.utility.CreditUtility;
@@ -22,6 +23,7 @@ public class CreditRateService {
 
     private final CreditAccountRepository creditAccountRepository;
     private final OperationHistoryService operationHistoryService;
+    private final OperationWebSocketPublisher operationWebSocketPublisher;
 
     public void updateCreditAccounts() {
         var creditAccounts = getCreditAccounts();
@@ -36,6 +38,8 @@ public class CreditRateService {
                 creditAccount.setNextWriteOffDate(CreditUtility.calculateNextCreditWriteOffDate(creditAccount.getNextWriteOffDate(), creditAccount.getWriteOffPeriod()));
 
                 creditAccountRepository.save(creditAccount);
+
+                operationWebSocketPublisher.publishAccountMoneyReceiving(creditAccount);
 
                 saveOperation(creditAccount, creditGrowth);
             }

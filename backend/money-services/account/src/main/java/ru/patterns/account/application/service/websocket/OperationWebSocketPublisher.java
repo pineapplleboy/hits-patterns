@@ -5,7 +5,11 @@ import lombok.experimental.ExtensionMethod;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.WebSocketMessageType;
+import ru.patterns.account.application.common.model.websocket.ProductBalanceUpdateModel;
 import ru.patterns.account.application.common.model.websocket.WebSocketMessage;
+import ru.patterns.account.application.utility.CurrencySymbolUtility;
+import ru.patterns.account.domain.entity.BankAccount;
+import ru.patterns.account.domain.entity.CreditAccount;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.mapper.OperationMapper;
 
@@ -43,5 +47,19 @@ public class OperationWebSocketPublisher {
         if (operation.getRecipientId() != null) {
             messagingTemplate.convertAndSend(USER_INFO_TOPIC_NAME + operation.getRecipientId(), eventReceiver);
         }
+    }
+
+    public void publishAccountMoneyReceiving(BankAccount account) {
+        WebSocketMessage event = new WebSocketMessage(WebSocketMessageType.BANK_ACCOUNT_SUM_UPDATE,
+                new ProductBalanceUpdateModel(account.getBalance() + CurrencySymbolUtility.getCurrencySymbol(account.getCurrencyId())));
+
+        messagingTemplate.convertAndSend(USER_INFO_TOPIC_NAME + account.getUserId(), event);
+    }
+
+    public void publishAccountMoneyReceiving(CreditAccount account) {
+        WebSocketMessage event = new WebSocketMessage(WebSocketMessageType.CREDIT_ACCOUNT_DEPT_UPDATE,
+                new ProductBalanceUpdateModel(account.getDept() + CurrencySymbolUtility.getCurrencySymbol(account.getCurrencyId())));
+
+        messagingTemplate.convertAndSend(USER_INFO_TOPIC_NAME + account.getUserId(), event);
     }
 }
