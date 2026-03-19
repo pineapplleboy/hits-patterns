@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.enums.TransactionFinishStatus;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
+import ru.patterns.account.application.service.websocket.OperationWebSocketPublisher;
 import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.entity.CreditAccount;
 import ru.patterns.account.domain.entity.Operation;
@@ -20,6 +21,7 @@ import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -31,6 +33,7 @@ public class TransferOperationService {
     private final CreditAccountRepository creditAccountRepository;
     private final OperationRepository operationRepository;
     private final OperationHistoryService operationHistoryService;
+    private final OperationWebSocketPublisher operationWebSocketPublisher;
 
     @Value("${master-bank.account-number}")
     private String masterBankAccountNumber;
@@ -40,8 +43,7 @@ public class TransferOperationService {
         BankAccount bankAccountFrom = findBankAccountByAccountNumber(assignment.getAccountNumberFrom());
         Operation operation = findOrCreateOperationById(assignment.getOperationId(), assignment);
 
-        operation.setStatus(assignment.getStatus());
-        operationRepository.save(operation);
+        saveOperationWithStatus(operation, assignment.getStatus());
 
         if (assignment.getStatus() == OperationStatus.REJECTED) {
             return TransactionFinishStatus.TRANSACTION_REJECTED;
@@ -79,8 +81,7 @@ public class TransferOperationService {
         bankAccountRepository.save(bankAccountFrom);
         bankAccountRepository.save(bankAccountTo);
 
-        operation.setStatus(OperationStatus.SUCCESS);
-        operationRepository.save(operation);
+        saveOperationWithStatus(operation, OperationStatus.SUCCESS);
 
         setCurrentlyTransactional(bankAccountFrom, bankAccountTo, null, false);
 
@@ -126,8 +127,7 @@ public class TransferOperationService {
         bankAccountRepository.save(bankAccountFrom);
         creditAccountRepository.save(creditAccountTo);
 
-        operation.setStatus(OperationStatus.SUCCESS);
-        operationRepository.save(operation);
+        saveOperationWithStatus(operation, OperationStatus.SUCCESS);
 
         setCurrentlyTransactional(bankAccountFrom, null, creditAccountTo, false);
 
@@ -135,9 +135,16 @@ public class TransferOperationService {
     }
 
     private TransactionFinishStatus finishRejectedOperation(Operation operation) {
-        operation.setStatus(OperationStatus.REJECTED);
-        operationRepository.save(operation);
+        saveOperationWithStatus(operation, OperationStatus.REJECTED);
         return TransactionFinishStatus.TRANSACTION_REJECTED;
+    }
+
+    private void saveOperationWithStatus(Operation operation, OperationStatus status) {
+        operation.setStatus(status);
+        operation.setUpdateTime(Instant.now());
+        operationRepository.save(operation);
+
+        operationWebSocketPublisher.publishOperationUpdated(operation);
     }
 
     private void setCurrentlyTransactional(BankAccount bankAccountFrom, BankAccount bankAccountTo,

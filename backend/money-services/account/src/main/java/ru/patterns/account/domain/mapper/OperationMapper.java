@@ -3,6 +3,7 @@ package ru.patterns.account.domain.mapper;
 import lombok.experimental.UtilityClass;
 import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.model.operation.OperationModel;
+import ru.patterns.account.application.common.model.operation.OperationUpdateStatusModel;
 import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.Operation;
 
@@ -24,7 +25,7 @@ public class OperationMapper {
 
         return new OperationModel()
                 .setOperationId(operation.getOperationId())
-                .setAccountNumberFrom(accountNumberFrom)
+                .setAccountNumberFrom(accountNumberFrom.equals("0000-0000-0000-0000") ? null : accountNumberFrom)
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
                 .setAmount(isIncomingOperation ?
@@ -33,7 +34,14 @@ public class OperationMapper {
                 .setStatus(operation.getStatus())
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
-                .setRecipientAccountNumber(operation.getRecipientAccountNumber())
+                .setRecipientAccountNumber(operation.getRecipientAccountNumber().equals("0000-0000-0000-0000") ? null :
+                        operation.getRecipientAccountNumber())
                 .setUserIdFrom(operation.getUserIdFrom());
+    }
+
+    public OperationUpdateStatusModel toStatusModel(Operation operation) {
+        return new OperationUpdateStatusModel()
+                .setOperationId(operation.getOperationId())
+                .setNewStatus(operation.getStatus());
     }
 }
