@@ -20,7 +20,7 @@ public class OperationWebSocketPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    private final static String USER_INFO_TOPIC_NAME = "/topic/users/";
+    public final static String USER_INFO_TOPIC_NAME = "/topic/users/";
 
     public void publishOperationUpdated(Operation operation) {
         WebSocketMessage event = new WebSocketMessage(WebSocketMessageType.OPERATION_STATUS_UPDATE, operation.toStatusModel());
