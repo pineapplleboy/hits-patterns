@@ -1,4 +1,5 @@
-﻿using Duende.IdentityServer.Models;
+﻿using Duende.IdentityServer;
+using Duende.IdentityServer.Models;
 
 namespace IdentityTest
 {
@@ -130,6 +131,46 @@ namespace IdentityTest
                         "SampleAPI"
                     }
                 },
+                new Client
+                {
+                    ClientId = "android_client_app",
+                    ClientName = "Mobile client app",
+                    RedirectUris = { "com.client.android:/callback"},
+                    PostLogoutRedirectUris = { "com.client.android:/logout" },
+
+                    AllowedGrantTypes = GrantTypes.Code,
+                    AllowAccessTokensViaBrowser = true,
+                    RequireConsent = false,
+
+                    AllowOfflineAccess = true,
+                    RefreshTokenUsage = TokenUsage.ReUse,
+
+                    AllowedScopes = {
+                            IdentityServerConstants.StandardScopes.OpenId,
+                            IdentityServerConstants.StandardScopes.Profile,
+                            "SampleAPI"
+                        }
+                },
+                new Client
+                {
+                    ClientId = "android_employeee_app",
+                    ClientName = "Mobile employee app",
+                    RedirectUris = { "com.employee.android:/callback"},
+                    PostLogoutRedirectUris = { "com.employee.android:/logout" },
+
+                    AllowedGrantTypes = GrantTypes.Code,
+                    AllowAccessTokensViaBrowser = true,
+                    RequireConsent = false,
+
+                    AllowOfflineAccess = true,
+                    RefreshTokenUsage = TokenUsage.ReUse,
+
+                    AllowedScopes = {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "SampleAPI"
+                    }
+                }
 
             };
 
