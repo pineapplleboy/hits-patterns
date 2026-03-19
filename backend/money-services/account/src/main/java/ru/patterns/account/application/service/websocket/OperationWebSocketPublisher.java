@@ -30,4 +30,19 @@ public class OperationWebSocketPublisher {
             messagingTemplate.convertAndSend(USER_INFO_TOPIC_NAME + operation.getRecipientId(), event);
         }
     }
+
+    public void publishOperationCreated(Operation operation) {
+        WebSocketMessage eventAuthor = new WebSocketMessage(WebSocketMessageType.OPERATION_STATUS_UPDATE,
+                operation.toModel(operation.getAccountNumberFrom()));
+        WebSocketMessage eventReceiver = new WebSocketMessage(WebSocketMessageType.OPERATION_STATUS_UPDATE,
+                operation.toModel(operation.getRecipientAccountNumber()));
+
+        if (operation.getUserIdFrom() != null) {
+            messagingTemplate.convertAndSend(USER_INFO_TOPIC_NAME + operation.getUserIdFrom(), eventAuthor);
+        }
+
+        if (operation.getRecipientId() != null) {
+            messagingTemplate.convertAndSend(USER_INFO_TOPIC_NAME + operation.getRecipientId(), eventReceiver);
+        }
+    }
 }

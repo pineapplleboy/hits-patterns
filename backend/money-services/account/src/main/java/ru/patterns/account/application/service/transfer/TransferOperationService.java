@@ -43,6 +43,8 @@ public class TransferOperationService {
         BankAccount bankAccountFrom = findBankAccountByAccountNumber(assignment.getAccountNumberFrom());
         Operation operation = findOrCreateOperationById(assignment.getOperationId(), assignment);
 
+        operationWebSocketPublisher.publishOperationCreated(operation);
+
         saveOperationWithStatus(operation, assignment.getStatus());
 
         if (assignment.getStatus() == OperationStatus.REJECTED) {
