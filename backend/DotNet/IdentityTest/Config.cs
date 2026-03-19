@@ -139,6 +139,8 @@ namespace IdentityTest
                     PostLogoutRedirectUris = { "com.client.android:/logout" },
 
                     AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
                     AllowAccessTokensViaBrowser = true,
                     RequireConsent = false,
 
@@ -153,12 +155,14 @@ namespace IdentityTest
                 },
                 new Client
                 {
-                    ClientId = "android_employeee_app",
+                    ClientId = "android_employeeee_app",
                     ClientName = "Mobile employee app",
                     RedirectUris = { "com.employee.android:/callback"},
                     PostLogoutRedirectUris = { "com.employee.android:/logout" },
 
                     AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
                     AllowAccessTokensViaBrowser = true,
                     RequireConsent = false,
 
