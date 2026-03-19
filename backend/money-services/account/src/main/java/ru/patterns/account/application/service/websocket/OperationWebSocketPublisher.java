@@ -5,7 +5,6 @@ import lombok.experimental.ExtensionMethod;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.WebSocketMessageType;
-import ru.patterns.account.application.common.model.operation.OperationUpdateStatusModel;
 import ru.patterns.account.application.common.model.websocket.WebSocketMessage;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.mapper.OperationMapper;
@@ -32,7 +31,7 @@ public class OperationWebSocketPublisher {
     }
 
     public void publishOperationCreated(Operation operation) {
-        WebSocketMessage eventAuthor = new WebSocketMessage(WebSocketMessageType.OPERATION_STATUS_UPDATE,
+        WebSocketMessage eventAuthor = new WebSocketMessage(WebSocketMessageType.OPERATION_CREATE,
                 operation.toModel(operation.getAccountNumberFrom()));
         WebSocketMessage eventReceiver = new WebSocketMessage(WebSocketMessageType.OPERATION_STATUS_UPDATE,
                 operation.toModel(operation.getRecipientAccountNumber()));
