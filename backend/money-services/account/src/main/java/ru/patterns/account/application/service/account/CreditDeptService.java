@@ -66,15 +66,14 @@ public class CreditDeptService {
     }
 
     private void saveOperation(CreditAccount creditAccount, BigDecimal growth) {
-        operationHistoryService.createAndSaveOperation(
+        operationHistoryService.createAndSaveCreditOperation(
                 creditAccount.getUserId(),
                 TransferAccountType.CREDIT_ACCOUNT,
                 growth,
                 CurrencyConstants.BASE_CURRENCY_ID,
-                null,
-                null,
                 AccountActionType.TRANSFER,
                 OperationStatus.SUCCESS,
-                creditAccount.getAccountNumber());
+                creditAccount.getAccountNumber(),
+                CreditUtility.calculateNextCreditWriteOffDate(creditAccount.getCreateTime(), creditAccount.getWriteOffPeriod()));
     }
 }
