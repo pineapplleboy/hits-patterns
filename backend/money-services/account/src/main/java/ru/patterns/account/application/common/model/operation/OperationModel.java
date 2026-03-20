@@ -30,4 +30,6 @@ public class OperationModel {
     private OperationStatus status = OperationStatus.CREATED;
 
     private Instant createTime = Instant.now();
+
+    private Instant operationResolveTime = Instant.now();
 }

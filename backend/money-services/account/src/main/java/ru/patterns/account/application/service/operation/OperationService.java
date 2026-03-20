@@ -30,7 +30,15 @@ public class OperationService {
         var incomingOperations = operationRepository.findByRecipientId(userId);
 
         return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
-                .map(operation -> OperationMapper.toModel(operation, null))
+                .map(operation -> {
+                    var accountNumber = operation.getUserIdFrom().equals(userId) ? operation.getAccountNumberFrom() :
+                            operation.getRecipientAccountNumber();
+
+                    return operation.getTransferAccountType() == TransferAccountType.CREDIT_ACCOUNT ?
+                            OperationMapper.toCreditOperationModel(operation, accountNumber) :
+                            OperationMapper.toBankAccountOperationModel(operation, accountNumber);
+                }
+                )
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList().reversed();
     }
@@ -52,7 +60,9 @@ public class OperationService {
                 ))
                 .values()
                 .stream()
-                .map(operation -> OperationMapper.toModel(operation, accountNumber))
+                .map(operation -> operation.getTransferAccountType() == TransferAccountType.CREDIT_ACCOUNT ?
+                        OperationMapper.toCreditOperationModel(operation, accountNumber) :
+                        OperationMapper.toBankAccountOperationModel(operation, accountNumber))
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList().reversed();
     }

@@ -23,5 +23,6 @@
     <include file="/db/changelog/014-add-currency-id-to-accounts.xml"/>
     <include file="/db/changelog/015-update-operation-amount-fields.xml"/>
     <include file="/db/changelog/016-backfill-operation-currency.xml"/>
+    <include file="/db/changelog/017-add-operation-credit-fields.xml"/>
 
 </databaseChangeLog>
