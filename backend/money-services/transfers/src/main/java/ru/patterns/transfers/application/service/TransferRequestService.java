@@ -16,6 +16,7 @@ import ru.patterns.transfers.application.common.client.CalculatorRequestModel;
 import ru.patterns.transfers.application.kafka.provider.TransferAssignmentProvider;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -43,7 +44,8 @@ public class TransferRequestService {
             return assignment;
         }
 
-        if (message.getAccountNumberFrom().equals(message.getAccountNumberTo())) {
+        if (Objects.equals(message.getAccountNumberFrom(), message.getAccountNumberTo())
+                && message.getAccountNumberFrom() != null) {
             assignment.setStatus(OperationStatus.REJECTED);
             return assignment;
         }
