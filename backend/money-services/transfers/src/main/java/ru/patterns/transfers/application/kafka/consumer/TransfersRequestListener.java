@@ -31,12 +31,7 @@ public class TransfersRequestListener {
 
             TransferRequestMessage msg = objectMapper.readValue(message, TransferRequestMessage.class);
 
-            try {
-                AuthUtility.isAuthorized(token);
-            }
-            catch (Exception e) {
-                transferRequestService.processReject(msg, token);
-            }
+            AuthUtility.isAuthorized(token);
 
             try {
                 transferRequestService.processTransferRequest(msg, token);

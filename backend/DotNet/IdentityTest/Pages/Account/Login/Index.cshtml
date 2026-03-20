@@ -43,9 +43,13 @@
                                     </div>
                                 </div>
                             }
-                            <a asp-page="../Register/Index" asp-route-returnUrl="@Model.Input.ReturnUrl">
-                                Register
-                            </a><br/>
+                            @if (Model.View.ShowRegistration)
+                            {
+                                <a asp-page="../Register/Index" asp-route-returnUrl="@Model.Input.ReturnUrl">
+                                    Register
+                                </a>
+                                <br/>
+                            }
                             <button class="btn btn-primary" name="Input.Button" value="login">Login</button>
                             <button class="btn btn-secondary" name="Input.Button" value="cancel">Cancel</button>
                         </form>

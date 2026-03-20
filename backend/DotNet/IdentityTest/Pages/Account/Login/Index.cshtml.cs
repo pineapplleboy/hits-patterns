@@ -19,6 +19,11 @@ namespace IdentityTest.Pages.Login
     [AllowAnonymous]
     public class Index : PageModel
     {
+        private static readonly HashSet<string> ClientsWithoutSelfRegistration = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "android_employeeee_app"
+        };
+
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IIdentityServerInteractionService _interaction;
@@ -174,6 +179,7 @@ namespace IdentityTest.Pages.Login
                 View = new ViewModel
                 {
                     EnableLocalLogin = local,
+                    ShowRegistration = IsSelfRegistrationAllowed(context?.Client?.ClientId),
                 };
 
                 Input.Username = context.LoginHint;
@@ -221,8 +227,14 @@ namespace IdentityTest.Pages.Login
             {
                 AllowRememberLogin = LoginOptions.AllowRememberLogin,
                 EnableLocalLogin = allowLocal && LoginOptions.AllowLocalLogin,
+                ShowRegistration = IsSelfRegistrationAllowed(client?.ClientId),
                 ExternalProviders = providers.ToArray()
             };
+        }
+
+        private static bool IsSelfRegistrationAllowed(string? clientId)
+        {
+            return string.IsNullOrWhiteSpace(clientId) || !ClientsWithoutSelfRegistration.Contains(clientId);
         }
     }
 }
