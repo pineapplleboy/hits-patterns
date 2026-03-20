@@ -19,7 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CreditRateService {
+public class CreditDeptService {
 
     private final CreditAccountRepository creditAccountRepository;
     private final OperationHistoryService operationHistoryService;

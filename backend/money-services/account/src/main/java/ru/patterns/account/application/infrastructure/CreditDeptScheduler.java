@@ -3,16 +3,16 @@ package ru.patterns.account.application.infrastructure;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import ru.patterns.account.application.service.account.CreditRateService;
+import ru.patterns.account.application.service.account.CreditDeptService;
 
 @Component
 @RequiredArgsConstructor
 public class CreditDeptScheduler {
 
-    private final CreditRateService creditRateService;
+    private final CreditDeptService creditDeptService;
 
     @Scheduled(fixedRate = 60000)
     public void performCreditDeptCalculation() {
-        creditRateService.updateCreditAccounts();
+        creditDeptService.updateCreditAccounts();
     }
 }

@@ -48,4 +48,12 @@ public class OperationController {
 
         return operationService.getOperationStatus(operationId);
     }
+
+    @GetMapping("/users/{userId}/operations/missed")
+    @Operation(summary = "Получение просроченных платежей по кредитам пользователя [Сотрудник или Пользователь]")
+    public List<OperationModel> getExpiredOperations(@PathVariable UUID userId, @Parameter(hidden = true) @RequestHeader String authorization) {
+        AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
+
+        return operationService.getExpiredCreditOperations(userId);
+    }
 }

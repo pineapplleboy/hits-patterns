@@ -3,6 +3,7 @@ package ru.patterns.account.application.service.operation;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
+import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.operation.OperationModel;
@@ -12,6 +13,7 @@ import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
 
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -65,6 +67,19 @@ public class OperationService {
                         OperationMapper.toBankAccountOperationModel(operation, accountNumber))
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList().reversed();
+    }
+
+    public List<OperationModel> getExpiredCreditOperations(UUID userId) {
+        return operationRepository.findByUserIdFromAndTransferAccountTypeAndActionTypeAndPurchasedFalseAndExpectedPaymentDateBefore(
+                        userId,
+                        TransferAccountType.CREDIT_ACCOUNT,
+                        AccountActionType.CREDIT_DEPT_PERCENT,
+                        Instant.now()
+                )
+                .stream()
+                .map(operation -> OperationMapper.toCreditOperationModel(operation, operation.getAccountNumberFrom()))
+                .sorted(Comparator.comparing(OperationModel::getCreateTime))
+                .toList();
     }
 
     private Stream<Operation> getOperationsByType(String accountNumber, TransferAccountType transferAccountType) {
