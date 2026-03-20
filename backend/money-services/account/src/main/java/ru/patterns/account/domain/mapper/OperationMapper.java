@@ -55,7 +55,7 @@ public class OperationMapper {
         }
 
         return new CreditOperationModel()
-                .setPurchased(operation.isPurchased())
+                .setNotExpired(operation.isPurchased())
                 .setDeptLeft(operation.getDeptLeft())
                 .setExpectedPaymentDate(operation.getExpectedPaymentDate())
                 .setOperationId(operation.getOperationId())

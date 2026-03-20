@@ -5,6 +5,7 @@ import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.domain.entity.Operation;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,12 @@ public interface OperationRepository extends JpaRepository<Operation, UUID> {
             TransferAccountType transferAccountType,
             AccountActionType actionType,
             Instant expectedPaymentDate
+    );
+    List<Operation> findByUserIdFromAndTransferAccountTypeAndActionTypeAndPurchasedFalseAndDeptLeftGreaterThan(
+            UUID userIdFrom,
+            TransferAccountType transferAccountType,
+            AccountActionType actionType,
+            BigDecimal deptLeft
     );
     Optional<Operation> getOperationByOperationId(UUID operationId);
 }

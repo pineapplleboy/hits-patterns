@@ -18,5 +18,5 @@ public class CreditOperationModel extends OperationModel {
 
     private BigDecimal deptLeft = BigDecimal.ZERO;
 
-    private boolean purchased = true;
+    private boolean notExpired = true;
 }
