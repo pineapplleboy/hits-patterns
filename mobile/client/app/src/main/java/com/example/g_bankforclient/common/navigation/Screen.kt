@@ -4,6 +4,7 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Authorization: Screen("authorization")
     object Credits : Screen("credits")
+    object Profile : Screen("profile")
     object CreateAccount : Screen("create_account")
 
     object AccountDetails : Screen("account_details/{accountId}") {
@@ -22,4 +23,5 @@ sealed class Screen(val route: String) {
 sealed class BottomNavScreen(val route: String, val title: String) {
     object Home : BottomNavScreen("home", "Главная")
     object Credits : BottomNavScreen("credits", "Кредиты")
+    object Profile : BottomNavScreen("profile", "Профиль")
 }

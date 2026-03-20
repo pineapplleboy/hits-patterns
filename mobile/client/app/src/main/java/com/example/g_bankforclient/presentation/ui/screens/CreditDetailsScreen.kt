@@ -305,7 +305,11 @@ private fun DefaultCreditDetailsScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "${account.name} - ${account.balance.formatMoney()}"
+                                            text = "${account.name} - ${
+                                                account.balanceDisplay ?: account.balance.formatMoney(
+                                                    account.currencySymbol ?: "₽"
+                                                )
+                                            }"
                                         )
                                         if (accounts.size > 1) {
                                             Icon(
@@ -341,7 +345,11 @@ private fun DefaultCreditDetailsScreen(
                                                     color = BankColors.LightGray
                                                 ) {
                                                     Text(
-                                                        text = "${account.name} - ${account.balance.formatMoney()}",
+                                                        text = "${account.name} - ${
+                                                            account.balanceDisplay ?: account.balance.formatMoney(
+                                                                account.currencySymbol ?: "₽"
+                                                            )
+                                                        }",
                                                         modifier = Modifier.padding(16.dp)
                                                     )
                                                 }

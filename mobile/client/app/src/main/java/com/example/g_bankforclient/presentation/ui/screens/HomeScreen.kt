@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,10 +55,15 @@ import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 fun HomeScreen(
     onAccountClick: (String) -> Unit,
     onCreateAccount: () -> Unit,
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onEnterMainApp: () -> Unit = {}
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        onEnterMainApp()
+    }
 
     val handleLogout: () -> Unit = {
         viewModel.logout()
@@ -104,7 +110,17 @@ private fun DefaultHomeScreen(
     onCreateAccount: () -> Unit,
     onLogout: () -> Unit = {}
 ) {
-    val totalBalance = accounts.sumOf { it.balance }
+    val useBackendBalanceStrings = accounts.any { it.balanceDisplay != null }
+    val currencySymbols = accounts.map { it.currencySymbol ?: "₽" }.distinct()
+    val singleCurrency = currencySymbols.size <= 1
+    val totalBalance =
+        if (!useBackendBalanceStrings && singleCurrency) accounts.sumOf { it.balance } else null
+    val balanceByCurrency = if (!useBackendBalanceStrings && !singleCurrency) {
+        accounts.groupBy { it.currencySymbol ?: "₽" }
+            .mapValues { (_, list) -> list.sumOf { it.balance } }
+    } else null
+    val singleAccountBalanceDisplay =
+        if (useBackendBalanceStrings && accounts.size == 1) accounts.single().balanceDisplay else null
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -157,16 +173,54 @@ private fun DefaultHomeScreen(
             ) {
                 Column {
                     Text(
-                        text = "Общий баланс",
+                        text = when {
+                            singleAccountBalanceDisplay != null -> "Общий баланс"
+                            totalBalance != null -> "Общий баланс"
+                            else -> "Сводка по счетам"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.8f)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = totalBalance.formatMoney(),
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = Color.White
-                    )
+                    when {
+                        singleAccountBalanceDisplay != null -> {
+                            Text(
+                                text = singleAccountBalanceDisplay,
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = Color.White
+                            )
+                        }
+
+                        totalBalance != null -> {
+                            Text(
+                                text = totalBalance.formatMoney(
+                                    currencySymbols.firstOrNull() ?: "₽"
+                                ),
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = Color.White
+                            )
+                        }
+
+                        balanceByCurrency != null -> {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                balanceByCurrency.forEach { (symbol, sum) ->
+                                    Text(
+                                        text = sum.formatMoney(symbol),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+
+                        else -> {
+                            Text(
+                                text = "${accounts.size} ${if (accounts.size == 1) "счет" else "счета"}",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = Color.White
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(

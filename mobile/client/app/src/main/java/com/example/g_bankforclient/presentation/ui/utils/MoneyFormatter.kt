@@ -4,11 +4,11 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 
-fun Double.formatMoney(): String {
+fun Double.formatMoney(currencySymbol: String = "₽"): String {
     val symbols = DecimalFormatSymbols(Locale.getDefault())
     symbols.groupingSeparator = ' '
     symbols.decimalSeparator = ','
     val formatter = DecimalFormat("#,##0.00", symbols)
-    return "${formatter.format(this)} ₽"
+    return "${formatter.format(this)} $currencySymbol"
 }
 

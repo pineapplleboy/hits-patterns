@@ -151,7 +151,7 @@ private fun DefaultAuthorizationScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = if (isRegisterMode) "Регистрация" else stringResource(R.string.login_for_employees),
+                text = "Вход через IdentityServer (SSO)",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -216,11 +216,7 @@ private fun DefaultAuthorizationScreen(
 
             Button(
                 onClick = onLoginClick,
-                enabled = if (isRegisterMode) {
-                    name.isNotBlank() && credentials.login.isNotBlank() && credentials.password.isNotBlank()
-                } else {
-                    credentials.login.isNotBlank() && credentials.password.isNotBlank()
-                },
+                enabled = true,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -231,20 +227,8 @@ private fun DefaultAuthorizationScreen(
                 )
             ) {
                 Text(
-                    text = if (isRegisterMode) "Зарегистрироваться" else stringResource(R.string.login_button),
+                    text = "Войти через SSO",
                     style = MaterialTheme.typography.titleMedium
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextButton(
-                onClick = onToggleMode,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = if (isRegisterMode) "Уже есть аккаунт? Войти" else "Нет аккаунта? Зарегистрироваться",
-                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }

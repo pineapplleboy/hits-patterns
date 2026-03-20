@@ -251,7 +251,8 @@ private fun DefaultAccountDetailsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = account.balance.formatMoney(),
+                            text = account.balanceDisplay
+                                ?: account.balance.formatMoney(account.currencySymbol ?: "₽"),
                             style = MaterialTheme.typography.displaySmall,
                             color = Color.White
                         )

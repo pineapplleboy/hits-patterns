@@ -6,7 +6,7 @@ import com.example.g_bankforclient.domain.models.Transaction
 interface AccountRepository {
     suspend fun getAccounts(): List<Account>
     suspend fun getAccountDetails(accountNumber: String): Account
-    suspend fun createAccount(initialAmount: Double)
+    suspend fun createAccount(currencyId: Int)
     suspend fun closeAccount(accountId: String)
     suspend fun deposit(accountId: String, amount: Double)
     suspend fun withdrawal(accountId: String, amount: Double)

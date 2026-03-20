@@ -13,12 +13,16 @@ import com.example.g_bankforclient.presentation.ui.screens.CreateAccountScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreditDetailsScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreditsScreen
 import com.example.g_bankforclient.presentation.ui.screens.HomeScreen
+import com.example.g_bankforclient.presentation.ui.screens.ProfileScreen
 import com.example.g_bankforclient.presentation.ui.screens.TransactionHistoryScreen
 
 @Composable
 fun BankNavigation(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDarkTheme: Boolean = false,
+    onThemeChange: (Boolean) -> Unit = {},
+    onEnterMainApp: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -46,7 +50,8 @@ fun BankNavigation(
                     navController.navigate(Screen.Authorization.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                onEnterMainApp = onEnterMainApp
             )
         }
 
@@ -57,6 +62,10 @@ fun BankNavigation(
                 },
                 onCreateCredit = { }
             )
+        }
+
+        composable(Screen.Profile.route) {
+            ProfileScreen(isDarkTheme = isDarkTheme, onThemeChange = onThemeChange)
         }
 
         composable(

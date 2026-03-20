@@ -25,7 +25,8 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun getAccounts(): List<Account> {
         return try {
-            accountService.getUserBankAccounts(currentUserId).map { it.toAccountDomain() }
+            accountService.getUserBankAccounts(currentUserId, hidden = false)
+                .map { it.toAccountDomain() }
         } catch (e: Exception) {
             emptyList()
         }
@@ -36,10 +37,10 @@ class AccountRepositoryImpl @Inject constructor(
         return accountDetails.toAccountDomain()
     }
 
-    override suspend fun createAccount(initialAmount: Double) {
+    override suspend fun createAccount(currencyId: Int) {
         accountService.createBankAccount(
             userId = currentUserId,
-            request = MoneyAmountRequestModel(amount = initialAmount)
+            currencyId = currencyId
         )
     }
 

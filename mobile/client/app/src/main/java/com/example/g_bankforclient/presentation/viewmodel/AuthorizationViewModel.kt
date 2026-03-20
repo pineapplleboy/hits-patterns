@@ -2,6 +2,7 @@ package com.example.g_bankforclient.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.g_bankforclient.domain.TokenStorage
 import com.example.g_bankforclient.domain.models.UserCredentials
 import com.example.g_bankforclient.domain.usecase.auth.LoginUseCase
 import com.example.g_bankforclient.domain.usecase.auth.RegisterUseCase
@@ -20,7 +21,8 @@ import javax.inject.Inject
 class AuthorizationViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
-    private val gson: Gson
+    private val gson: Gson,
+    private val tokenStorage: TokenStorage
 ) : ViewModel() {
 
     private val _state: MutableStateFlow<AuthorizationScreenState> = MutableStateFlow(
@@ -29,6 +31,13 @@ class AuthorizationViewModel @Inject constructor(
         )
     )
     val state: StateFlow<AuthorizationScreenState> = _state.asStateFlow()
+
+    init {
+        // If user already authenticated (persisted userId), skip login screen.
+        if (!tokenStorage.getUserId().isNullOrBlank()) {
+            _state.value = AuthorizationScreenState.AuthSuccess
+        }
+    }
 
     fun onLoginClick() {
         val currentState = _state.value
