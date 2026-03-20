@@ -31,9 +31,19 @@ public class TransfersRequestListener {
 
             TransferRequestMessage msg = objectMapper.readValue(message, TransferRequestMessage.class);
 
-            AuthUtility.isAuthorized(token);
+            try {
+                AuthUtility.isAuthorized(token);
+            }
+            catch (Exception e) {
+                transferRequestService.processReject(msg, token);
+            }
 
-            transferRequestService.processTransferRequest(msg, token);
+            try {
+                transferRequestService.processTransferRequest(msg, token);
+            }
+            catch (Exception e) {
+                transferRequestService.processReject(msg, token);
+            }
 
             ack.acknowledge();
         } catch (Exception exception) {

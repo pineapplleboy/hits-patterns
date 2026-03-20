@@ -37,6 +37,13 @@ public class TransferRequestService {
         transferAssignmentProvider.send(enrichTransfer(message, token), token);
     }
 
+    public void processReject(TransferRequestMessage message, String token) {
+        TransferAssignmentMessage assignment = TransferMessageFactory.createAssignment(message);
+        assignment.setStatus(OperationStatus.REJECTED);
+
+        transferAssignmentProvider.send(enrichTransfer(message, token), token);
+    }
+
     private TransferAssignmentMessage enrichTransfer(TransferRequestMessage message, String token) {
         TransferAssignmentMessage assignment = TransferMessageFactory.createAssignment(message);
 
