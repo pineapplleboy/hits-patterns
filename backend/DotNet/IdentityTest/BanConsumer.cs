@@ -4,6 +4,7 @@ using Confluent.Kafka;
 using IdentityTest.Models;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
+using System.Text;
 using System.Text.Json;
 
 namespace IdentityTest
@@ -25,9 +26,9 @@ namespace IdentityTest
                 BootstrapServers = KafkaOptions.bootstrapServer,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
             };
-            Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .CreateBootstrapLogger();
+            //Log.Logger = new LoggerConfiguration()
+            //.WriteTo.Console()
+            //.CreateBootstrapLogger();
 
             
             var _consumer = new ConsumerBuilder<string, string>(config).Build();
@@ -35,15 +36,22 @@ namespace IdentityTest
 
             await Task.Run(async () =>
             {
-                Log.Information("Я кафка");
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     var consumeResult = _consumer.Consume(stoppingToken);
                     var userBanInfo = JsonSerializer.Deserialize<UserBanDTO>(consumeResult.Message.Value);
-
-                    if (userBanInfo != null)
+                    
+                    var headers = consumeResult.Message.Headers;
+                    var authHeader = headers.FirstOrDefault(h => h.Key == "Authorization");
+                    var isValid = false;
+                    if (authHeader != null)
                     {
-                        Log.Information("Есть пользователь");
+                        string token = Encoding.UTF8.GetString(authHeader.GetValueBytes());
+                        isValid = await TokenValidator.ValidateToken(token);
+                    }
+
+                    if (userBanInfo != null && isValid)
+                    {
                         using (var scope = _serviceProvider.CreateScope())
                         {
                             var _userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();

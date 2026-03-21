@@ -1,4 +1,5 @@
 ﻿using ClassLibrary;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using patternsUsers.Services;
@@ -42,7 +43,8 @@ namespace patternsUsers.Controllers
         [HttpPost("ban-user/{id}")]
         public async Task<IActionResult> BanUser([FromRoute] Guid id)
         {
-            await _userService.BanUser(UserDescriptor.GetUserId(User), id);
+            string token = await HttpContext.GetTokenAsync("access_token");
+            await _userService.BanUser(UserDescriptor.GetUserId(User), id, token);
             return Ok();
         }
 
@@ -50,7 +52,8 @@ namespace patternsUsers.Controllers
         [HttpPost("unban-user/{id}")]
         public async Task<IActionResult> UnbanUsers([FromRoute] Guid id)
         {
-            await _userService.UnbanUser(id);
+            string token = await HttpContext.GetTokenAsync("access_token");
+            await _userService.UnbanUser(id, token);
             return Ok();
         }
 
