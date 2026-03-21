@@ -112,7 +112,8 @@ namespace patternsUsers.Services.Implementations
 
                 var dr = await p.ProduceAsync(KafkaOptions.ban_user_bank_accounts, new Message<Null, string>
                 {
-                    Value = JsonSerializer.Serialize(userBan)
+                    Value = JsonSerializer.Serialize(userBan),
+                    Headers = headers
                 });
             }
         }
