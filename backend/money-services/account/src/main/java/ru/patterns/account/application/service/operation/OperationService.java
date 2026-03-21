@@ -16,6 +16,7 @@ import ru.patterns.shared.model.response.OperationStatusResponseModel;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -33,7 +34,7 @@ public class OperationService {
 
         return Stream.concat(outgoingOperations.stream(), incomingOperations.stream())
                 .map(operation -> {
-                    var accountNumber = operation.getUserIdFrom().equals(userId) ? operation.getAccountNumberFrom() :
+                    var accountNumber = Objects.equals(operation.getUserIdFrom(), userId) ? operation.getAccountNumberFrom() :
                             operation.getRecipientAccountNumber();
 
                     return operation.getTransferAccountType() == TransferAccountType.CREDIT_ACCOUNT ?
