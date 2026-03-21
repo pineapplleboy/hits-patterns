@@ -11,7 +11,7 @@ public class RestClientConfig {
     @Bean
     public RestClient accountClient() {
         return RestClient.builder()
-                .baseUrl(UrlConstants.BASE_URL + "/account/patterns/api/v2/users")
+                .baseUrl(UrlConstants.BASE_URL + "/core/patterns/api/v2/users")
                 .defaultHeader("Accept", "application/json")
                 .build();
     }
