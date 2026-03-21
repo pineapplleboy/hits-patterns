@@ -37,7 +37,7 @@ public class OperationWebSocketPublisher {
     public void publishOperationCreated(Operation operation) {
         WebSocketMessage eventAuthor = new WebSocketMessage(WebSocketMessageType.OPERATION_CREATE,
                 operation.toBankAccountOperationModel(operation.getAccountNumberFrom()));
-        WebSocketMessage eventReceiver = new WebSocketMessage(WebSocketMessageType.OPERATION_STATUS_UPDATE,
+        WebSocketMessage eventReceiver = new WebSocketMessage(WebSocketMessageType.OPERATION_CREATE,
                 operation.toBankAccountOperationModel(operation.getRecipientAccountNumber()));
 
         if (operation.getUserIdFrom() != null) {

@@ -21,15 +21,15 @@ public class OperationHistoryService {
 
     private final OperationRepository operationRepository;
 
-    public void createAndSaveOperation(UUID userId,
-                                       TransferAccountType transferAccountType,
-                                       BigDecimal sumFrom,
-                                       Integer currencyFrom,
-                                       BigDecimal sumTo,
-                                       Integer currencyTo,
-                                       AccountActionType actionType,
-                                       OperationStatus operationStatus,
-                                       String accountNumberFrom) {
+    public void createAndSaveTransferOperation(UUID userId,
+                                               TransferAccountType transferAccountType,
+                                               BigDecimal sumFrom,
+                                               Integer currencyFrom,
+                                               BigDecimal sumTo,
+                                               Integer currencyTo,
+                                               AccountActionType actionType,
+                                               OperationStatus operationStatus,
+                                               String accountNumberFrom) {
         Operation operation = new Operation()
                 .setAccountNumberFrom(accountNumberFrom)
                 .setUserIdFrom(userId)
@@ -46,7 +46,7 @@ public class OperationHistoryService {
         operationRepository.save(operation);
     }
 
-    public void createAndSaveCreditOperation(UUID userId,
+    public Operation createAndSaveCreditOperation(UUID userId,
                                        TransferAccountType transferAccountType,
                                        BigDecimal sumFrom,
                                        Integer currencyFrom,
@@ -70,6 +70,8 @@ public class OperationHistoryService {
                 .setDeptLeft(sumFrom);
 
         operationRepository.save(operation);
+
+        return operation;
     }
 
     public void createAndSaveOperationAboutAccountCornerOperation(BankAccount account, AccountActionType actionType) {
@@ -98,7 +100,7 @@ public class OperationHistoryService {
         operationRepository.save(operation);
     }
 
-    public Operation createAndSaveOperation(TransferAssignmentMessage assignmentMessage) {
+    public Operation createAndSaveTransferOperation(TransferAssignmentMessage assignmentMessage) {
         Operation operation = new Operation()
                 .setOperationId(assignmentMessage.getOperationId())
                 .setAccountNumberFrom(assignmentMessage.getAccountNumberFrom())
@@ -111,9 +113,7 @@ public class OperationHistoryService {
                 .setStatus(assignmentMessage.getStatus())
                 .setUserIdFrom(assignmentMessage.getUserIdFrom())
                 .setRecipientId(assignmentMessage.getUserIdTo())
-                .setActionType(assignmentMessage.getTransferAccountType() == TransferAccountType.BANK_ACCOUNT ?
-                        AccountActionType.TRANSFER :
-                        AccountActionType.CREDIT_DEPT_PERCENT);
+                .setActionType(AccountActionType.TRANSFER);
 
         operationRepository.save(operation);
 

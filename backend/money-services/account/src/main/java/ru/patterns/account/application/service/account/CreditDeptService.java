@@ -66,7 +66,7 @@ public class CreditDeptService {
     }
 
     private void saveOperation(CreditAccount creditAccount, BigDecimal growth) {
-        operationHistoryService.createAndSaveCreditOperation(
+        var operation = operationHistoryService.createAndSaveCreditOperation(
                 creditAccount.getUserId(),
                 TransferAccountType.CREDIT_ACCOUNT,
                 growth,
@@ -75,5 +75,7 @@ public class CreditDeptService {
                 OperationStatus.SUCCESS,
                 creditAccount.getAccountNumber(),
                 creditAccount.getNextWriteOffDate());
+
+        operationWebSocketPublisher.publishOperationCreated(operation);
     }
 }

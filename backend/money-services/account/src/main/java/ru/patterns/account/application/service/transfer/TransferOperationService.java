@@ -200,7 +200,7 @@ public class TransferOperationService {
             return;
         }
 
-        long delayMillis = ThreadLocalRandom.current().nextLong(500, 1501);
+        long delayMillis = ThreadLocalRandom.current().nextLong(7000, 10000);
 
         try {
             Thread.sleep(delayMillis);
@@ -257,6 +257,6 @@ public class TransferOperationService {
     private Operation findOrCreateOperationById(UUID operationId, TransferAssignmentMessage assignmentMessage) {
         var operation = operationRepository.getOperationByOperationId(operationId);
 
-        return operation.orElseGet(() -> operationHistoryService.createAndSaveOperation(assignmentMessage));
+        return operation.orElseGet(() -> operationHistoryService.createAndSaveTransferOperation(assignmentMessage));
     }
 }

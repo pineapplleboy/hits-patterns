@@ -45,7 +45,7 @@ public class BanService {
     }
 
     private void callOperationHistoryService(UUID userId, String accountNumber, TransferAccountType transferAccountType, boolean ban) {
-        operationHistoryService.createAndSaveOperation(userId,
+        operationHistoryService.createAndSaveTransferOperation(userId,
                 transferAccountType,
                 null,
                 null,
