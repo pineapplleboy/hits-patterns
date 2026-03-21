@@ -74,6 +74,6 @@ public class CreditDeptService {
                 AccountActionType.TRANSFER,
                 OperationStatus.SUCCESS,
                 creditAccount.getAccountNumber(),
-                CreditUtility.calculateNextCreditWriteOffDate(creditAccount.getCreateTime(), creditAccount.getWriteOffPeriod()));
+                creditAccount.getNextWriteOffDate());
     }
 }
