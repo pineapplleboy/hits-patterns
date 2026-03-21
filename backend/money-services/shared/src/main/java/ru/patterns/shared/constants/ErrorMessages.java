@@ -18,5 +18,5 @@ public class ErrorMessages {
     public final String INVALID_CREDIT_SUM = "Некорректный лимит";
     public final String CURRENCY_NOT_SUPPORTABLE = "Валюта не поддерживается";
     public final String OPERATION_NOT_FOUND = "Операция не найдена";
-    public final String CREDIT_RATING_TOO_LOW = "Ваш кредитный рейтинг мал для взятия кредита";
+    public final String CREDIT_RATING_TOO_LOW = "Ваш кредитный рейтинг недостаточен для взятия кредита";
 }
