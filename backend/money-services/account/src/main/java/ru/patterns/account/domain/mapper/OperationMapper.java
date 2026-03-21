@@ -9,9 +9,12 @@ import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.Operation;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @UtilityClass
 public class OperationMapper {
+
+    private static final String EMPTY_ACCOUNT_NUMBER = "0000-0000-0000-0000";
 
     public OperationModel toBankAccountOperationModel(Operation operation, String requestingAccountNumber) {
         AccountActionType actionType = operation.getActionType();
@@ -28,7 +31,7 @@ public class OperationMapper {
 
         return new OperationModel()
                 .setOperationId(operation.getOperationId())
-                .setAccountNumberFrom(accountNumberFrom.equals("0000-0000-0000-0000") ? null : accountNumberFrom)
+                .setAccountNumberFrom(normalizeAccountNumber(accountNumberFrom))
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
                 .setAmount(isIncomingOperation ?
@@ -37,8 +40,7 @@ public class OperationMapper {
                 .setStatus(operation.getStatus())
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
-                .setRecipientAccountNumber(operation.getRecipientAccountNumber().equals("0000-0000-0000-0000") ? null :
-                        operation.getRecipientAccountNumber())
+                .setRecipientAccountNumber(normalizeAccountNumber(operation.getRecipientAccountNumber()))
                 .setUserIdFrom(operation.getUserIdFrom())
                 .setOperationResolveTime(operation.getOperationResolveTime());
     }
@@ -63,7 +65,7 @@ public class OperationMapper {
                 .setDeptLeft(operation.getDeptLeft())
                 .setExpectedPaymentDate(operation.getExpectedPaymentDate())
                 .setOperationId(operation.getOperationId())
-                .setAccountNumberFrom(accountNumberFrom.equals("0000-0000-0000-0000") ? null : accountNumberFrom)
+                .setAccountNumberFrom(normalizeAccountNumber(accountNumberFrom))
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
                 .setAmount(isIncomingOperation ?
@@ -72,8 +74,7 @@ public class OperationMapper {
                 .setStatus(operation.getStatus())
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
-                .setRecipientAccountNumber(operation.getRecipientAccountNumber().equals("0000-0000-0000-0000") ? null :
-                        operation.getRecipientAccountNumber())
+                .setRecipientAccountNumber(normalizeAccountNumber(operation.getRecipientAccountNumber()))
                 .setUserIdFrom(operation.getUserIdFrom())
                 .setOperationResolveTime(operation.getOperationResolveTime());
     }
@@ -82,5 +83,9 @@ public class OperationMapper {
         return new OperationUpdateStatusModel()
                 .setOperationId(operation.getOperationId())
                 .setNewStatus(operation.getStatus());
+    }
+
+    private String normalizeAccountNumber(String accountNumber) {
+        return Objects.equals(accountNumber, EMPTY_ACCOUNT_NUMBER) ? null : accountNumber;
     }
 }
