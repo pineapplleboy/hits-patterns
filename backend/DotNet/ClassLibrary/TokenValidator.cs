@@ -14,7 +14,7 @@ namespace ClassLibrary
         //public const string URL = "https://localhost:5001";
         //public const string PUBLIC_KEY = "https://localhost:5001/.well-known/openid-configuration/jwks";
 
-        public const string URL = "http://91.227.18.176";
+        public const string URL = "http://91.227.18.176/identity";
         public const string PUBLIC_KEY = "http://91.227.18.176/identity/.well-known/openid-configuration/jwks";
 
         private static async Task<string> GetJwksAsync(string jwksUri)
