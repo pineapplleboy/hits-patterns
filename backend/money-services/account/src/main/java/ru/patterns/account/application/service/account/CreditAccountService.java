@@ -59,7 +59,14 @@ public class CreditAccountService {
         return creditAccountRepository.getCreditAccountByUserId(userId)
                 .stream()
                 .sorted(Comparator.comparing(CreditAccount::isClosed))
-                .map(account -> account.toFullModel())
+                .map(account -> {
+                    var accountFullModel = account.toFullModel();
+                    var operations = operationService.getAccountOperations(account.getAccountNumber(), TransferAccountType.CREDIT_ACCOUNT);
+
+                    accountFullModel.setOperations(operations);
+
+                    return accountFullModel;
+                })
                 .toList();
     }
 
