@@ -74,7 +74,7 @@ public class CreditDeptService {
                 AccountActionType.CREDIT_DEPT_PERCENT,
                 OperationStatus.SUCCESS,
                 creditAccount.getAccountNumber(),
-                creditAccount.getNextWriteOffDate());
+                CreditUtility.calculateNextCreditWriteOffDate(Instant.now(), creditAccount.getWriteOffPeriod()));
 
         operationWebSocketPublisher.publishOperationCreated(operation);
     }
