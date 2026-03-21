@@ -23,6 +23,6 @@ public class CreditRatingController {
                                                  @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
 
-        return creditRatingService.getUserCreditRatingModel(userId, authorization);
+        return creditRatingService.getUserCreditRating(userId, authorization);
     }
 }

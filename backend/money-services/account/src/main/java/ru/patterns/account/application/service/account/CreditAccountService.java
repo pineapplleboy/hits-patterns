@@ -55,6 +55,14 @@ public class CreditAccountService {
                 new MoneyAmountRequestModel(takeCreditMessage.getCreditAmount()), token);
     }
 
+    public List<CreditAccountFullModel> getUsersAllCreditHistory(UUID userId) {
+        return creditAccountRepository.getCreditAccountByUserId(userId)
+                .stream()
+                .sorted(Comparator.comparing(CreditAccount::isClosed))
+                .map(account -> account.toFullModel())
+                .toList();
+    }
+
     public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {
         return creditAccountRepository.getCreditAccountsByUserIdAndClosedIsFalse(userId)
                 .stream()

@@ -28,6 +28,15 @@ public class CreditAccountController {
         return creditAccountService.getUsersCreditsHistory(userId);
     }
 
+    @GetMapping("/history")
+    @Operation(summary = "Получение кредитной истории пользователя [Сотрудник или Пользователь]")
+    public List<CreditAccountFullModel> getUserCreditHistory(@PathVariable UUID userId,
+                                                             @Parameter(hidden = true) @RequestHeader String authorization) {
+        AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
+
+        return creditAccountService.getUsersAllCreditHistory(userId);
+    }
+
     @GetMapping("/{accountNumber}")
     @Operation(summary = "Получение детальной информации о кредите пользователя [Сотрудник или Пользователь]")
     public CreditAccountFullModel getUserCreditFullInfo(@PathVariable UUID userId, @PathVariable String accountNumber,
