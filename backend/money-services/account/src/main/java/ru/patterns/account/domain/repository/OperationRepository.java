@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface OperationRepository extends JpaRepository<Operation, UUID> {
@@ -27,5 +28,7 @@ public interface OperationRepository extends JpaRepository<Operation, UUID> {
                                                                                         TransferAccountType transferAccountType,
                                                                                         AccountActionType actionType
     );
+    List<Operation> findByAccountNumberFromInAndTransferAccountType(Set<String> accountNumbersFrom, TransferAccountType transferAccountType);
+    List<Operation> findByRecipientAccountNumberInAndTransferAccountType(Set<String> recipientAccountNumbers, TransferAccountType transferAccountType);
     Optional<Operation> getOperationByOperationId(UUID operationId);
 }

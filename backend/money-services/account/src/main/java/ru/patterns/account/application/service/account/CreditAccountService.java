@@ -24,7 +24,9 @@ import ru.patterns.shared.model.kafka.TakeCreditMessage;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,17 +58,20 @@ public class CreditAccountService {
     }
 
     public List<CreditAccountFullModel> getUsersAllCreditHistory(UUID userId) {
-        return creditAccountRepository.getCreditAccountByUserId(userId)
+        var creditAccounts = creditAccountRepository.getCreditAccountByUserId(userId)
                 .stream()
                 .sorted(Comparator.comparing(CreditAccount::isClosed))
-                .map(account -> {
-                    var accountFullModel = account.toFullModel();
-                    var operations = operationService.getAccountOperations(account.getAccountNumber(), TransferAccountType.CREDIT_ACCOUNT);
+                .toList();
 
-                    accountFullModel.setOperations(operations);
+        Set<String> accountNumbers = creditAccounts.stream()
+                .map(CreditAccount::getAccountNumber)
+                .collect(Collectors.toSet());
 
-                    return accountFullModel;
-                })
+        var operationsByAccount = operationService.getAccountOperations(accountNumbers, TransferAccountType.CREDIT_ACCOUNT);
+
+        return creditAccounts.stream()
+                .map(account -> account.toFullModel()
+                        .setOperations(operationsByAccount.getOrDefault(account.getAccountNumber(), List.of())))
                 .toList();
     }
 

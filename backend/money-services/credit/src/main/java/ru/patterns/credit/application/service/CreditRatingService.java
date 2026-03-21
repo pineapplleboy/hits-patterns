@@ -6,11 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import ru.patterns.credit.application.common.model.account.CreditAccountHistoryModel;
 import ru.patterns.credit.application.common.model.operation.CreditOperationModel;
+import ru.patterns.credit.application.common.model.operation.CreditStats;
 import ru.patterns.credit.application.common.model.response.CreditRatingModel;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,52 +27,32 @@ public class CreditRatingService {
 
     public CreditRatingModel getUserCreditRating(UUID userId, String token) {
         var creditHistory = getUserCreditHistory(userId, token);
+        var stats = collectCreditStats(creditHistory);
 
-        var totalCreditCounter = creditHistory.size();
-
-        var closedCreditCounter = creditHistory.stream()
-                .filter(credit -> isZeroDept(credit.getDept()))
-                .count();
-
-        var activeCreditAmount = creditHistory.stream()
-                .filter(credit -> !isZeroDept(credit.getDept()))
-                .count();
-
-        var expiredCreditAmount = creditHistory.stream()
-                .map(CreditAccountHistoryModel::getOperations)
-                .filter(operations -> operations != null && !operations.isEmpty())
-                .mapToLong(this::calculateExpiredCreditAmount)
-                .sum();
-
-        var creditRating = calculateCreditRating(creditHistory, totalCreditCounter,
-                closedCreditCounter, activeCreditAmount, expiredCreditAmount);
+        var creditRating = calculateCreditRating(stats);
 
         return new CreditRatingModel()
                 .setRating(creditRating)
-                .setTotalCreditCounter(totalCreditCounter)
-                .setClosedCreditCounter(closedCreditCounter)
-                .setActiveCreditAmount(activeCreditAmount)
-                .setExpiredOperationsAmount(expiredCreditAmount);
+                .setTotalCreditCounter(stats.getTotalCreditCounter())
+                .setClosedCreditCounter(stats.getClosedCreditCounter())
+                .setActiveCreditAmount(stats.getActiveCreditAmount())
+                .setExpiredOperationsAmount(stats.getExpiredCreditAmount());
     }
 
-    private long calculateCreditRating(List<CreditAccountHistoryModel> creditHistory,
-                                         int totalCreditCounter,
-                                         long closedCreditCounter,
-                                         long activeCreditAmount,
-                                         long expiredCreditAmount) {
-        if (creditHistory == null || creditHistory.isEmpty()) {
+    private int calculateCreditRating(CreditStats stats) {
+        if (stats.getTotalCreditCounter() == 0) {
             return 650;
         }
 
         long creditRating = 650;
 
-        creditRating += Math.min(90, totalCreditCounter * 15);
-        creditRating += (int) Math.min(120, closedCreditCounter * 35);
-        creditRating -= (int) Math.min(160, activeCreditAmount * 10);
-        creditRating -= (int) Math.min(250, expiredCreditAmount * 45);
-        creditRating -= calculateDebtPenalty(calculateSumDept(creditHistory));
+        creditRating += Math.min(90, stats.getTotalCreditCounter() * 15L);
+        creditRating += Math.min(120, stats.getClosedCreditCounter() * 35L);
+        creditRating -= Math.min(160, stats.getActiveCreditAmount() * 10L);
+        creditRating -= Math.min(250, stats.getExpiredCreditAmount() * 45L);
+        creditRating -= calculateDebtPenalty(stats.getTotalCurrentDebt());
 
-        return Math.max(1, Math.min(999, creditRating));
+        return (int) Math.max(1, Math.min(999, creditRating));
     }
 
     private List<CreditAccountHistoryModel> getUserCreditHistory(UUID userId, String token) {
@@ -83,13 +62,6 @@ public class CreditRatingService {
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {
                 });
-    }
-
-    private BigDecimal calculateSumDept(List<CreditAccountHistoryModel> creditHistory) {
-        return creditHistory.stream()
-                .map(CreditAccountHistoryModel::getDept)
-                .map(this::parseAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private int calculateDebtPenalty(BigDecimal totalCurrentDebt) {
@@ -112,12 +84,6 @@ public class CreditRatingService {
         return 170;
     }
 
-    private long calculateExpiredCreditAmount(List<CreditOperationModel> operations) {
-        return operations.stream()
-                .filter(CreditOperationModel::isExpired)
-                .count();
-    }
-
     private BigDecimal parseAmount(String amount) {
         if (amount == null) {
             return BigDecimal.ZERO;
@@ -131,12 +97,48 @@ public class CreditRatingService {
         return new BigDecimal(numericAmount);
     }
 
-    private boolean isZeroDept(String dept) {
-        String numericDept = dept.replaceAll("[^\\d,.-]", "").replace(',', '.');
-        if (numericDept.isBlank()) {
-            return true;
+    private CreditStats collectCreditStats(List<CreditAccountHistoryModel> creditHistory) {
+        if (creditHistory == null || creditHistory.isEmpty()) {
+            return new CreditStats();
         }
 
-        return BigDecimal.ZERO.compareTo(new BigDecimal(numericDept)) == 0;
+        long totalCreditCounter = 0;
+        long closedCreditCounter = 0;
+        long activeCreditAmount = 0;
+        long expiredCreditAmount = 0;
+        BigDecimal totalCurrentDebt = BigDecimal.ZERO;
+
+        for (CreditAccountHistoryModel credit : creditHistory) {
+            totalCreditCounter++;
+
+            BigDecimal currentDebt = parseAmount(credit.getDept());
+            totalCurrentDebt = totalCurrentDebt.add(currentDebt);
+
+            if (currentDebt.compareTo(BigDecimal.ZERO) == 0) {
+                closedCreditCounter++;
+            } else {
+                activeCreditAmount++;
+            }
+
+            List<CreditOperationModel> operations = credit.getOperations();
+            if (operations == null || operations.isEmpty()) {
+                continue;
+            }
+
+            for (CreditOperationModel operation : operations) {
+                if (operation.isExpired()) {
+                    expiredCreditAmount++;
+                }
+            }
+        }
+
+        return new CreditStats(
+                totalCreditCounter,
+                closedCreditCounter,
+                activeCreditAmount,
+                expiredCreditAmount,
+                totalCurrentDebt
+        );
     }
+
 }
