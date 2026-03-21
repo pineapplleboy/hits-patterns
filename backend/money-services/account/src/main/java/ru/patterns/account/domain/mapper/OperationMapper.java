@@ -8,6 +8,7 @@ import ru.patterns.account.application.common.model.operation.OperationUpdateSta
 import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.Operation;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -34,9 +35,7 @@ public class OperationMapper {
                 .setAccountNumberFrom(normalizeAccountNumber(accountNumberFrom))
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
-                .setAmount(isIncomingOperation ?
-                        operation.getAmountTo().toString() + CurrencySymbolUtility.getCurrencySymbol(operation.getCurrencyTo()) :
-                        operation.getAmountFrom().toString() + CurrencySymbolUtility.getCurrencySymbol(operation.getCurrencyFrom()))
+                .setAmount(formatAmount(operation, isIncomingOperation))
                 .setStatus(operation.getStatus())
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
@@ -68,9 +67,7 @@ public class OperationMapper {
                 .setAccountNumberFrom(normalizeAccountNumber(accountNumberFrom))
                 .setActionType(actionType)
                 .setCreateTime(operation.getCreateTime())
-                .setAmount(isIncomingOperation ?
-                        operation.getAmountTo().toString() + CurrencySymbolUtility.getCurrencySymbol(operation.getCurrencyTo()) :
-                        operation.getAmountFrom().toString() + CurrencySymbolUtility.getCurrencySymbol(operation.getCurrencyFrom()))
+                .setAmount(formatAmount(operation, isIncomingOperation))
                 .setStatus(operation.getStatus())
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
@@ -87,5 +84,24 @@ public class OperationMapper {
 
     private String normalizeAccountNumber(String accountNumber) {
         return Objects.equals(accountNumber, EMPTY_ACCOUNT_NUMBER) ? null : accountNumber;
+    }
+
+    private String formatAmount(Operation operation, boolean isIncomingOperation) {
+        BigDecimal amount = isIncomingOperation ? operation.getAmountTo() : operation.getAmountFrom();
+        Integer currency = isIncomingOperation ? operation.getCurrencyTo() : operation.getCurrencyFrom();
+
+        if (amount == null) {
+            amount = isIncomingOperation ? operation.getAmountFrom() : operation.getAmountTo();
+        }
+
+        if (currency == null) {
+            currency = isIncomingOperation ? operation.getCurrencyFrom() : operation.getCurrencyTo();
+        }
+
+        if (amount == null) {
+            amount = BigDecimal.ZERO;
+        }
+
+        return amount.toString() + CurrencySymbolUtility.getCurrencySymbol(currency);
     }
 }
