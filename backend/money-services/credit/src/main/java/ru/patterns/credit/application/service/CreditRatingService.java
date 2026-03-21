@@ -29,7 +29,51 @@ public class CreditRatingService {
     public CreditRatingModel getUserCreditRating(UUID userId, String token) {
         var creditHistory = getUserCreditHistory(userId, token);
 
-        return new CreditRatingModel(calculateCreditRating(creditHistory));
+        var totalCreditCounter = creditHistory.size();
+
+        var closedCreditCounter = creditHistory.stream()
+                .filter(credit -> isZeroDept(credit.getDept()))
+                .count();
+
+        var activeCreditAmount = creditHistory.stream()
+                .filter(credit -> !isZeroDept(credit.getDept()))
+                .count();
+
+        var expiredCreditAmount = creditHistory.stream()
+                .map(CreditAccountHistoryModel::getOperations)
+                .filter(operations -> operations != null && !operations.isEmpty())
+                .mapToLong(this::calculateExpiredCreditAmount)
+                .sum();
+
+        var creditRating = calculateCreditRating(creditHistory, totalCreditCounter,
+                closedCreditCounter, activeCreditAmount, expiredCreditAmount);
+
+        return new CreditRatingModel()
+                .setRating(creditRating)
+                .setTotalCreditCounter(totalCreditCounter)
+                .setClosedCreditCounter(closedCreditCounter)
+                .setActiveCreditAmount(activeCreditAmount)
+                .setExpiredOperationsAmount(expiredCreditAmount);
+    }
+
+    private long calculateCreditRating(List<CreditAccountHistoryModel> creditHistory,
+                                         int totalCreditCounter,
+                                         long closedCreditCounter,
+                                         long activeCreditAmount,
+                                         long expiredCreditAmount) {
+        if (creditHistory == null || creditHistory.isEmpty()) {
+            return 650;
+        }
+
+        long creditRating = 650;
+
+        creditRating += Math.min(90, totalCreditCounter * 15);
+        creditRating += (int) Math.min(120, closedCreditCounter * 35);
+        creditRating -= (int) Math.min(160, activeCreditAmount * 10);
+        creditRating -= (int) Math.min(250, expiredCreditAmount * 45);
+        creditRating -= calculateDebtPenalty(calculateSumDept(creditHistory));
+
+        return Math.max(1, Math.min(999, creditRating));
     }
 
     private List<CreditAccountHistoryModel> getUserCreditHistory(UUID userId, String token) {
@@ -41,33 +85,50 @@ public class CreditRatingService {
                 });
     }
 
-    private int calculateCreditRating(List<CreditAccountHistoryModel> creditHistory) {
-        int creditRating = 300;
-        Instant now = Instant.now();
-        Instant monthAgo = now.minus(30, ChronoUnit.DAYS);
+    private BigDecimal calculateSumDept(List<CreditAccountHistoryModel> creditHistory) {
+        return creditHistory.stream()
+                .map(CreditAccountHistoryModel::getDept)
+                .map(this::parseAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
-        for (CreditAccountHistoryModel history : creditHistory) {
-
-            if (isZeroDept(history.getDept())) {
-                creditRating += 50;
-            } else {
-                creditRating -= 70;
-            }
-
-            for (CreditOperationModel operation : history.getOperations()) {
-                Instant expectedPaymentDate = operation.getExpectedPaymentDate();
-
-                if (expectedPaymentDate != null && expectedPaymentDate.isBefore(monthAgo)) {
-                    creditRating += 30;
-                } else if (operation.isExpired() || expectedPaymentDate != null && expectedPaymentDate.isBefore(now)) {
-                    creditRating -= 20;
-                } else {
-                    creditRating += 10;
-                }
-            }
+    private int calculateDebtPenalty(BigDecimal totalCurrentDebt) {
+        if (totalCurrentDebt.compareTo(BigDecimal.ZERO) <= 0) {
+            return -20;
         }
 
-        return Math.max(1, Math.min(999, creditRating));
+        if (totalCurrentDebt.compareTo(BigDecimal.valueOf(10_000)) <= 0) {
+            return 20;
+        }
+
+        if (totalCurrentDebt.compareTo(BigDecimal.valueOf(50_000)) <= 0) {
+            return 60;
+        }
+
+        if (totalCurrentDebt.compareTo(BigDecimal.valueOf(150_000)) <= 0) {
+            return 110;
+        }
+
+        return 170;
+    }
+
+    private long calculateExpiredCreditAmount(List<CreditOperationModel> operations) {
+        return operations.stream()
+                .filter(CreditOperationModel::isExpired)
+                .count();
+    }
+
+    private BigDecimal parseAmount(String amount) {
+        if (amount == null) {
+            return BigDecimal.ZERO;
+        }
+
+        String numericAmount = amount.replaceAll("[^\\d,.-]", "").replace(',', '.');
+        if (numericAmount.isBlank()) {
+            return BigDecimal.ZERO;
+        }
+
+        return new BigDecimal(numericAmount);
     }
 
     private boolean isZeroDept(String dept) {

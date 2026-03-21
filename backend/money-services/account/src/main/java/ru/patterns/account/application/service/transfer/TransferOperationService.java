@@ -172,7 +172,7 @@ public class TransferOperationService {
                 if (operation.getExpectedPaymentDate().isAfter(Instant.now())) {
                     operation.setPurchased(true);
                 }
-                
+
             } else {
                 operation.setDeptLeft(operationDeptLeft.subtract(amountLeft));
                 amountLeft = BigDecimal.ZERO;
