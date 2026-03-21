@@ -46,7 +46,7 @@ master-bank:
   user-id: 00000000-0000-0000-0000-000000000000
 
 transfers:
-  delay-enabled: false
+  delay-enabled: true
 
 kafka:
   url: ${KAFKA_URL:localhost:29092}
