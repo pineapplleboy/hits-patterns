@@ -144,11 +144,11 @@ public class TransferOperationService {
     }
 
     private void updateCreditOperations(CreditAccount creditAccount, BigDecimal amount) {
-        var notClosedOperations = operationRepository.findByUserIdFromAndTransferAccountTypeAndActionTypeAndPurchasedFalseAndDeptLeftGreaterThan(
-                        creditAccount.getUserId(),
+        var notClosedOperations = operationRepository.findByAccountNumberFromAndDeptLeftGreaterThanAndTransferAccountTypeAndActionType(
+                        creditAccount.getAccountNumber(),
+                        BigDecimal.ZERO,
                         TransferAccountType.CREDIT_ACCOUNT,
-                        AccountActionType.CREDIT_DEPT_PERCENT,
-                        BigDecimal.ZERO
+                        AccountActionType.CREDIT_DEPT_PERCENT
                 ).stream()
                 .sorted(Comparator.comparing(Operation::getCreateTime))
                 .toList();
@@ -168,7 +168,11 @@ public class TransferOperationService {
 
                 operation.setDeptLeft(BigDecimal.ZERO);
                 operation.setOperationResolveTime(now);
-                operation.setPurchased(true);
+
+                if (operation.getExpectedPaymentDate().isAfter(Instant.now())) {
+                    operation.setPurchased(true);
+                }
+                
             } else {
                 operation.setDeptLeft(operationDeptLeft.subtract(amountLeft));
                 amountLeft = BigDecimal.ZERO;

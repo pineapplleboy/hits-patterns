@@ -71,7 +71,7 @@ public class CreditDeptService {
                 TransferAccountType.CREDIT_ACCOUNT,
                 growth,
                 CurrencyConstants.BASE_CURRENCY_ID,
-                AccountActionType.TRANSFER,
+                AccountActionType.CREDIT_DEPT_PERCENT,
                 OperationStatus.SUCCESS,
                 creditAccount.getAccountNumber(),
                 creditAccount.getNextWriteOffDate());

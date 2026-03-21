@@ -22,11 +22,10 @@ public interface OperationRepository extends JpaRepository<Operation, UUID> {
             AccountActionType actionType,
             Instant expectedPaymentDate
     );
-    List<Operation> findByUserIdFromAndTransferAccountTypeAndActionTypeAndPurchasedFalseAndDeptLeftGreaterThan(
-            UUID userIdFrom,
-            TransferAccountType transferAccountType,
-            AccountActionType actionType,
-            BigDecimal deptLeft
+    List<Operation> findByAccountNumberFromAndDeptLeftGreaterThanAndTransferAccountTypeAndActionType(String accountNumberFrom,
+                                                                                        BigDecimal deptLeft,
+                                                                                        TransferAccountType transferAccountType,
+                                                                                        AccountActionType actionType
     );
     Optional<Operation> getOperationByOperationId(UUID operationId);
 }
