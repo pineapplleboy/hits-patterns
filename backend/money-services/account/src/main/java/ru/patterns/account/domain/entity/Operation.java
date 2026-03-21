@@ -70,7 +70,7 @@ public class Operation {
     private BigDecimal deptLeft = BigDecimal.ZERO; // для кредитных операций списания процентов: оставшийся долг
 
     @Column(name = "is_purchased")
-    private boolean purchased = true; // для кредитных операций списания процентов: просрочена ли операция
+    private boolean purchased = false; // для кредитных операций списания процентов: просрочена ли операция
 
     @Column(name = "operation_create_time")
     private Instant createTime = Instant.now();

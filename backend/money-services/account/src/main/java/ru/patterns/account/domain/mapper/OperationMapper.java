@@ -2,8 +2,8 @@ package ru.patterns.account.domain.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.patterns.account.application.common.enums.AccountActionType;
-import ru.patterns.account.application.common.model.operation.OperationModel;
 import ru.patterns.account.application.common.model.operation.CreditOperationModel;
+import ru.patterns.account.application.common.model.operation.OperationModel;
 import ru.patterns.account.application.common.model.operation.OperationUpdateStatusModel;
 import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.Operation;
@@ -40,8 +40,7 @@ public class OperationMapper {
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
                 .setRecipientAccountNumber(normalizeAccountNumber(operation.getRecipientAccountNumber()))
-                .setUserIdFrom(operation.getUserIdFrom())
-                .setOperationResolveTime(operation.getOperationResolveTime());
+                .setUserIdFrom(operation.getUserIdFrom());
     }
 
     public OperationModel toCreditOperationModel(Operation operation, String requestingAccountNumber) {
@@ -57,10 +56,8 @@ public class OperationMapper {
                     : AccountActionType.TRANSFER_SENT;
         }
 
-        var expired = !operation.isPurchased() && operation.getExpectedPaymentDate().isBefore(Instant.now());
-
         return new CreditOperationModel()
-                .setExpired(expired)
+                .setExpired(isExpired(operation))
                 .setDeptLeft(operation.getDeptLeft())
                 .setExpectedPaymentDate(operation.getExpectedPaymentDate())
                 .setOperationId(operation.getOperationId())
@@ -72,14 +69,18 @@ public class OperationMapper {
                 .setTransferAccountType(operation.getTransferAccountType())
                 .setStatus(operation.getStatus())
                 .setRecipientAccountNumber(normalizeAccountNumber(operation.getRecipientAccountNumber()))
-                .setUserIdFrom(operation.getUserIdFrom())
-                .setOperationResolveTime(operation.getOperationResolveTime());
+                .setUserIdFrom(operation.getUserIdFrom());
     }
 
     public OperationUpdateStatusModel toStatusModel(Operation operation) {
         return new OperationUpdateStatusModel()
                 .setOperationId(operation.getOperationId())
-                .setNewStatus(operation.getStatus());
+                .setNewStatus(operation.getStatus()) ;
+    }
+
+    private boolean isExpired(Operation operation) {
+        return !operation.isPurchased() && operation.getExpectedPaymentDate() != null
+                && !operation.getExpectedPaymentDate().isAfter(Instant.now());
     }
 
     private String normalizeAccountNumber(String accountNumber) {
@@ -102,6 +103,6 @@ public class OperationMapper {
             amount = BigDecimal.ZERO;
         }
 
-        return amount.toString() + CurrencySymbolUtility.getCurrencySymbol(currency);
+        return amount + CurrencySymbolUtility.getCurrencySymbol(currency);
     }
 }

@@ -23,7 +23,6 @@ import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.UUID;
 
 @Service
@@ -40,9 +39,6 @@ public class TransferOperationService {
     @Value("${master-bank.account-number}")
     private String masterBankAccountNumber;
 
-    @Value("${transfers.delay-enabled}")
-    private boolean transferDelayEnabled;
-
     @Transactional
     public TransactionFinishStatus makeTransfer(TransferAssignmentMessage assignment) {
         BankAccount bankAccountFrom = findBankAccountByAccountNumber(assignment.getAccountNumberFrom());
@@ -51,8 +47,6 @@ public class TransferOperationService {
         operationWebSocketPublisher.publishOperationCreated(operation);
 
         saveOperationWithStatus(operation, assignment.getStatus());
-
-        waitRandomTime();
 
         if (assignment.getStatus() == OperationStatus.REJECTED) {
             return TransactionFinishStatus.TRANSACTION_REJECTED;
@@ -193,21 +187,6 @@ public class TransferOperationService {
     private TransactionFinishStatus finishRejectedOperation(Operation operation) {
         saveOperationWithStatus(operation, OperationStatus.REJECTED);
         return TransactionFinishStatus.TRANSACTION_REJECTED;
-    }
-
-    private void waitRandomTime() {
-        if (!transferDelayEnabled) {
-            return;
-        }
-
-        long delayMillis = ThreadLocalRandom.current().nextLong(7000, 10000);
-
-        try {
-            Thread.sleep(delayMillis);
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(exception);
-        }
     }
 
     private void saveOperationWithStatus(Operation operation, OperationStatus status) {
