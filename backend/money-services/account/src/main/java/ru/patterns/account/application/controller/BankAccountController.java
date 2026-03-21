@@ -49,12 +49,21 @@ public class BankAccountController {
     }
 
     @GetMapping("/users/{userId}/bank-accounts/all")
-    @Operation(summary = "Получение всех счетов (скрытые + нескрытые) [Работник]")
+    @Operation(summary = "Получение всех счетов пользователя(скрытые + нескрытые) [Работник]")
     public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId,
                                                            @Parameter(hidden = true) @RequestHeader String authorization) {
         AuthUtility.checkUserIfEmployee(authorization);
 
         return bankAccountService.getAllUserBankAccounts(userId, authorization);
+    }
+
+    @GetMapping("/users/{userId}/bank-accounts/rub")
+    @Operation(summary = "Получение всех рублёвых счетов пользователя [Пользователь]")
+    public List<BankAccountShortModel> getUserRubBankAccounts(@PathVariable UUID userId,
+                                                           @Parameter(hidden = true) @RequestHeader String authorization) {
+        AuthUtility.checkUserIdEquality(authorization, userId);
+
+        return bankAccountService.getAllRubUserBankAccounts(userId);
     }
 
     @GetMapping("/users/{userId}/bank-accounts/{accountNumber}")

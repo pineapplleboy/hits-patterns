@@ -19,7 +19,7 @@ public class BankAccountMapper {
                 .setHidden(hidden);
     }
 
-    public BankAccountFullModel toFullModelWithoutComments(BankAccount bankAccount, CurrencyModel currency) {
+    public BankAccountFullModel toFullModelWithoutOperations(BankAccount bankAccount, CurrencyModel currency) {
         return new BankAccountFullModel()
                 .setId(bankAccount.getId())
                 .setAccountNumber(bankAccount.getAccountNumber())

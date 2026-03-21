@@ -16,6 +16,7 @@ import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.factory.BankAccountFactory;
 import ru.patterns.account.domain.mapper.BankAccountMapper;
 import ru.patterns.account.domain.repository.BankAccountRepository;
+import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
@@ -95,13 +96,21 @@ public class BankAccountService {
                 .toList();
     }
 
+    public List<BankAccountShortModel> getAllRubUserBankAccounts(UUID userId) {
+        return  bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true)
+                .stream()
+                .filter(account -> account.getCurrencyId().equals(CurrencyConstants.BASE_CURRENCY_ID))
+                .map(account -> account.toShortModel(false))
+                .toList();
+    }
+
     public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber, String token) {
         var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
 
         var currency = currencyService.getCurrencyById(account.getCurrencyId(), token);
 
-        var accountFullModel = account.toFullModelWithoutComments(currency);
+        var accountFullModel = account.toFullModelWithoutOperations(currency);
         var bankOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.BANK_ACCOUNT);
 
         var creditOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);
