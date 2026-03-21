@@ -19,7 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CreditRateService {
+public class CreditDeptService {
 
     private final CreditAccountRepository creditAccountRepository;
     private final OperationHistoryService operationHistoryService;
@@ -66,15 +66,14 @@ public class CreditRateService {
     }
 
     private void saveOperation(CreditAccount creditAccount, BigDecimal growth) {
-        operationHistoryService.createAndSaveOperation(
+        operationHistoryService.createAndSaveCreditOperation(
                 creditAccount.getUserId(),
                 TransferAccountType.CREDIT_ACCOUNT,
                 growth,
                 CurrencyConstants.BASE_CURRENCY_ID,
-                null,
-                null,
-                AccountActionType.TRANSFER,
+                AccountActionType.CREDIT_DEPT_PERCENT,
                 OperationStatus.SUCCESS,
-                creditAccount.getAccountNumber());
+                creditAccount.getAccountNumber(),
+                creditAccount.getNextWriteOffDate());
     }
 }

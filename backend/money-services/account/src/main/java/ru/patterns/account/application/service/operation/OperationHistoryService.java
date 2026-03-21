@@ -12,6 +12,7 @@ import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -41,6 +42,32 @@ public class OperationHistoryService {
                 .setTransferAccountType(transferAccountType)
                 .setActionType(actionType)
                 .setStatus(operationStatus);
+
+        operationRepository.save(operation);
+    }
+
+    public void createAndSaveCreditOperation(UUID userId,
+                                       TransferAccountType transferAccountType,
+                                       BigDecimal sumFrom,
+                                       Integer currencyFrom,
+                                       AccountActionType actionType,
+                                       OperationStatus operationStatus,
+                                       String accountNumberFrom,
+                                       Instant expectedPaymentDate) {
+        Operation operation = new Operation()
+                .setAccountNumberFrom(accountNumberFrom)
+                .setUserIdFrom(userId)
+                .setRecipientAccountNumber(null)
+                .setRecipientId(null)
+                .setAmountFrom(sumFrom)
+                .setCurrencyFrom(currencyFrom)
+                .setAmountTo(sumFrom)
+                .setCurrencyTo(currencyFrom)
+                .setTransferAccountType(transferAccountType)
+                .setActionType(actionType)
+                .setStatus(operationStatus)
+                .setExpectedPaymentDate(expectedPaymentDate)
+                .setDeptLeft(sumFrom);
 
         operationRepository.save(operation);
     }

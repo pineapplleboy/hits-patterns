@@ -48,6 +48,8 @@ public class TransferService {
                                                               String token) {
         var recipientId = getRecipientId(bankAccountTo);
 
+        transferValidationService.checkIfTransferToBankAccountAvailable(bankAccountFrom, bankAccountTo, userId, recipientId, requestModel);
+
         sendRequest(createOperationTransferRequestContext(userId, recipientId, bankAccountFrom, bankAccountTo,
                 requestModel, TransferAccountType.BANK_ACCOUNT), token);
 

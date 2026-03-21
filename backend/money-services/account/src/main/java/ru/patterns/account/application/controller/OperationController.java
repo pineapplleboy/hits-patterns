@@ -4,9 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.account.application.common.model.operation.OperationModel;
 import ru.patterns.account.application.service.operation.OperationService;
+import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
 import ru.patterns.shared.utility.AuthUtility;
 
@@ -47,5 +47,13 @@ public class OperationController {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
 
         return operationService.getOperationStatus(operationId);
+    }
+
+    @GetMapping("/users/{userId}/operations/missed")
+    @Operation(summary = "Получение просроченных платежей по кредитам пользователя [Сотрудник или Пользователь]")
+    public List<OperationModel> getExpiredOperations(@PathVariable UUID userId, @Parameter(hidden = true) @RequestHeader String authorization) {
+        AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
+
+        return operationService.getExpiredCreditOperations(userId);
     }
 }

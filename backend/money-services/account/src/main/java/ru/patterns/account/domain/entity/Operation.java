@@ -60,6 +60,18 @@ public class Operation {
     @Column(name = "operation_status")
     private OperationStatus status = OperationStatus.CREATED;
 
+    @Column(name = "operation_resolve_time")
+    private Instant operationResolveTime = Instant.now(); // время выполнения операции
+
+    @Column(name = "expected_payment_date")
+    private Instant expectedPaymentDate = Instant.now(); // для кредитных операций: ожидаемая дата выплаты
+
+    @Column(name = "dept_left")
+    private BigDecimal deptLeft = BigDecimal.ZERO; // для кредитных операций списания процентов: оставшийся долг
+
+    @Column(name = "is_purchased")
+    private boolean purchased = true; // для кредитных операций списания процентов: просрочена ли операция
+
     @Column(name = "operation_create_time")
     private Instant createTime = Instant.now();
 

@@ -33,7 +33,12 @@ public class TransfersRequestListener {
 
             AuthUtility.isAuthorized(token);
 
-            transferRequestService.processTransferRequest(msg, token);
+            try {
+                transferRequestService.processTransferRequest(msg, token);
+            }
+            catch (Exception e) {
+                transferRequestService.processReject(msg, token);
+            }
 
             ack.acknowledge();
         } catch (Exception exception) {

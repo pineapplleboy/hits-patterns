@@ -5,6 +5,13 @@ namespace IdentityTest
 {
     public static class Config
     {
+        private const int SwaggerAccessTokenLifetimeSeconds = 8 * 60 * 60;
+        private const int MobileAccessTokenLifetimeSeconds = 60 * 60;
+        private const int MobileIdentityTokenLifetimeSeconds = 60 * 60;
+        private const int AuthorizationCodeLifetimeSeconds = 5 * 60;
+        private const int SlidingRefreshTokenLifetimeSeconds = 15 * 24 * 60 * 60;
+        private const int AbsoluteRefreshTokenLifetimeSeconds = 30 * 24 * 60 * 60;
+
         private static readonly string UsersSwaggerUrl = GetEnvironmentVariable("SWAGGER_USERS_URL", "https://localhost:7022");
         private static readonly string UserSettingsSwaggerUrl = GetEnvironmentVariable("SWAGGER_USER_SETTINGS_URL", "https://localhost:7209");
         private static readonly string AccountSwaggerUrl = GetEnvironmentVariable("SWAGGER_ACCOUNT_URL", "http://localhost:8082");
@@ -42,6 +49,8 @@ namespace IdentityTest
                     AllowedGrantTypes = GrantTypes.Code,
                     RequirePkce = true,
                     RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
                     RedirectUris = {$"{UsersSwaggerUrl}/swagger/oauth2-redirect.html"},
                     AllowedCorsOrigins = {UsersSwaggerOrigin},
@@ -59,6 +68,8 @@ namespace IdentityTest
                     AllowedGrantTypes = GrantTypes.Code,
                     RequirePkce = true,
                     RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
                     RedirectUris = {$"{UserSettingsSwaggerUrl}/swagger/oauth2-redirect.html"},
                     AllowedCorsOrigins = {UserSettingsSwaggerOrigin},
@@ -75,6 +86,8 @@ namespace IdentityTest
                     AllowedGrantTypes = GrantTypes.Code,
                     RequirePkce = true,
                     RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
                     RedirectUris = {$"{AccountSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {AccountSwaggerOrigin},
@@ -91,6 +104,8 @@ namespace IdentityTest
                     AllowedGrantTypes = GrantTypes.Code,
                     RequirePkce = true,
                     RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
                     RedirectUris = {$"{TransfersSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {TransfersSwaggerOrigin},
@@ -107,6 +122,8 @@ namespace IdentityTest
                     AllowedGrantTypes = GrantTypes.Code,
                     RequirePkce = true,
                     RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
                     RedirectUris = {$"{CurrencySwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {CurrencySwaggerOrigin},
@@ -123,6 +140,8 @@ namespace IdentityTest
                     AllowedGrantTypes = GrantTypes.Code,
                     RequirePkce = true,
                     RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
                     RedirectUris = {$"{CreditSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {CreditSwaggerOrigin},
@@ -143,9 +162,16 @@ namespace IdentityTest
                     RequireClientSecret = false,
                     AllowAccessTokensViaBrowser = true,
                     RequireConsent = false,
+                    AccessTokenLifetime = MobileAccessTokenLifetimeSeconds,
+                    IdentityTokenLifetime = MobileIdentityTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
                     AllowOfflineAccess = true,
                     RefreshTokenUsage = TokenUsage.ReUse,
+                    RefreshTokenExpiration = TokenExpiration.Sliding,
+                    SlidingRefreshTokenLifetime = SlidingRefreshTokenLifetimeSeconds,
+                    AbsoluteRefreshTokenLifetime = AbsoluteRefreshTokenLifetimeSeconds,
+                    UpdateAccessTokenClaimsOnRefresh = true,
 
                     AllowedScopes = {
                             IdentityServerConstants.StandardScopes.OpenId,
@@ -165,9 +191,16 @@ namespace IdentityTest
                     RequireClientSecret = false,
                     AllowAccessTokensViaBrowser = true,
                     RequireConsent = false,
+                    AccessTokenLifetime = MobileAccessTokenLifetimeSeconds,
+                    IdentityTokenLifetime = MobileIdentityTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
                     AllowOfflineAccess = true,
                     RefreshTokenUsage = TokenUsage.ReUse,
+                    RefreshTokenExpiration = TokenExpiration.Sliding,
+                    SlidingRefreshTokenLifetime = SlidingRefreshTokenLifetimeSeconds,
+                    AbsoluteRefreshTokenLifetime = AbsoluteRefreshTokenLifetimeSeconds,
+                    UpdateAccessTokenClaimsOnRefresh = true,
 
                     AllowedScopes = {
                         IdentityServerConstants.StandardScopes.OpenId,

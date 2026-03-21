@@ -22,6 +22,7 @@ import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.UUID;
 
 @Service
@@ -135,9 +136,52 @@ public class TransferOperationService {
 
         saveOperationWithStatus(operation, OperationStatus.SUCCESS);
 
+        updateCreditOperations(creditAccountTo, amount);
+
         setCurrentlyTransactional(bankAccountFrom, null, creditAccountTo, false);
 
         return TransactionFinishStatus.TRANSACTION_FINISHED;
+    }
+
+    private void updateCreditOperations(CreditAccount creditAccount, BigDecimal amount) {
+        var notClosedOperations = operationRepository.findByAccountNumberFromAndDeptLeftGreaterThanAndTransferAccountTypeAndActionType(
+                        creditAccount.getAccountNumber(),
+                        BigDecimal.ZERO,
+                        TransferAccountType.CREDIT_ACCOUNT,
+                        AccountActionType.CREDIT_DEPT_PERCENT
+                ).stream()
+                .sorted(Comparator.comparing(Operation::getCreateTime))
+                .toList();
+
+        BigDecimal amountLeft = amount;
+        Instant now = Instant.now();
+
+        for (Operation operation : notClosedOperations) {
+            if (amountLeft.compareTo(BigDecimal.ZERO) == 0) {
+                break;
+            }
+
+            BigDecimal operationDeptLeft = operation.getDeptLeft();
+
+            if (operationDeptLeft.compareTo(amountLeft) <= 0) {
+                amountLeft = amountLeft.subtract(operationDeptLeft);
+
+                operation.setDeptLeft(BigDecimal.ZERO);
+                operation.setOperationResolveTime(now);
+
+                if (operation.getExpectedPaymentDate().isAfter(Instant.now())) {
+                    operation.setPurchased(true);
+                }
+
+            } else {
+                operation.setDeptLeft(operationDeptLeft.subtract(amountLeft));
+                amountLeft = BigDecimal.ZERO;
+            }
+
+            operationRepository.save(operation);
+
+            operationWebSocketPublisher.publishOperationUpdated(operation);
+        }
     }
 
     private TransactionFinishStatus finishRejectedOperation(Operation operation) {
