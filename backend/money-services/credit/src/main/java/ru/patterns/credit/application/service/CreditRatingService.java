@@ -49,7 +49,7 @@ public class CreditRatingService {
         creditRating += Math.min(90, stats.getTotalCreditCounter() * 15L);
         creditRating += Math.min(120, stats.getClosedCreditCounter() * 35L);
         creditRating -= Math.min(160, stats.getActiveCreditAmount() * 10L);
-        creditRating -= Math.min(500, stats.getExpiredCreditAmount() * 100L);
+        creditRating -= Math.min(750, stats.getExpiredCreditAmount() * 80L);
         creditRating -= calculateDebtPenalty(stats.getTotalCurrentDebt());
 
         return (int) Math.max(1, Math.min(999, creditRating));
