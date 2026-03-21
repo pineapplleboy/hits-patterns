@@ -37,7 +37,7 @@ public class TransferValidationService {
 
         validateAccountRemainder(bankAccount, requestModel);
 
-        if (accountNumberTo != null && userId != null && recipientId != null && !userId.equals(recipientId)
+        if (userId != null && recipientId != null && !userId.equals(recipientId)
                 && !isBankAccountCurrenciesEquals(bankAccount, accountNumberTo)) {
             throw new BadRequestException(ErrorMessages.TRANSFERS_BETWEEN_CURRENCIES_NOT_AVAILABLE);
         }
