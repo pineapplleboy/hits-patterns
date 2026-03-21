@@ -8,6 +8,8 @@ import ru.patterns.account.application.common.model.operation.OperationUpdateSta
 import ru.patterns.account.application.utility.CurrencySymbolUtility;
 import ru.patterns.account.domain.entity.Operation;
 
+import java.time.Instant;
+
 @UtilityClass
 public class OperationMapper {
 
@@ -54,8 +56,10 @@ public class OperationMapper {
                     : AccountActionType.TRANSFER_SENT;
         }
 
+        var expired = !operation.isPurchased() && operation.getExpectedPaymentDate().isBefore(Instant.now());
+
         return new CreditOperationModel()
-                .setNotExpired(operation.isPurchased())
+                .setExpired(expired)
                 .setDeptLeft(operation.getDeptLeft())
                 .setExpectedPaymentDate(operation.getExpectedPaymentDate())
                 .setOperationId(operation.getOperationId())
