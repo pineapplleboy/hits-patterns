@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
+import ru.patterns.account.application.common.model.operation.CreditOperationModel;
 import ru.patterns.account.application.common.model.operation.OperationModel;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.account.domain.mapper.OperationMapper;
@@ -13,7 +14,6 @@ import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -96,14 +96,16 @@ public class OperationService {
     }
 
     public List<OperationModel> getExpiredCreditOperations(UUID userId) {
-        return operationRepository.findByUserIdFromAndTransferAccountTypeAndActionTypeAndPurchasedFalseAndExpectedPaymentDateBefore(
+        return operationRepository.findByUserIdFromAndTransferAccountTypeAndActionType(
                         userId,
                         TransferAccountType.CREDIT_ACCOUNT,
-                        AccountActionType.CREDIT_DEPT_PERCENT,
-                        Instant.now()
+                        AccountActionType.CREDIT_DEPT_PERCENT
                 )
                 .stream()
                 .map(operation -> OperationMapper.toCreditOperationModel(operation, operation.getAccountNumberFrom()))
+                .map(CreditOperationModel.class::cast)
+                .filter(CreditOperationModel::isExpired)
+                .map(OperationModel.class::cast)
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList();
     }

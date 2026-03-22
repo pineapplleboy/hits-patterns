@@ -17,11 +17,10 @@ public interface OperationRepository extends JpaRepository<Operation, UUID> {
     List<Operation> findByRecipientId(UUID recipientId);
     List<Operation> findByAccountNumberFromAndTransferAccountType(String accountNumberFrom, TransferAccountType transferAccountType);
     List<Operation> findByRecipientAccountNumberAndTransferAccountType(String recipientAccountNumber, TransferAccountType transferAccountType);
-    List<Operation> findByUserIdFromAndTransferAccountTypeAndActionTypeAndPurchasedFalseAndExpectedPaymentDateBefore(
+    List<Operation> findByUserIdFromAndTransferAccountTypeAndActionType(
             UUID userIdFrom,
             TransferAccountType transferAccountType,
-            AccountActionType actionType,
-            Instant expectedPaymentDate
+            AccountActionType actionType
     );
     List<Operation> findByAccountNumberFromAndDeptLeftGreaterThanAndTransferAccountTypeAndActionType(String accountNumberFrom,
                                                                                         BigDecimal deptLeft,
