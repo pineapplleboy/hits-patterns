@@ -51,14 +51,16 @@ public class OperationWebSocketPublisher {
 
     public void publishAccountMoneyReceiving(BankAccount account) {
         WebSocketMessage event = new WebSocketMessage(WebSocketMessageType.BANK_ACCOUNT_SUM_UPDATE,
-                new ProductBalanceUpdateModel(account.getBalance() + CurrencySymbolUtility.getCurrencySymbol(account.getCurrencyId())));
+                new ProductBalanceUpdateModel(account.getId(),
+                        account.getBalance() + CurrencySymbolUtility.getCurrencySymbol(account.getCurrencyId())));
 
         messagingTemplate.convertAndSend(USER_INFO_TOPIC_NAME + account.getUserId(), event);
     }
 
     public void publishAccountMoneyReceiving(CreditAccount account) {
         WebSocketMessage event = new WebSocketMessage(WebSocketMessageType.CREDIT_ACCOUNT_DEPT_UPDATE,
-                new ProductBalanceUpdateModel(account.getDept() + CurrencySymbolUtility.getCurrencySymbol(account.getCurrencyId())));
+                new ProductBalanceUpdateModel(account.getId(),
+                        account.getDept() + CurrencySymbolUtility.getCurrencySymbol(account.getCurrencyId())));
 
         messagingTemplate.convertAndSend(USER_INFO_TOPIC_NAME + account.getUserId(), event);
     }
