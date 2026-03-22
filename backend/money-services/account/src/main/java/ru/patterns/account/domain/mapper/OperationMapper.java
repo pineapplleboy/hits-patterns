@@ -79,7 +79,8 @@ public class OperationMapper {
     }
 
     private boolean isExpired(Operation operation) {
-        return !operation.isPurchased() && operation.getExpectedPaymentDate() != null
+        return operation.getActionType() == AccountActionType.CREDIT_DEPT_PERCENT
+                && !operation.isPurchased() && operation.getExpectedPaymentDate() != null
                 && !operation.getExpectedPaymentDate().isAfter(Instant.now());
     }
 
