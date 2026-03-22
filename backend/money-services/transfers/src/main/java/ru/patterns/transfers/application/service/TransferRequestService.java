@@ -46,6 +46,8 @@ public class TransferRequestService {
 
     private TransferAssignmentMessage enrichTransfer(TransferRequestMessage message, String token) {
         TransferAssignmentMessage assignment = TransferMessageFactory.createAssignment(message);
+        boolean isReplenishment = message.getAccountNumberFrom() == null;
+        boolean isWithdrawal = message.getAccountNumberTo() == null;
 
         if (assignment.getRepeatAmount() > 0) {
             return assignment;
@@ -57,28 +59,33 @@ public class TransferRequestService {
             return assignment;
         }
 
-        if (message.getAccountNumberTo() == null) {
+        if (isWithdrawal) {
             assignment.setAmountTo(calculateCurrency(message.getCurrencyFrom(), CurrencyConstants.BASE_CURRENCY_ID, message.getAmount(), token)
                     .getAmountFinal());
         }
 
-        if (message.getAccountNumberTo() == null) {
+        if (isWithdrawal) {
             assignment.setAccountNumberTo(masterAccountNumber);
         } else {
             assignment.setAccountNumberTo(message.getAccountNumberTo());
         }
 
-        if (message.getAccountNumberFrom() == null) {
+        if (isReplenishment) {
             assignment.setAmountFrom(calculateCurrency(message.getCurrencyTo(), CurrencyConstants.BASE_CURRENCY_ID, message.getAmount(), token)
                     .getAmountFinal());
         } else {
             assignment.setAmountFrom(message.getAmount());
         }
 
-        if (message.getAccountNumberFrom() == null) {
+        if (isReplenishment) {
             assignment.setAccountNumberFrom(masterAccountNumber);
         } else {
             assignment.setAccountNumberFrom(message.getAccountNumberFrom());
+        }
+
+        if (isReplenishment) {
+            assignment.setAmountTo(message.getAmount());
+            return assignment;
         }
 
         if (message.getCurrencyFrom().equals(message.getCurrencyTo())) {
