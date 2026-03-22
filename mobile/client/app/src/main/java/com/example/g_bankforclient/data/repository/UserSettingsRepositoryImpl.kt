@@ -21,4 +21,8 @@ class UserSettingsRepositoryImpl @Inject constructor(
         val dto = userSettingsService.updateMySettings(UserSettingsDTO(isDarkMode = isDarkMode))
         return UserSettings(isDarkMode = dto.isDarkMode)
     }
+
+    override suspend fun toggleAccountVisibility(accountUuid: String) {
+        userSettingsService.toggleAccountVisibility(accountUuid)
+    }
 }

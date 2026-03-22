@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +34,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.domain.models.Transaction
 import com.example.g_bankforclient.domain.models.TransactionType
 import com.example.g_bankforclient.presentation.state.TransactionHistoryScreenState
+import com.example.g_bankforclient.presentation.ui.components.ErrorDialog
+import com.example.g_bankforclient.presentation.ui.components.LoadingContent
 import com.example.g_bankforclient.presentation.ui.components.TransactionItem
 import com.example.g_bankforclient.presentation.viewmodel.TransactionHistoryViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
@@ -55,15 +56,23 @@ fun TransactionHistoryScreen(
         viewModel.loadTransactionHistory(accountId)
     }
 
+    // Диалог ошибки для Error state
+    val errorState = screenState as? TransactionHistoryScreenState.Error
+    if (errorState != null) {
+        ErrorDialog(
+            message = errorState.message,
+            onDismiss = onBack,
+            onRetry = { viewModel.loadTransactionHistory(accountId) }
+        )
+    }
+
     when (val state = screenState) {
         is TransactionHistoryScreenState.Default -> DefaultTransactionHistoryScreen(
             transactions = state.transactions,
             onBack = onBack
         )
-        
-        TransactionHistoryScreenState.Loading -> LoadingTransactionHistoryScreen()
-        
-        is TransactionHistoryScreenState.Error -> ErrorTransactionHistoryScreen(state.message)
+        TransactionHistoryScreenState.Loading -> LoadingContent()
+        is TransactionHistoryScreenState.Error -> LoadingContent() // backdrop пока диалог открыт
     }
 }
 
@@ -138,16 +147,6 @@ private fun DefaultTransactionHistoryScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun LoadingTransactionHistoryScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
     }
 }
 

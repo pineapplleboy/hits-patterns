@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.g_bankforclient.domain.usecase.account.CreateAccountUseCase
 import com.example.g_bankforclient.domain.usecase.currency.GetCurrenciesUseCase
 import com.example.g_bankforclient.presentation.state.CreateAccountScreenState
+import com.example.g_bankforclient.presentation.ui.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,8 +41,10 @@ class CreateAccountViewModel @Inject constructor(
                         currenciesLoading = false
                     )
                 }
-                .onFailure {
-                    _state.value = current.copy(currenciesLoading = false)
+                .onFailure { e ->
+                    _state.value = CreateAccountScreenState.Error(
+                        message = e.toUserMessage("Не удалось загрузить список валют")
+                    )
                 }
         }
     }
@@ -70,7 +73,7 @@ class CreateAccountViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     _state.value = CreateAccountScreenState.Error(
-                        message = e.message ?: "Не удалось открыть счет"
+                        message = e.toUserMessage("Не удалось открыть счет")
                     )
                 }
         }

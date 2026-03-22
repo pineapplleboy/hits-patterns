@@ -37,28 +37,33 @@ data class BankAccountFullModel(
     val operations: List<OperationModel>,
     val createTime: Date,
     val banned: Boolean = false,
+    val hidden: Boolean = false,
     val currency: CurrencyModel? = null
 )
 
 data class CreditAccountShortModel(
     val id: UUID,
     val accountNumber: String,
-    val dept: Double,
+    /** Долг приходит строкой с суффиксом валюты, например "50515.61₽" */
+    val dept: String,
     val creditRateName: String,
     val creditRatePercent: Int,
     val writeOffPeriod: String,
-    val nextWriteOffDate: Date
+    val nextWriteOffDate: Date,
+    val banned: Boolean = false
 )
 
 data class CreditAccountFullModel(
     val id: UUID,
     val accountNumber: String,
-    val dept: Double,
+    /** Долг приходит строкой с суффиксом валюты, например "50515.61₽" */
+    val dept: String,
     val creditRateName: String,
     val creditRatePercent: Int,
     val writeOffPeriod: String,
     val nextWriteOffDate: Date,
-    val operations: List<OperationModel>
+    val operations: List<OperationModel>,
+    val banned: Boolean = false
 )
 
 data class OperationModel(
@@ -79,7 +84,8 @@ enum class TransferAccountType {
 }
 
 enum class AccountActionType {
-    OPEN_ACCOUNT, CLOSE_ACCOUNT, TRANSFER, TRANSFER_RECEIVED, TRANSFER_SENT, ACCOUNT_BANNED, ACCOUNT_UNBANNED
+    OPEN_ACCOUNT, CLOSE_ACCOUNT, TRANSFER, TRANSFER_RECEIVED, TRANSFER_SENT,
+    ACCOUNT_BANNED, ACCOUNT_UNBANNED, CREDIT_DEPT_PERCENT
 }
 
 enum class OperationStatus {

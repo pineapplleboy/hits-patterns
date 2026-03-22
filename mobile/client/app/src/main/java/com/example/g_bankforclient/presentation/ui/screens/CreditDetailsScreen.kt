@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,6 +62,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.domain.models.Account
 import com.example.g_bankforclient.domain.models.Credit
 import com.example.g_bankforclient.presentation.state.CreditDetailsScreenState
+import com.example.g_bankforclient.presentation.ui.components.ErrorDialog
+import com.example.g_bankforclient.presentation.ui.components.LoadingContent
 import com.example.g_bankforclient.presentation.ui.components.TransactionItem
 import com.example.g_bankforclient.presentation.ui.utils.formatMoney
 import com.example.g_bankforclient.presentation.viewmodel.CreditDetailsViewModel
@@ -81,54 +82,71 @@ fun CreditDetailsScreen(
     val screenState by viewModel.state.collectAsStateWithLifecycle()
     var amount by remember { mutableStateOf("") }
     var selectedAccountId by remember { mutableStateOf("") }
-
     val snackbarHostState = remember { SnackbarHostState() }
-    
+
     LaunchedEffect(creditId) {
         viewModel.loadCreditDetails(creditId)
     }
 
     LaunchedEffect(screenState) {
-        if (screenState is CreditDetailsScreenState.Default && (screenState as CreditDetailsScreenState.Default).errorMessage != null) {
-            snackbarHostState.showSnackbar(
-                (screenState as CreditDetailsScreenState.Default).errorMessage ?: "Ошибка"
-            )
-            viewModel.clearError()
+        val s = screenState as? CreditDetailsScreenState.Default
+        val msg = s?.snackbarMessage
+        if (msg != null) {
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearSnackbar()
         }
+    }
+
+    // Диалог для errorMessage в Default state (операция не удалась)
+    val defaultState = screenState as? CreditDetailsScreenState.Default
+    if (defaultState?.errorMessage != null) {
+        ErrorDialog(
+            message = defaultState.errorMessage,
+            onDismiss = { viewModel.clearError() }
+        )
+    }
+
+    // Диалог для глобальной Error state (загрузка не удалась)
+    val errorState = screenState as? CreditDetailsScreenState.Error
+    if (errorState != null) {
+        ErrorDialog(
+            message = errorState.message,
+            onDismiss = onBack,
+            onRetry = { viewModel.loadCreditDetails(creditId) }
+        )
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         when (val state = screenState) {
-        is CreditDetailsScreenState.Default -> {
-            LaunchedEffect(state.credit) {
-                if (selectedAccountId.isEmpty()) {
-                    selectedAccountId = viewModel.accounts.firstOrNull()?.id ?: ""
+            is CreditDetailsScreenState.Default -> {
+                LaunchedEffect(state.credit) {
+                    if (selectedAccountId.isEmpty()) {
+                        selectedAccountId = viewModel.accounts.firstOrNull()?.id ?: ""
+                    }
                 }
+                DefaultCreditDetailsScreen(
+                    credit = state.credit,
+                    accounts = viewModel.accounts,
+                    amount = amount,
+                    selectedAccountId = selectedAccountId,
+                    isLoading = state.isLoading,
+                    onAmountChange = { amount = it },
+                    onSelectedAccountChange = { selectedAccountId = it },
+                    onBack = onBack,
+                    onRefresh = { viewModel.loadCreditDetails(creditId) },
+                    onPayCredit = { accountId, paymentAmount ->
+                        viewModel.payCredit(state.credit.id, accountId, paymentAmount)
+                        amount = ""
+                    },
+                    modifier = Modifier.padding(paddingValues)
+                )
             }
-            
-            DefaultCreditDetailsScreen(
-                credit = state.credit,
-                accounts = viewModel.accounts,
-                amount = amount,
-                selectedAccountId = selectedAccountId,
-                isLoading = state.isLoading,
-                onAmountChange = { amount = it },
-                onSelectedAccountChange = { selectedAccountId = it },
-                onBack = onBack,
-                onRefresh = { viewModel.loadCreditDetails(creditId) },
-                onPayCredit = { accountId, paymentAmount -> 
-                    viewModel.payCredit(state.credit.id, accountId, paymentAmount)
-                    amount = ""
-                },
-                modifier = Modifier.padding(paddingValues)
-            )
-        }
-        
-        CreditDetailsScreenState.Loading -> LoadingCreditDetailsScreen()
-        
-        is CreditDetailsScreenState.Error -> ErrorCreditDetailsScreen(state.message)
+
+            CreditDetailsScreenState.Loading -> LoadingContent()
+            // Error отображается через диалог выше
+            is CreditDetailsScreenState.Error -> LoadingContent()
         }
     }
 }
@@ -185,11 +203,20 @@ private fun DefaultCreditDetailsScreen(
                             )
                         }
                     }
-                    Text(
-                        text = credit.name,
-                        style = MaterialTheme.typography.headlineMedium,
+                    Column(
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-                    )
+                    ) {
+                        Text(
+                            text = credit.name,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = credit.id,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = BankColors.SecondaryText
+                        )
+                    }
                 }
             }
         }
@@ -530,16 +557,6 @@ private fun DefaultCreditDetailsScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun LoadingCreditDetailsScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
     }
 }
 

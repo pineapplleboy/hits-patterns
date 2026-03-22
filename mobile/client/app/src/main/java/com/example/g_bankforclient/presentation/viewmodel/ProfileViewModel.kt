@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.g_bankforclient.domain.usecase.user.GetMyProfileUseCase
 import com.example.g_bankforclient.presentation.state.ProfileScreenState
+import com.example.g_bankforclient.presentation.ui.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +33,7 @@ class ProfileViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     _state.value = ProfileScreenState.Error(
-                        message = e.message ?: "Не удалось загрузить профиль"
+                        message = e.toUserMessage("Не удалось загрузить профиль")
                     )
                 }
         }

@@ -19,6 +19,8 @@ data class Transaction(
     val description: String,
     val status: TransactionStatus = TransactionStatus.SUCCESS,
     val fromAccount: String? = null,
-    val toAccount: String? = null
+    val toAccount: String? = null,
+    /** Символ валюты операции (₽, $, €…). Если null — отображаем ₽. */
+    val currencySymbol: String? = null
 )
 

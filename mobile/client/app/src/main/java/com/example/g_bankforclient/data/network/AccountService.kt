@@ -43,16 +43,31 @@ interface AccountService {
         @Path("accountNumber") accountNumber: String
     )
 
-    @GET("patterns/api/v1/users/{userId}/credit-accounts")
+    @GET("patterns/api/v2/users/{userId}/credit-accounts")
     suspend fun getUserCreditAccounts(
         @Path("userId") userId: UUID
     ): List<CreditAccountShortModel>
 
-    @GET("patterns/api/v1/users/{userId}/credit-accounts/{accountNumber}")
+    @GET("patterns/api/v2/users/{userId}/credit-accounts/{accountNumber}")
     suspend fun getCreditAccountDetails(
         @Path("userId") userId: UUID,
         @Path("accountNumber") accountNumber: String
     ): CreditAccountFullModel
+
+    @GET("patterns/api/v2/users/{userId}/credit-accounts/history")
+    suspend fun getCreditAccountHistory(
+        @Path("userId") userId: UUID
+    ): List<CreditAccountFullModel>
+
+    @GET("patterns/api/v2/users/{userId}/operations/missed")
+    suspend fun getMissedCreditPayments(
+        @Path("userId") userId: UUID
+    ): List<OperationModel>
+
+    @GET("patterns/api/v2/users/{userId}/bank-accounts/rub")
+    suspend fun getRubBankAccounts(
+        @Path("userId") userId: UUID
+    ): List<BankAccountShortModel>
 
     @GET("patterns/api/v2/users/{userId}/operations")
     suspend fun getUserOperations(
@@ -77,6 +92,14 @@ interface AccountService {
     suspend fun withdrawFromBankAccount(
         @Path("userId") userId: UUID,
         @Path("bankAccountNumber") bankAccountNumber: String,
+        @Body request: MoneyAmountRequestModel
+    ): OperationStatusResponseModel
+
+    @POST("patterns/api/v2/users/{userId}/transfers/bank-account/{bankAccountNumber}/bankAccountTo/{bankAccountTo}")
+    suspend fun transferToBankAccount(
+        @Path("userId") userId: UUID,
+        @Path("bankAccountNumber") bankAccountNumber: String,
+        @Path("bankAccountTo") bankAccountTo: String,
         @Body request: MoneyAmountRequestModel
     ): OperationStatusResponseModel
 

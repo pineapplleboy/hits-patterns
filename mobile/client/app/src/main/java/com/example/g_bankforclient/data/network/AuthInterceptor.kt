@@ -14,6 +14,7 @@ class AuthInterceptor(
     private val authStateStorage: AuthStateStorage,
     private val authorizationService: AuthorizationService,
     private val tokenStorage: TokenStorage,
+    private val authEventBus: AuthEventBus,
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -32,7 +33,9 @@ class AuthInterceptor(
                 val newRequest = request.newBuilder()
                     .addHeader("Authorization", "Bearer $token")
                     .build()
-                return chain.proceed(newRequest)
+                val response = chain.proceed(newRequest)
+                if (response.code == 401) handleUnauthorized()
+                return response
             }
             return chain.proceed(request)
         }
@@ -56,7 +59,9 @@ class AuthInterceptor(
             val newRequest = request.newBuilder()
                 .addHeader("Authorization", "Bearer $freshAccessToken")
                 .build()
-            return chain.proceed(newRequest)
+            val response = chain.proceed(newRequest)
+            if (response.code == 401) handleUnauthorized()
+            return response
         }
 
         // Fallback: if AppAuth state cannot produce a fresh token for this request,
@@ -66,9 +71,19 @@ class AuthInterceptor(
             val newRequest = request.newBuilder()
                 .addHeader("Authorization", "Bearer $persistedToken")
                 .build()
-            return chain.proceed(newRequest)
+            val response = chain.proceed(newRequest)
+            if (response.code == 401) handleUnauthorized()
+            return response
         }
 
-        return chain.proceed(request)
+        val response = chain.proceed(request)
+        if (response.code == 401) handleUnauthorized()
+        return response
+    }
+
+    private fun handleUnauthorized() {
+        tokenStorage.clearToken()
+        authStateStorage.clearAuthState()
+        authEventBus.emitUnauthorized()
     }
 }

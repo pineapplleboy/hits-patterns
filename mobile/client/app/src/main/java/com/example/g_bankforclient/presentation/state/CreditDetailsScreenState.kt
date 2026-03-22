@@ -7,7 +7,8 @@ sealed interface CreditDetailsScreenState {
     data class Default(
         val credit: Credit,
         val isLoading: Boolean = false,
-        val errorMessage: String? = null
+        val errorMessage: String? = null,
+        val snackbarMessage: String? = null
     ) : CreditDetailsScreenState
 
     data object Loading : CreditDetailsScreenState

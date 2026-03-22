@@ -15,21 +15,45 @@ private fun parseMoney(raw: String): Double {
     return cleaned.toDoubleOrNull() ?: 0.0
 }
 
-fun BankAccountShortModel.toDomain(): Account = Account(
-    id = accountNumber,
-    name = "Счет $accountNumber",
-    balance = parseMoney(balance),
-    banned = banned,
-    currencySymbol = null,
-    balanceDisplay = balance
-)
+private fun extractCurrencySymbol(balanceStr: String): String? {
+    val symbol =
+        balanceStr.filter { !it.isDigit() && it != '.' && it != '-' && it != ' ' && it != ',' }
+            .trim()
+    return symbol.ifEmpty { null }
+}
+
+private fun symbolToCharCode(symbol: String?): String? = when (symbol) {
+    "₽", "руб", "р" -> "RUB"
+    "$" -> "USD"
+    "€" -> "EUR"
+    "£" -> "GBP"
+    "¥" -> "CNY"
+    else -> null
+}
+
+fun BankAccountShortModel.toDomain(): Account {
+    val symbol = extractCurrencySymbol(balance)
+    return Account(
+        id = accountNumber,
+        uuid = id.toString(),
+        name = "Счет $accountNumber",
+        balance = parseMoney(balance),
+        banned = banned,
+        isHidden = hidden,
+        currencySymbol = symbol,
+        currencyCharCode = symbolToCharCode(symbol),
+        balanceDisplay = balance
+    )
+}
 
 fun BankAccountFullModel.toDomain(): Account = Account(
     id = accountNumber,
+    uuid = id.toString(),
     name = "Счет $accountNumber",
     balance = parseMoney(balance),
     banned = banned,
+    isHidden = hidden,
     currencySymbol = currency?.symbol,
+    currencyCharCode = currency?.charCode,
     balanceDisplay = null
 )
-

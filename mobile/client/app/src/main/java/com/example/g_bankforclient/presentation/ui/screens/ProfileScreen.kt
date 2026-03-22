@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.domain.models.User
 import com.example.g_bankforclient.domain.models.UserRole
 import com.example.g_bankforclient.presentation.state.ProfileScreenState
+import com.example.g_bankforclient.presentation.ui.components.ErrorDialog
 import com.example.g_bankforclient.presentation.viewmodel.ProfileViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 
@@ -46,15 +47,23 @@ fun ProfileScreen(
     val viewModel: ProfileViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    val errorState = state as? ProfileScreenState.Error
+    if (errorState != null) {
+        ErrorDialog(
+            message = errorState.message,
+            onDismiss = { viewModel.loadProfile() },
+            onRetry = { viewModel.loadProfile() }
+        )
+    }
+
     when (val s = state) {
         is ProfileScreenState.Default -> ProfileContent(
             user = s.user,
             isDarkMode = isDarkTheme,
             onThemeChange = onThemeChange
         )
-
         ProfileScreenState.Loading -> BoxLoading()
-        is ProfileScreenState.Error -> ProfileError(message = s.message)
+        is ProfileScreenState.Error -> BoxLoading() // backdrop пока диалог открыт
     }
 }
 

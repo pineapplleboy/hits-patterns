@@ -5,10 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,6 +21,7 @@ import com.example.g_bankforclient.common.navigation.BankNavigation
 import com.example.g_bankforclient.common.navigation.Screen
 import com.example.g_bankforclient.presentation.ui.components.BankBottomNavigation
 import com.example.g_bankforclient.presentation.viewmodel.AppThemeViewModel
+import com.example.g_bankforclient.presentation.viewmodel.SessionViewModel
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -58,6 +61,17 @@ fun BankApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val sessionViewModel: SessionViewModel = hiltViewModel()
+    val isUnauthorized by sessionViewModel.isUnauthorized.collectAsStateWithLifecycle()
+    LaunchedEffect(isUnauthorized) {
+        if (isUnauthorized) {
+            sessionViewModel.resetUnauthorized()
+            navController.navigate(Screen.Authorization.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
     val showBottomNav = currentRoute == Screen.Home.route ||
             currentRoute == Screen.Credits.route ||
             currentRoute == Screen.Profile.route
@@ -83,7 +97,9 @@ fun BankApp(
     ) { paddingValues ->
         BankNavigation(
             navController = navController,
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues),
             isDarkTheme = isDarkTheme,
             onThemeChange = onThemeChange,
             onEnterMainApp = onEnterMainApp

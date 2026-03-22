@@ -7,8 +7,9 @@ sealed class Screen(val route: String) {
     object Profile : Screen("profile")
     object CreateAccount : Screen("create_account")
 
-    object AccountDetails : Screen("account_details/{accountId}") {
-        fun createRoute(accountId: String) = "account_details/$accountId"
+    object AccountDetails : Screen("account_details/{accountId}?isHidden={isHidden}") {
+        fun createRoute(accountId: String, isHidden: Boolean = false) =
+            "account_details/$accountId?isHidden=$isHidden"
     }
 
     object CreditDetails : Screen("credit_details/{creditId}") {
@@ -18,6 +19,8 @@ sealed class Screen(val route: String) {
     object TransactionHistory : Screen("transaction_history/{accountId}") {
         fun createRoute(accountId: String) = "transaction_history/$accountId"
     }
+
+    object MissedPayments : Screen("missed_payments")
 }
 
 sealed class BottomNavScreen(val route: String, val title: String) {

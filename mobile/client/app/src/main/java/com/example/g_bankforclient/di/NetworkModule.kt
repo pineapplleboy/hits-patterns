@@ -3,9 +3,11 @@ package com.example.g_bankforclient.di
 import android.content.Context
 import com.example.g_bankforclient.data.network.AccountService
 import com.example.g_bankforclient.data.network.ApiService
+import com.example.g_bankforclient.data.network.AuthEventBus
 import com.example.g_bankforclient.data.network.AuthInterceptor
 import com.example.g_bankforclient.data.network.AuthService
 import com.example.g_bankforclient.data.network.CurrencyService
+import com.example.g_bankforclient.data.network.ExchangeRateService
 import com.example.g_bankforclient.data.network.UserService
 import com.example.g_bankforclient.data.network.UserSettingsService
 import com.example.g_bankforclient.data.sso.AllowHttpConnectionBuilder
@@ -82,9 +84,10 @@ object NetworkModule {
     fun provideAuthInterceptor(
         authStateStorage: AuthStateStorage,
         authorizationService: AuthorizationService,
-        tokenStorage: TokenStorage
+        tokenStorage: TokenStorage,
+        authEventBus: AuthEventBus
     ): AuthInterceptor {
-        return AuthInterceptor(authStateStorage, authorizationService, tokenStorage)
+        return AuthInterceptor(authStateStorage, authorizationService, tokenStorage, authEventBus)
     }
     
     @Provides
@@ -165,6 +168,26 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
+
+    @Provides
+    @Singleton
+    @Named("noAuthOkHttpClient")
+    fun provideNoAuthOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @Named("exchangeRateRetrofit")
+    fun provideExchangeRateRetrofit(@Named("noAuthOkHttpClient") okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://www.cbr-xml-daily.ru/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
     
     @Provides
     @Singleton
@@ -200,5 +223,11 @@ object NetworkModule {
     @Singleton
     fun provideUserService(@Named("usersRetrofit") retrofit: Retrofit): UserService {
         return retrofit.create(UserService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExchangeRateService(@Named("exchangeRateRetrofit") retrofit: Retrofit): ExchangeRateService {
+        return retrofit.create(ExchangeRateService::class.java)
     }
 }

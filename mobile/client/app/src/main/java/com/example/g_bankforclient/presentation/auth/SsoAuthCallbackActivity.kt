@@ -66,20 +66,32 @@ class SsoAuthCallbackActivity : ComponentActivity() {
                 return@performTokenRequest
             }
 
-            // Persist token response as well, otherwise AuthState.idToken can remain null.
+            // Сохраняем access token в tokenStorage ДО вызова getMyProfile().
+            // AuthState намеренно сохраняем ПОСЛЕ — чтобы AuthInterceptor при вызове
+            // getMyProfile() использовал простой путь tokenStorage.getToken()
+            // вместо асинхронного performActionWithFreshTokens (который диспатчится
+            // на main thread и может создавать timing issues).
+            val rawAccessToken = tokenResponse.accessToken
+            if (!rawAccessToken.isNullOrBlank()) {
+                tokenStorage.setToken(rawAccessToken)
+            }
+
             val authState = AuthState(response, tokenResponse, tokenException)
-            authStateStorage.setAuthState(authState)
-            tokenStorage.setToken(tokenResponse.accessToken)
-            loadProfileAndFinish()
+            loadProfileAndFinish(authState)
         }
     }
 
-    private fun loadProfileAndFinish() {
-        // Now we can load profile (requires Authorization header).
+    private fun loadProfileAndFinish(authState: AuthState? = null) {
         lifecycleScope.launch(Dispatchers.IO) {
             val ok = runCatching {
                 val profile = userService.getMyProfile()
                 tokenStorage.setUserId(profile.id.toString())
+                // Сохраняем AuthState только после успешной загрузки профиля.
+                // С этого момента интерцептор использует полный AppAuth-flow
+                // (автообновление токена через performActionWithFreshTokens).
+                if (authState != null) {
+                    authStateStorage.setAuthState(authState)
+                }
                 true
             }.getOrDefault(false)
 

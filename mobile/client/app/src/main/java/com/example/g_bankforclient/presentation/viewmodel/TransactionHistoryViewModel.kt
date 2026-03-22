@@ -9,6 +9,7 @@ import com.example.g_bankforclient.domain.models.UserRealtimeEvent
 import com.example.g_bankforclient.domain.usecase.account.GetAccountTransactionsUseCase
 import com.example.g_bankforclient.domain.usecase.realtime.ObserveUserRealtimeEventsUseCase
 import com.example.g_bankforclient.presentation.state.TransactionHistoryScreenState
+import com.example.g_bankforclient.presentation.ui.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,7 +50,7 @@ class TransactionHistoryViewModel @Inject constructor(
                 )
             }.onFailure { e ->
                 _state.value = TransactionHistoryScreenState.Error(
-                    message = e.message ?: "Не удалось загрузить историю операций"
+                    message = e.toUserMessage("Не удалось загрузить историю операций")
                 )
             }
         }
@@ -101,9 +102,9 @@ class TransactionHistoryViewModel @Inject constructor(
                         }
                     }
 
-                    is UserRealtimeEvent.BankAccountSumUpdate -> {
-                        // Не влияет на страницу истории напрямую (там только транзакции).
-                    }
+                    is UserRealtimeEvent.BankAccountSumUpdate -> {}
+
+                    is UserRealtimeEvent.CreditAccountDeptUpdate -> {}
                 }
             }
         }
@@ -119,9 +120,13 @@ class TransactionHistoryViewModel @Inject constructor(
             mutable[idx] = tx
             mutable
         } else {
-            // Новые операции показываем первыми.
             listOf(tx) + transactions
         }
+    }
+
+    fun clearError() {
+        val current = _state.value as? TransactionHistoryScreenState.Default ?: return
+        _state.value = current.copy(errorMessage = null)
     }
 
     private fun mapActionTypeToTransactionType(actionType: String?): TransactionType {

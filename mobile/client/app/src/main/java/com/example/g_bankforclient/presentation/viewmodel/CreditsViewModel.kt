@@ -2,10 +2,14 @@ package com.example.g_bankforclient.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.g_bankforclient.domain.models.Account
+import com.example.g_bankforclient.domain.usecase.account.GetRubAccountsUseCase
 import com.example.g_bankforclient.domain.usecase.credit.GetCreditRatesUseCase
+import com.example.g_bankforclient.domain.usecase.credit.GetCreditRatingUseCase
 import com.example.g_bankforclient.domain.usecase.credit.GetCreditsUseCase
 import com.example.g_bankforclient.domain.usecase.credit.TakeCreditByRateUseCase
 import com.example.g_bankforclient.presentation.state.CreditsScreenState
+import com.example.g_bankforclient.presentation.ui.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +21,9 @@ import javax.inject.Inject
 class CreditsViewModel @Inject constructor(
     private val getCreditsUseCase: GetCreditsUseCase,
     private val getCreditRatesUseCase: GetCreditRatesUseCase,
-    private val takeCreditByRateUseCase: TakeCreditByRateUseCase
+    private val getCreditRatingUseCase: GetCreditRatingUseCase,
+    private val takeCreditByRateUseCase: TakeCreditByRateUseCase,
+    private val getRubAccountsUseCase: GetRubAccountsUseCase
 ) : ViewModel() {
 
     private val _state: MutableStateFlow<CreditsScreenState> = MutableStateFlow(
@@ -28,16 +34,28 @@ class CreditsViewModel @Inject constructor(
     )
     val state: StateFlow<CreditsScreenState> = _state.asStateFlow()
 
+    private val _rubAccounts = MutableStateFlow<List<Account>>(emptyList())
+    val rubAccounts: List<Account> get() = _rubAccounts.value
+
     init {
         loadCreditsAndRates()
     }
 
+    private fun loadRubAccounts() {
+        viewModelScope.launch {
+            runCatching { getRubAccountsUseCase() }
+                .onSuccess { accounts -> _rubAccounts.value = accounts }
+        }
+    }
+
     fun loadCreditsAndRates() {
+        loadRubAccounts()
         viewModelScope.launch {
             val currentState = _state.value as? CreditsScreenState.Default
             _state.value = CreditsScreenState.Default(
                 credits = currentState?.credits ?: emptyList(),
                 creditRates = currentState?.creditRates ?: emptyList(),
+                creditRating = currentState?.creditRating,
                 isLoading = true
             )
             runCatching {
@@ -48,14 +66,43 @@ class CreditsViewModel @Inject constructor(
                 _state.value = CreditsScreenState.Default(
                     credits = credits,
                     creditRates = creditRates,
+                    creditRating = (_state.value as? CreditsScreenState.Default)?.creditRating,
                     isLoading = false
                 )
             }.onFailure { e ->
                 _state.value = CreditsScreenState.Error(
-                    message = e.message ?: "Не удалось загрузить данные"
+                    message = e.toUserMessage("Не удалось загрузить данные")
                 )
             }
         }
+    }
+
+    fun loadCreditRating() {
+        val currentState = _state.value as? CreditsScreenState.Default ?: return
+        _state.value = currentState.copy(isRatingLoading = true, showRatingDialog = false)
+        viewModelScope.launch {
+            runCatching { getCreditRatingUseCase() }
+                .onSuccess { rating ->
+                    val state = _state.value as? CreditsScreenState.Default ?: return@launch
+                    _state.value = state.copy(
+                        creditRating = rating,
+                        showRatingDialog = true,
+                        isRatingLoading = false
+                    )
+                }
+                .onFailure { e ->
+                    val state = _state.value as? CreditsScreenState.Default ?: return@launch
+                    _state.value = state.copy(
+                        isRatingLoading = false,
+                        errorMessage = e.toUserMessage("Не удалось загрузить кредитный рейтинг")
+                    )
+                }
+        }
+    }
+
+    fun dismissRatingDialog() {
+        val state = _state.value as? CreditsScreenState.Default ?: return
+        _state.value = state.copy(showRatingDialog = false)
     }
     
     fun takeCredit(rateId: java.util.UUID, sum: Double, bankAccountNum: String) {
@@ -83,7 +130,7 @@ class CreditsViewModel @Inject constructor(
                     if (state is CreditsScreenState.Default) {
                         _state.value = state.copy(
                             isLoading = false,
-                            errorMessage = e.message ?: "Ошибка при оформлении кредита"
+                            errorMessage = e.toUserMessage("Ошибка при оформлении кредита")
                         )
                     }
                 }

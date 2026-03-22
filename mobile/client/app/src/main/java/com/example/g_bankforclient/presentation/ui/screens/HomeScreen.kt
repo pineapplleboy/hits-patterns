@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -46,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.domain.models.Account
 import com.example.g_bankforclient.presentation.state.HomeScreenState
 import com.example.g_bankforclient.presentation.ui.components.AccountCard
+import com.example.g_bankforclient.presentation.ui.components.ErrorDialog
 import com.example.g_bankforclient.presentation.ui.utils.formatMoney
 import com.example.g_bankforclient.presentation.viewmodel.HomeViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
@@ -53,7 +56,7 @@ import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 
 @Composable
 fun HomeScreen(
-    onAccountClick: (String) -> Unit,
+    onAccountClick: (accountId: String, isHidden: Boolean) -> Unit,
     onCreateAccount: () -> Unit,
     onLogout: () -> Unit = {},
     onEnterMainApp: () -> Unit = {}
@@ -81,34 +84,69 @@ fun HomeScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    val defaultState = screenState as? HomeScreenState.Default
+    if (defaultState?.errorMessage != null) {
+        ErrorDialog(
+            message = defaultState.errorMessage,
+            onDismiss = { viewModel.clearError() }
+        )
+    }
+
+    val errorState = screenState as? HomeScreenState.Error
+    if (errorState != null) {
+        ErrorDialog(
+            message = errorState.message,
+            onDismiss = { viewModel.loadAccounts() },
+            onRetry = { viewModel.loadAccounts() }
+        )
+    }
+
     when (val state = screenState) {
         is HomeScreenState.Default -> DefaultHomeScreen(
             accounts = state.accounts,
+            hiddenAccounts = state.hiddenAccounts,
+            showingHidden = state.showingHidden,
             isLoading = state.isLoading,
             onAccountClick = onAccountClick,
             onCreateAccount = onCreateAccount,
-            onLogout = handleLogout
+            onLogout = handleLogout,
+            onToggleHidden = { viewModel.toggleShowHidden() }
         )
 
         HomeScreenState.Loading -> DefaultHomeScreen(
             accounts = emptyList(),
+            hiddenAccounts = emptyList(),
+            showingHidden = false,
             isLoading = true,
             onAccountClick = onAccountClick,
             onCreateAccount = onCreateAccount,
-            onLogout = handleLogout
+            onLogout = handleLogout,
+            onToggleHidden = {}
         )
-        
-        is HomeScreenState.Error -> ErrorHomeScreen(state.message)
+
+        is HomeScreenState.Error -> DefaultHomeScreen(
+            accounts = emptyList(),
+            hiddenAccounts = emptyList(),
+            showingHidden = false,
+            isLoading = false,
+            onAccountClick = { _, _ -> },
+            onCreateAccount = {},
+            onLogout = handleLogout,
+            onToggleHidden = {}
+        )
     }
 }
 
 @Composable
 private fun DefaultHomeScreen(
     accounts: List<Account>,
+    hiddenAccounts: List<Account> = emptyList(),
+    showingHidden: Boolean = false,
     isLoading: Boolean = false,
-    onAccountClick: (String) -> Unit,
+    onAccountClick: (accountId: String, isHidden: Boolean) -> Unit,
     onCreateAccount: () -> Unit,
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onToggleHidden: () -> Unit = {}
 ) {
     val useBackendBalanceStrings = accounts.any { it.balanceDisplay != null }
     val currencySymbols = accounts.map { it.currencySymbol ?: "₽" }.distinct()
@@ -250,18 +288,27 @@ private fun DefaultHomeScreen(
                     text = "Мои счета",
                     style = MaterialTheme.typography.headlineSmall
                 )
-                FilledIconButton(
-                    onClick = onCreateAccount,
-                    modifier = Modifier.size(40.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Создать счет",
-                        tint = Color.White
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconButton(onClick = onToggleHidden) {
+                        Icon(
+                            imageVector = if (showingHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (showingHidden) "Скрыть скрытые счета" else "Показать скрытые счета",
+                            tint = if (showingHidden) MaterialTheme.colorScheme.primary else BankColors.MediumGray
+                        )
+                    }
+                    FilledIconButton(
+                        onClick = onCreateAccount,
+                        modifier = Modifier.size(40.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Создать счет",
+                            tint = Color.White
+                        )
+                    }
                 }
             }
         }
@@ -282,7 +329,7 @@ private fun DefaultHomeScreen(
             }
         }
 
-        if (accounts.isEmpty()) {
+        if (accounts.isEmpty() && !isLoading) {
             item {
                 Column(
                     modifier = Modifier
@@ -314,10 +361,54 @@ private fun DefaultHomeScreen(
                     account = account,
                     onClick = {
                         if (!account.banned) {
-                            onAccountClick(account.id)
+                            onAccountClick(account.id, false)
                         }
                     }
                 )
+            }
+        }
+
+        if (showingHidden) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.VisibilityOff,
+                        contentDescription = null,
+                        tint = BankColors.MediumGray,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Скрытые счета",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = BankColors.MediumGray
+                    )
+                }
+            }
+
+            if (hiddenAccounts.isEmpty() && !isLoading) {
+                item {
+                    Text(
+                        text = "Нет скрытых счетов",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = BankColors.MediumGray,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+            } else {
+                items(hiddenAccounts) { account ->
+                    AccountCard(
+                        account = account,
+                        onClick = {
+                            if (!account.banned) {
+                                onAccountClick(account.id, true)
+                            }
+                        }
+                    )
+                }
             }
         }
     }
@@ -366,8 +457,8 @@ fun HomeScreenPreview() {
         DefaultHomeScreen(
             accounts = accounts,
             isLoading = false,
-            onAccountClick = { /* Пустая заглушка */ },
-            onCreateAccount = { /* Пустая заглушка */ }
+            onAccountClick = {} as (accountId: String, isHidden: Boolean) -> Unit,
+            onCreateAccount = {}
         )
     }
 }

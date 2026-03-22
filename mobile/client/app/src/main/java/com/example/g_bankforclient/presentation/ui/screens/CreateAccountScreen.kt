@@ -48,6 +48,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforclient.domain.models.Currency
 import com.example.g_bankforclient.presentation.state.CreateAccountScreenState
+import com.example.g_bankforclient.presentation.ui.components.ErrorDialog
 import com.example.g_bankforclient.presentation.viewmodel.CreateAccountViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
@@ -60,6 +61,16 @@ fun CreateAccountScreen(
 ) {
     val viewModel: CreateAccountViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
+
+    // Диалог для Error state — валюты не загрузились или создание провалилось
+    val errorState = screenState as? CreateAccountScreenState.Error
+    if (errorState != null) {
+        ErrorDialog(
+            message = errorState.message,
+            onDismiss = { viewModel.loadCurrencies() },
+            onRetry = { viewModel.loadCurrencies() }
+        )
+    }
 
     when (val state = screenState) {
         is CreateAccountScreenState.Default -> DefaultCreateAccountScreen(
@@ -80,7 +91,15 @@ fun CreateAccountScreen(
             SuccessCreateAccountScreen(state.message)
         }
 
-        is CreateAccountScreenState.Error -> ErrorCreateAccountScreen(state.message)
+        // Error отображается через диалог выше, показываем Default как backdrop
+        is CreateAccountScreenState.Error -> DefaultCreateAccountScreen(
+            currencies = emptyList(),
+            selectedCurrencyId = null,
+            currenciesLoading = false,
+            onBack = onBack,
+            onSelectCurrency = {},
+            onCreateAccount = {}
+        )
     }
 }
 

@@ -6,7 +6,8 @@ sealed interface TransactionHistoryScreenState {
 
     data class Default(
         val transactions: List<Transaction>,
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
+        val errorMessage: String? = null
     ) : TransactionHistoryScreenState
 
     data object Loading : TransactionHistoryScreenState

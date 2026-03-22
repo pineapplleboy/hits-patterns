@@ -16,6 +16,12 @@ private fun parseMoney(raw: String): Double {
     return cleaned.toDoubleOrNull() ?: 0.0
 }
 
+private fun extractSymbol(raw: String): String? {
+    val symbol =
+        raw.filter { !it.isDigit() && it != '.' && it != '-' && it != ' ' && it != ',' }.trim()
+    return symbol.ifEmpty { null }
+}
+
 fun OperationModel.toDomain(fallbackAccountId: String = ""): Transaction = Transaction(
     id = operationId.toString(),
     accountId = accountNumberFrom ?: fallbackAccountId,
@@ -27,6 +33,7 @@ fun OperationModel.toDomain(fallbackAccountId: String = ""): Transaction = Trans
         AccountActionType.TRANSFER_SENT -> TransactionType.WITHDRAWAL
         AccountActionType.ACCOUNT_BANNED -> TransactionType.INFO
         AccountActionType.ACCOUNT_UNBANNED -> TransactionType.INFO
+        AccountActionType.CREDIT_DEPT_PERCENT -> TransactionType.INFO
     },
     amount = parseMoney(amount),
     date = createTime,
@@ -38,6 +45,7 @@ fun OperationModel.toDomain(fallbackAccountId: String = ""): Transaction = Trans
         AccountActionType.TRANSFER_SENT -> "Исходящий перевод"
         AccountActionType.ACCOUNT_BANNED -> "Счёт заблокирован"
         AccountActionType.ACCOUNT_UNBANNED -> "Счёт разблокирован"
+        AccountActionType.CREDIT_DEPT_PERCENT -> "Начисление процентов"
     },
     status = when (status) {
         OperationStatus.CREATED -> TransactionStatus.CREATED
@@ -46,7 +54,8 @@ fun OperationModel.toDomain(fallbackAccountId: String = ""): Transaction = Trans
         OperationStatus.REJECTED -> TransactionStatus.REJECTED
     },
     fromAccount = if (actionType == AccountActionType.TRANSFER_RECEIVED) accountNumberFrom else null,
-    toAccount = if (actionType == AccountActionType.TRANSFER_SENT || actionType == AccountActionType.TRANSFER) recipientAccountNumber else null
+    toAccount = if (actionType == AccountActionType.TRANSFER_SENT || actionType == AccountActionType.TRANSFER) recipientAccountNumber else null,
+    currencySymbol = extractSymbol(amount)
 )
 
 fun OperationModel.toCreditDomain(fallbackAccountId: String = ""): Transaction = Transaction(
@@ -60,6 +69,7 @@ fun OperationModel.toCreditDomain(fallbackAccountId: String = ""): Transaction =
         AccountActionType.TRANSFER_SENT -> TransactionType.CREDIT_PAYMENT
         AccountActionType.ACCOUNT_BANNED -> TransactionType.INFO
         AccountActionType.ACCOUNT_UNBANNED -> TransactionType.INFO
+        AccountActionType.CREDIT_DEPT_PERCENT -> TransactionType.CREDIT_PAYMENT
     },
     amount = parseMoney(amount),
     date = createTime,
@@ -71,6 +81,7 @@ fun OperationModel.toCreditDomain(fallbackAccountId: String = ""): Transaction =
         AccountActionType.TRANSFER_SENT -> "Платеж по кредиту"
         AccountActionType.ACCOUNT_BANNED -> "Кредит заблокирован"
         AccountActionType.ACCOUNT_UNBANNED -> "Кредит разблокирован"
+        AccountActionType.CREDIT_DEPT_PERCENT -> "Начисление процентов"
     },
     status = when (status) {
         OperationStatus.CREATED -> TransactionStatus.CREATED
@@ -79,5 +90,6 @@ fun OperationModel.toCreditDomain(fallbackAccountId: String = ""): Transaction =
         OperationStatus.REJECTED -> TransactionStatus.REJECTED
     },
     fromAccount = if (actionType == AccountActionType.TRANSFER_RECEIVED) accountNumberFrom else null,
-    toAccount = if (actionType == AccountActionType.TRANSFER_SENT || actionType == AccountActionType.TRANSFER) recipientAccountNumber else null
+    toAccount = if (actionType == AccountActionType.TRANSFER_SENT || actionType == AccountActionType.TRANSFER) recipientAccountNumber else null,
+    currencySymbol = extractSymbol(amount)
 )

@@ -6,7 +6,10 @@ sealed interface HomeScreenState {
 
     data class Default(
         val accounts: List<Account>,
-        val isLoading: Boolean = false
+        val hiddenAccounts: List<Account> = emptyList(),
+        val showingHidden: Boolean = false,
+        val isLoading: Boolean = false,
+        val errorMessage: String? = null
     ) : HomeScreenState
 
     data object Loading : HomeScreenState

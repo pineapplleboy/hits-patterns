@@ -1,5 +1,6 @@
 package com.example.g_bankforclient.data.repository
 
+import com.example.g_bankforclient.data.mapper.toCreditDomain
 import com.example.g_bankforclient.data.mapper.toDomain
 import com.example.g_bankforclient.data.network.AccountService
 import com.example.g_bankforclient.data.network.model.MoneyAmountRequestModel
@@ -26,6 +27,24 @@ class AccountRepositoryImpl @Inject constructor(
     override suspend fun getAccounts(): List<Account> {
         return try {
             accountService.getUserBankAccounts(currentUserId, hidden = false)
+                .map { it.toAccountDomain() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    override suspend fun getHiddenAccounts(): List<Account> {
+        return try {
+            accountService.getUserBankAccounts(currentUserId, hidden = true)
+                .map { it.toAccountDomain() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    override suspend fun getRubAccounts(): List<Account> {
+        return try {
+            accountService.getRubBankAccounts(currentUserId)
                 .map { it.toAccountDomain() }
         } catch (e: Exception) {
             emptyList()
@@ -60,7 +79,7 @@ class AccountRepositoryImpl @Inject constructor(
             )
 
             if (response.status.name != "SUCCESS") {
-                throw Exception("Операция пополнения в работе")
+                throw com.example.g_bankforclient.domain.models.OperationPendingException("Операция пополнения принята и выполняется")
             }
         } catch (e: Exception) {
             throw e
@@ -76,10 +95,26 @@ class AccountRepositoryImpl @Inject constructor(
             )
 
             if (response.status.name != "SUCCESS") {
-                throw Exception("Операция снятия средств в работе")
+                throw com.example.g_bankforclient.domain.models.OperationPendingException("Операция снятия принята и выполняется")
             }
         } catch (e: Exception) {
             throw e
+        }
+    }
+
+    override suspend fun transferToBankAccount(
+        fromAccount: String,
+        toAccount: String,
+        amount: Double
+    ) {
+        val response = accountService.transferToBankAccount(
+            userId = currentUserId,
+            bankAccountNumber = fromAccount,
+            bankAccountTo = toAccount,
+            request = MoneyAmountRequestModel(amount = amount)
+        )
+        if (response.status.name != "SUCCESS") {
+            throw com.example.g_bankforclient.domain.models.OperationPendingException("Перевод принят и выполняется")
         }
     }
 
@@ -105,5 +140,9 @@ class AccountRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    override suspend fun getMissedPayments(): List<Transaction> {
+        return accountService.getMissedCreditPayments(currentUserId).map { it.toCreditDomain() }
     }
 }

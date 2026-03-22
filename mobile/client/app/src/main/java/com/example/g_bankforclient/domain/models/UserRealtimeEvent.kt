@@ -21,5 +21,11 @@ sealed interface UserRealtimeEvent {
         val balance: Double,
         val accountNumber: String? = null,
     ) : UserRealtimeEvent
+
+    /** Сервер прислал обновление долга по кредиту */
+    data class CreditAccountDeptUpdate(
+        val balance: Double,
+        val accountNumber: String? = null,
+    ) : UserRealtimeEvent
 }
 
