@@ -11,41 +11,59 @@ data class MoneyAmountRequestModel(
     val amount: Double
 )
 
+/** Модель валюты (в ответах core API). */
+data class CurrencyModel(
+    val id: Int,
+    val name: String,
+    val charCode: String,
+    val symbol: String,
+    val rate: Double
+)
+
 data class BankAccountShortModel(
     val id: UUID,
     val accountNumber: String,
-    val balance: Double,
-    val banned: Boolean = false
+    /** Баланс может приходить строкой с бэкенда (v2). */
+    val balance: String,
+    val banned: Boolean = false,
+    val hidden: Boolean = false
 )
 
 data class BankAccountFullModel(
     val id: UUID,
     val accountNumber: String,
-    val balance: Double,
+    // Backend sometimes returns money as a string with currency suffix (e.g. "86.15₽", "86.15Р").
+    val balance: String,
     val operations: List<OperationModel>,
     val createTime: Date,
-    val banned: Boolean = false
+    val banned: Boolean = false,
+    val hidden: Boolean = false,
+    val currency: CurrencyModel? = null
 )
 
 data class CreditAccountShortModel(
     val id: UUID,
     val accountNumber: String,
-    val dept: Double,
+    /** Долг приходит строкой с суффиксом валюты, например "50515.61₽" */
+    val dept: String,
     val creditRateName: String,
     val creditRatePercent: Int,
     val writeOffPeriod: String,
-    val nextWriteOffDate: Date
+    val nextWriteOffDate: Date,
+    val banned: Boolean = false
 )
 
 data class CreditAccountFullModel(
     val id: UUID,
     val accountNumber: String,
-    val dept: Double,
+    /** Долг приходит строкой с суффиксом валюты, например "50515.61₽" */
+    val dept: String,
     val creditRateName: String,
     val creditRatePercent: Int,
     val writeOffPeriod: String,
     val nextWriteOffDate: Date,
-    val operations: List<OperationModel>
+    val operations: List<OperationModel>,
+    val banned: Boolean = false
 )
 
 data class OperationModel(
@@ -53,7 +71,8 @@ data class OperationModel(
     val accountNumberFrom: String?,
     val userIdFrom: UUID?,
     val recipientAccountNumber: String?,
-    val amount: Double,
+    // Backend sometimes returns money as a string with currency suffix.
+    val amount: String,
     val transferAccountType: TransferAccountType,
     val actionType: AccountActionType,
     val status: OperationStatus,
@@ -65,7 +84,8 @@ enum class TransferAccountType {
 }
 
 enum class AccountActionType {
-    OPEN_ACCOUNT, CLOSE_ACCOUNT, TRANSFER_RECEIVED, TRANSFER_SENT, ACCOUNT_BANNED, ACCOUNT_UNBANNED
+    OPEN_ACCOUNT, CLOSE_ACCOUNT, TRANSFER, TRANSFER_RECEIVED, TRANSFER_SENT,
+    ACCOUNT_BANNED, ACCOUNT_UNBANNED, CREDIT_DEPT_PERCENT
 }
 
 enum class OperationStatus {

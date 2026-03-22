@@ -18,6 +18,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // For AppAuth redirect handling. Must match backend redirect URI scheme.
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.client.android"
     }
 
     buildTypes {
@@ -73,4 +76,15 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+
+    // OAuth2/OIDC SSO (IdentityServer4) via AppAuth
+    implementation("net.openid:appauth:0.11.1")
+
+    // WebSockets + STOMP for realtime updates
+    implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
+
+    // STOMPProtocolAndroid (NaikSoftware) uses RxJava2 + Java-WebSocket transitively,
+    // but some environments fail to resolve transitive artifacts reliably.
+    implementation("io.reactivex.rxjava2:rxjava:2.2.5")
+    implementation("org.java-websocket:Java-WebSocket:1.3.6")
 }

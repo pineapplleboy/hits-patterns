@@ -13,12 +13,17 @@ import com.example.g_bankforclient.presentation.ui.screens.CreateAccountScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreditDetailsScreen
 import com.example.g_bankforclient.presentation.ui.screens.CreditsScreen
 import com.example.g_bankforclient.presentation.ui.screens.HomeScreen
+import com.example.g_bankforclient.presentation.ui.screens.MissedPaymentsScreen
+import com.example.g_bankforclient.presentation.ui.screens.ProfileScreen
 import com.example.g_bankforclient.presentation.ui.screens.TransactionHistoryScreen
 
 @Composable
 fun BankNavigation(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDarkTheme: Boolean = false,
+    onThemeChange: (Boolean) -> Unit = {},
+    onEnterMainApp: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -36,8 +41,8 @@ fun BankNavigation(
         }
         composable(Screen.Home.route) {
             HomeScreen(
-                onAccountClick = { accountId ->
-                    navController.navigate(Screen.AccountDetails.createRoute(accountId))
+                onAccountClick = { accountId, isHidden ->
+                    navController.navigate(Screen.AccountDetails.createRoute(accountId, isHidden))
                 },
                 onCreateAccount = {
                     navController.navigate(Screen.CreateAccount.route)
@@ -46,7 +51,8 @@ fun BankNavigation(
                     navController.navigate(Screen.Authorization.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                onEnterMainApp = onEnterMainApp
             )
         }
 
@@ -55,17 +61,35 @@ fun BankNavigation(
                 onCreditClick = { creditId ->
                     navController.navigate(Screen.CreditDetails.createRoute(creditId))
                 },
-                onCreateCredit = { }
+                onCreateCredit = { },
+                onMissedPayments = {
+                    navController.navigate(Screen.MissedPayments.route)
+                }
             )
+        }
+
+        composable(Screen.MissedPayments.route) {
+            MissedPaymentsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Profile.route) {
+            ProfileScreen(isDarkTheme = isDarkTheme, onThemeChange = onThemeChange)
         }
 
         composable(
             route = Screen.AccountDetails.route,
-            arguments = listOf(navArgument("accountId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("accountId") { type = NavType.StringType },
+                navArgument("isHidden") { type = NavType.BoolType; defaultValue = false }
+            )
         ) { backStackEntry ->
             val accountId = backStackEntry.arguments?.getString("accountId") ?: return@composable
+            val isHidden = backStackEntry.arguments?.getBoolean("isHidden") ?: false
             AccountDetailsScreen(
                 accountId = accountId,
+                isHidden = isHidden,
                 onBack = { navController.popBackStack() },
                 onViewHistory = {
                     navController.navigate(Screen.TransactionHistory.createRoute(accountId))

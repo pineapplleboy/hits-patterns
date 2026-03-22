@@ -4,14 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.ArrowBack
@@ -19,16 +22,23 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +46,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.g_bankforclient.domain.models.Currency
 import com.example.g_bankforclient.presentation.state.CreateAccountScreenState
+import com.example.g_bankforclient.presentation.ui.components.ErrorDialog
 import com.example.g_bankforclient.presentation.viewmodel.CreateAccountViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
@@ -50,9 +62,23 @@ fun CreateAccountScreen(
     val viewModel: CreateAccountViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
 
+    // Диалог для Error state — валюты не загрузились или создание провалилось
+    val errorState = screenState as? CreateAccountScreenState.Error
+    if (errorState != null) {
+        ErrorDialog(
+            message = errorState.message,
+            onDismiss = { viewModel.loadCurrencies() },
+            onRetry = { viewModel.loadCurrencies() }
+        )
+    }
+
     when (val state = screenState) {
-        CreateAccountScreenState.Default -> DefaultCreateAccountScreen(
+        is CreateAccountScreenState.Default -> DefaultCreateAccountScreen(
+            currencies = state.currencies,
+            selectedCurrencyId = state.selectedCurrencyId,
+            currenciesLoading = state.currenciesLoading,
             onBack = onBack,
+            onSelectCurrency = { viewModel.selectCurrency(it) },
             onCreateAccount = { viewModel.createAccount() }
         )
 
@@ -65,16 +91,31 @@ fun CreateAccountScreen(
             SuccessCreateAccountScreen(state.message)
         }
 
-        is CreateAccountScreenState.Error -> ErrorCreateAccountScreen(state.message)
+        // Error отображается через диалог выше, показываем Default как backdrop
+        is CreateAccountScreenState.Error -> DefaultCreateAccountScreen(
+            currencies = emptyList(),
+            selectedCurrencyId = null,
+            currenciesLoading = false,
+            onBack = onBack,
+            onSelectCurrency = {},
+            onCreateAccount = {}
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DefaultCreateAccountScreen(
+    currencies: List<Currency>,
+    selectedCurrencyId: Int?,
+    currenciesLoading: Boolean,
     onBack: () -> Unit,
+    onSelectCurrency: (Int) -> Unit,
     onCreateAccount: () -> Unit
 ) {
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    val selectedCurrency = currencies.find { it.id == selectedCurrencyId }
+
     Scaffold(
         topBar = {
             Surface(
@@ -106,7 +147,8 @@ private fun DefaultCreateAccountScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -134,27 +176,86 @@ private fun DefaultCreateAccountScreen(
                 style = MaterialTheme.typography.titleLarge
             )
 
+            Text(
+                text = "Выберите валюту счёта",
+                style = MaterialTheme.typography.titleSmall,
+                color = BankColors.SecondaryText,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (currenciesLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                }
+            } else {
+                ExposedDropdownMenuBox(
+                    expanded = dropdownExpanded,
+                    onExpandedChange = { dropdownExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedCurrency?.let { "${it.name} (${it.symbol})" }
+                            ?: "Выберите валюту",
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false }
+                    ) {
+                        currencies.forEach { currency ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            currency.symbol,
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                        Text("${currency.name} (${currency.charCode})")
+                                    }
+                                },
+                                onClick = {
+                                    onSelectCurrency(currency.id)
+                                    dropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 color = BankColors.LightGray.copy(alpha = 0.5f)
             ) {
                 Text(
-                    text = "Счёт будет создан с нулевым балансом. Вы сможете пополнить его после создания.",
+                    text = "Счёт будет создан с нулевым балансом в выбранной валюте. Пополнение доступно после создания.",
                     style = MaterialTheme.typography.bodySmall,
                     color = BankColors.SecondaryText,
                     modifier = Modifier.padding(16.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = onCreateAccount,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                enabled = selectedCurrencyId != null && !currenciesLoading
             ) {
                 Text("Открыть счет")
             }
@@ -240,7 +341,14 @@ private fun ErrorCreateAccountScreen(message: String) {
 fun CreateAccountScreenPreview() {
     GbankForClientTheme {
         DefaultCreateAccountScreen(
+            currencies = listOf(
+                Currency(1, "Российский рубль", "RUB", "₽", 1.0),
+                Currency(2, "US Dollar", "USD", "$", 0.011)
+            ),
+            selectedCurrencyId = 1,
+            currenciesLoading = false,
             onBack = {},
+            onSelectCurrency = {},
             onCreateAccount = {}
         )
     }

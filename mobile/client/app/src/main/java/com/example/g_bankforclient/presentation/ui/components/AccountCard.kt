@@ -66,7 +66,8 @@ fun AccountCard(account: Account, onClick: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = account.balance.formatMoney(),
+                    text = account.balanceDisplay
+                        ?: account.balance.formatMoney(account.currencySymbol ?: "₽"),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )

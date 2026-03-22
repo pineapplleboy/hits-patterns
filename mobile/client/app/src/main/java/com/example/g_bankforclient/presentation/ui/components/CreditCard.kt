@@ -75,10 +75,18 @@ fun CreditCard(credit: Credit, onClick: () -> Unit) {
                 }
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Text(
+                    text = credit.id,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = BankColors.SecondaryText
+                )
                 Text(
                     text = "${credit.interestRate}% годовых",
                     style = MaterialTheme.typography.labelSmall,
