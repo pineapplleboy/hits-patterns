@@ -24,7 +24,9 @@ import ru.patterns.shared.model.kafka.TakeCreditMessage;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +55,24 @@ public class CreditAccountService {
 
         transferService.replenishMoney(takeCreditMessage.getUserId(), takeCreditMessage.getBankAccountNumber(),
                 new MoneyAmountRequestModel(takeCreditMessage.getCreditAmount()), token);
+    }
+
+    public List<CreditAccountFullModel> getUsersAllCreditHistory(UUID userId) {
+        var creditAccounts = creditAccountRepository.getCreditAccountByUserId(userId)
+                .stream()
+                .sorted(Comparator.comparing(CreditAccount::isClosed))
+                .toList();
+
+        Set<String> accountNumbers = creditAccounts.stream()
+                .map(CreditAccount::getAccountNumber)
+                .collect(Collectors.toSet());
+
+        var operationsByAccount = operationService.getAccountOperations(accountNumbers, TransferAccountType.CREDIT_ACCOUNT);
+
+        return creditAccounts.stream()
+                .map(account -> account.toFullModel()
+                        .setOperations(operationsByAccount.getOrDefault(account.getAccountNumber(), List.of())))
+                .toList();
     }
 
     public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {

@@ -22,6 +22,11 @@ server:
 springdoc:
   swagger-ui:
     path: /swagger
+    oauth2-redirect-url: ${SWAGGER_OAUTH2_REDIRECT_URL:http://localhost:8081/swagger-ui/oauth2-redirect.html}
+    oauth:
+      client-id: ${SWAGGER_CLIENT_ID:api_swagger_credit}
+      use-pkce-with-authorization-code-grant: true
+      scopes: ${SWAGGER_OAUTH_SCOPES:SampleAPI}
   api-docs:
     path: /v3/api-docs
   cache:
@@ -30,3 +35,9 @@ springdoc:
 app:
   kafka:
     take-credit-topic: 00_take_credit
+  security:
+    oauth2:
+      authorization-url: ${SWAGGER_AUTHORIZATION_URL:https://localhost:5001/connect/authorize}
+      token-url: ${SWAGGER_TOKEN_URL:https://localhost:5001/connect/token}
+      scope: ${SWAGGER_OAUTH_SCOPE:SampleAPI}
+      scope-description: ${SWAGGER_OAUTH_SCOPE_DESCRIPTION:Sample API - full access}

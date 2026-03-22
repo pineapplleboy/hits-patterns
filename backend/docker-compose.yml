@@ -86,22 +86,28 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  patterns-auth:
-    image: ghcr.io/pineapplleboy/hits-patterns-patterns-auth:latest
-    container_name: patterns-auth
+  identity-server:
+    image: ghcr.io/pineapplleboy/hits-patterns-identity-server:latest
+    container_name: identity-server
     depends_on:
       postgres:
         condition: service_healthy
       kafka-init:
         condition: service_completed_successfully
     environment:
-      ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DbConnection: Host=postgres;Port=5432;Database=patternsAuth;Username=postgres;Password=postgres
+      ASPNETCORE_URLS: http://+:5001
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=testIdentity;Username=postgres;Password=postgres
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SWAGGER_USERS_URL: http://91.227.18.176/users
+      SWAGGER_USER_SETTINGS_URL: http://91.227.18.176/settings
+      SWAGGER_ACCOUNT_URL: http://91.227.18.176/core
+      SWAGGER_TRANSFERS_URL: http://91.227.18.176/transfers
+      SWAGGER_CURRENCY_URL: http://91.227.18.176/currency
+      SWAGGER_CREDIT_URL: http://91.227.18.176/credit
     ports:
-      - "127.0.0.1:5047:8080"
+      - "127.0.0.1:5001:5001"
     restart: unless-stopped
-    mem_limit: 250m
+    mem_limit: 350m
     logging:
       driver: "json-file"
       options:
@@ -120,6 +126,14 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DbConnection: Host=postgres;Port=5432;Database=patternsUsers;Username=postgres;Password=postgres
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      Auth__Authority: http://identity-server:5001
+      Auth__RequireHttpsMetadata: "false"
+      Swagger__OAuth__ClientId: api_swagger_users
+      Swagger__OAuth__AuthorizationUrl: http://91.227.18.176/identity/connect/authorize
+      Swagger__OAuth__TokenUrl: http://91.227.18.176/identity/connect/token
+      Swagger__OAuth__RedirectUrl: http://91.227.18.176/users/swagger/oauth2-redirect.html
+      Swagger__OAuth__Scope: SampleAPI
+      Swagger__OAuth__ScopeDescription: Sample API - full access
     ports:
       - "127.0.0.1:5229:8080"
     restart: unless-stopped
@@ -139,6 +153,14 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DbConnection: Host=postgres;Port=5432;Database=patternsUserSetting;Username=postgres;Password=postgres
+      Auth__Authority: http://identity-server:5001
+      Auth__RequireHttpsMetadata: "false"
+      Swagger__OAuth__ClientId: api_swagger_settings
+      Swagger__OAuth__AuthorizationUrl: http://91.227.18.176/identity/connect/authorize
+      Swagger__OAuth__TokenUrl: http://91.227.18.176/identity/connect/token
+      Swagger__OAuth__RedirectUrl: http://91.227.18.176/settings/swagger/oauth2-redirect.html
+      Swagger__OAuth__Scope: SampleAPI
+      Swagger__OAuth__ScopeDescription: Sample API - full access
     ports:
       - "127.0.0.1:5176:8080"
     restart: unless-stopped
@@ -163,6 +185,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       KAFKA_URL: kafka:9092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
+      SWAGGER_CLIENT_ID: api_swagger_account
+      SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
+      SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/core/swagger-ui/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx320m"
     ports:
       - "127.0.0.1:8082:8082"
@@ -188,6 +215,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       APP_KAFKA_TAKE_CREDIT_TOPIC: 00_take_credit
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
+      SWAGGER_CLIENT_ID: api_swagger_credit
+      SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
+      SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/credit/swagger-ui/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx300m"
     ports:
       - "127.0.0.1:8081:8081"
@@ -208,6 +240,11 @@ services:
     environment:
       KAFKA_URL: kafka:9092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
+      SWAGGER_CLIENT_ID: api_swagger_transfers
+      SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
+      SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/transfers/swagger-ui/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx250m"
     ports:
       - "127.0.0.1:8083:8083"
@@ -233,6 +270,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       KAFKA_URL: kafka:9092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
+      SWAGGER_CLIENT_ID: api_swagger_currency
+      SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
+      SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/currency/swagger-ui/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx300m"
     ports:
       - "127.0.0.1:8084:8084"

@@ -17,7 +17,7 @@ namespace patternsUsers.Services.Implementations
         {
             _context = context;
         }
-        public async Task BanUser(Guid userId, Guid userIdToBan)
+        public async Task BanUser(Guid userId, Guid userIdToBan, string token)
         {
             if(userId == userIdToBan) { throw new BadRequestException(ErrorMessages.YOU_CANT_BAN_THIS_USER); }
             
@@ -25,18 +25,18 @@ namespace patternsUsers.Services.Implementations
             if(userToBun.Ban == true) {throw new BadRequestException(ErrorMessages.USER_ALREADY_HAS_BAN);}
             userToBun.Ban = true;
 
-            await SendBunMessage(new UserBanDTO { Id = userToBun.Id, Ban = true });
+            await SendBunMessage(new UserBanDTO { Id = userToBun.Id, Ban = true }, token);
 
             await _context.SaveChangesAsync();
         }
 
-        public async Task UnbanUser(Guid userId)
+        public async Task UnbanUser(Guid userId, string token)
         {
             var user = await GetUserById(userId);
             if (user.Ban == false) { throw new BadRequestException(ErrorMessages.USER_HAS_NO_BAN); }
             user.Ban = false;
 
-            await SendBunMessage(new UserBanDTO { Id = userId, Ban = false });
+            await SendBunMessage(new UserBanDTO { Id = userId, Ban = false }, token);
             await _context.SaveChangesAsync();
         }
 
@@ -73,35 +73,47 @@ namespace patternsUsers.Services.Implementations
         }
 
 
-        private async Task SendBunMessage(UserBanDTO userBan)
+        private async Task SendBunMessage(UserBanDTO userBan, string token)
         {
-            await SendBunMessageToAuth(userBan);
-            await SendBunMessageToBank(userBan);
+            await SendBunMessageToAuth(userBan, token);
+            await SendBunMessageToBank(userBan, token);
         }
 
-        private async Task SendBunMessageToAuth(UserBanDTO userBan)
+        private async Task SendBunMessageToAuth(UserBanDTO userBan, string token)
         {
 
             var config = new ProducerConfig { BootstrapServers = KafkaOptions.bootstrapServer};
             using (var p = new ProducerBuilder<Null, string>(config).Build())
             {
+                var headers = new Headers
+                {
+                    { "Authorization", System.Text.Encoding.UTF8.GetBytes($"Bearer {token}") }
+                };
+
                 var dr = await p.ProduceAsync(KafkaOptions.ban_user_auth, new Message<Null, string>
                 {
-                    Value = JsonSerializer.Serialize(userBan)
+                    Value = JsonSerializer.Serialize(userBan),
+                    Headers = headers
                 });
             }
         }
 
 
-        private async Task SendBunMessageToBank(UserBanDTO userBan)
+        private async Task SendBunMessageToBank(UserBanDTO userBan, string token)
         {
 
             var config = new ProducerConfig { BootstrapServers = KafkaOptions.bootstrapServer };
             using (var p = new ProducerBuilder<Null, string>(config).Build())
             {
+                var headers = new Headers
+                {
+                    { "Authorization", System.Text.Encoding.UTF8.GetBytes($"Bearer {token}") }
+                };
+
                 var dr = await p.ProduceAsync(KafkaOptions.ban_user_bank_accounts, new Message<Null, string>
                 {
-                    Value = JsonSerializer.Serialize(userBan)
+                    Value = JsonSerializer.Serialize(userBan),
+                    Headers = headers
                 });
             }
         }

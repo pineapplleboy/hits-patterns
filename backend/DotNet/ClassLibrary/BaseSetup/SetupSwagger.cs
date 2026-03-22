@@ -9,35 +9,42 @@ namespace ClassLibrary.BaseSetup
     {
         public static void AddSwagger(WebApplicationBuilder builder)
         {
+            var authorizationUrl = builder.Configuration["Swagger:OAuth:AuthorizationUrl"]
+                ?? "https://localhost:5001/connect/authorize";
+            var tokenUrl = builder.Configuration["Swagger:OAuth:TokenUrl"]
+                ?? "https://localhost:5001/connect/token";
+            var scope = builder.Configuration["Swagger:OAuth:Scope"] ?? "SampleAPI";
+            var scopeDescription = builder.Configuration["Swagger:OAuth:ScopeDescription"] ?? "Sample API - full access";
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
-                    In = ParameterLocation.Header,
-                    Description = "Please enter token",
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    BearerFormat = "JWT",
-                    Scheme = "Bearer"
+                    Type = SecuritySchemeType.OAuth2,
+                    Flows = new OpenApiOAuthFlows
+                    {
+                        AuthorizationCode = new OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri(authorizationUrl),
+                            TokenUrl = new Uri(tokenUrl),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                {scope, scopeDescription}
+                            }
+                        },
+                    }
                 });
 
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                // Apply Scheme globally
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
                         new OpenApiSecurityScheme
                         {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
-
-                            Scheme = "oauth2",
-                            Name = "Bearer",
-                            In = ParameterLocation.Header
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
                         },
-                        new List<string>()
+                        new[] { scope }
                     }
                 });
             });
@@ -45,6 +52,17 @@ namespace ClassLibrary.BaseSetup
 
         public static void UseSwagger(WebApplication app)
         {
+            app.Use((context, next) =>
+            {
+                if (context.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var prefix)
+                    && !string.IsNullOrWhiteSpace(prefix))
+                {
+                    context.Request.PathBase = prefix.ToString();
+                }
+
+                return next();
+            });
+
             app.UseSwagger(options =>
             {
                 options.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
@@ -71,8 +89,22 @@ namespace ClassLibrary.BaseSetup
 
             app.UseSwaggerUI(options =>
             {
+                var clientId = app.Configuration["Swagger:OAuth:ClientId"];
+                var redirectUrl = app.Configuration["Swagger:OAuth:RedirectUrl"];
                 options.RoutePrefix = "swagger";
                 options.SwaggerEndpoint("./v1/swagger.json", "API v1");
+
+                if (!string.IsNullOrWhiteSpace(clientId))
+                {
+                    options.OAuthClientId(clientId);
+                }
+
+                if (!string.IsNullOrWhiteSpace(redirectUrl))
+                {
+                    options.OAuth2RedirectUrl(redirectUrl);
+                }
+
+                options.OAuthUsePkce();
             });
         }
     }

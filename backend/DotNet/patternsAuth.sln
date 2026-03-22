@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KafkaGenerator", "KafkaGene
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "patternsUserSetting", "patternsUserSetting\patternsUserSetting.csproj", "{C29BC2C8-D422-4560-AD74-EAC749D1194E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityTest", "IdentityTest\IdentityTest.csproj", "{5DE544B5-CE8E-5E68-3D52-C595DC4A67FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{C29BC2C8-D422-4560-AD74-EAC749D1194E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C29BC2C8-D422-4560-AD74-EAC749D1194E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C29BC2C8-D422-4560-AD74-EAC749D1194E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DE544B5-CE8E-5E68-3D52-C595DC4A67FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DE544B5-CE8E-5E68-3D52-C595DC4A67FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DE544B5-CE8E-5E68-3D52-C595DC4A67FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DE544B5-CE8E-5E68-3D52-C595DC4A67FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

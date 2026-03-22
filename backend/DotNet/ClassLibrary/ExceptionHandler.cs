@@ -26,13 +26,13 @@ namespace ClassLibrary
                 problemDetails = new ProblemDetails
                 {
                     Status = 401,
-                    Detail = "Refresh or access token is not valid"
+                    Detail = "Токен невалиден!"
                 };
             else
                 problemDetails = new ProblemDetails
                 {
                     Status = StatusCodes.Status500InternalServerError,
-                    Detail = "Internal server error"
+                    Detail = "Ошибка сервера"
                 };
 
             httpContext.Response.StatusCode = problemDetails.Status.Value;

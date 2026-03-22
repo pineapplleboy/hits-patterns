@@ -22,15 +22,31 @@ server:
 springdoc:
   swagger-ui:
     path: /swagger
+    oauth2-redirect-url: ${SWAGGER_OAUTH2_REDIRECT_URL:http://localhost:8082/swagger-ui/oauth2-redirect.html}
+    oauth:
+      client-id: ${SWAGGER_CLIENT_ID:api_swagger_account}
+      use-pkce-with-authorization-code-grant: true
+      scopes: ${SWAGGER_OAUTH_SCOPES:SampleAPI}
   api-docs:
     path: /v3/api-docs
   cache:
     disabled: true
 
+app:
+  security:
+    oauth2:
+      authorization-url: ${SWAGGER_AUTHORIZATION_URL:https://localhost:5001/connect/authorize}
+      token-url: ${SWAGGER_TOKEN_URL:https://localhost:5001/connect/token}
+      scope: ${SWAGGER_OAUTH_SCOPE:SampleAPI}
+      scope-description: ${SWAGGER_OAUTH_SCOPE_DESCRIPTION:Sample API - full access}
+
 master-bank:
   account-number: 0000-0000-0000-0000
   money: 1000000000
   user-id: 00000000-0000-0000-0000-000000000000
+
+transfers:
+  delay-enabled: true
 
 kafka:
   url: ${KAFKA_URL:localhost:29092}

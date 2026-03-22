@@ -1,0 +1,47 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="017-add-operation-credit-fields" author="aleksey.z">
+
+        <addColumn tableName="operation">
+            <column name="operation_resolve_time" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="expected_payment_date" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="dept_left" type="DECIMAL(19,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="is_purchased" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <update tableName="operation">
+            <column name="operation_resolve_time" valueComputed="CURRENT_TIMESTAMP"/>
+            <where>operation_resolve_time IS NULL</where>
+        </update>
+
+        <update tableName="operation">
+            <column name="expected_payment_date" valueComputed="CURRENT_TIMESTAMP"/>
+            <where>expected_payment_date IS NULL</where>
+        </update>
+
+        <update tableName="operation">
+            <column name="dept_left" valueNumeric="0"/>
+            <where>dept_left IS NULL</where>
+        </update>
+
+        <update tableName="operation">
+            <column name="is_purchased" valueBoolean="true"/>
+            <where>is_purchased IS NULL</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

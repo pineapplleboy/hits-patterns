@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.exception.UnauthorizedException;
@@ -18,6 +19,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> catchNotFoundException(NotFoundException exception) {
         return new ResponseEntity<>(new ErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage()),
                 HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchBadRequestException(BadRequestException exception) {
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), exception.getMessage()),
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler

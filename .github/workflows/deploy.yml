@@ -1,4 +1,4 @@
-name: Build & Deploy to VPS
+﻿name: Build & Deploy to VPS
 
 on:
   push:
@@ -13,8 +13,113 @@ permissions:
   packages: write
 
 jobs:
+  detect_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      build_matrix: ${{ steps.matrix.outputs.build_matrix }}
+      has_builds: ${{ steps.matrix.outputs.has_builds }}
+      service_names: ${{ steps.matrix.outputs.service_names }}
+      deploy_all: ${{ steps.matrix.outputs.deploy_all }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed services
+        id: matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BEFORE_SHA="${{ github.event.before }}"
+          AFTER_SHA="${{ github.sha }}"
+
+          if [[ "$BEFORE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            CHANGED_FILES="$(git ls-files)"
+          else
+            CHANGED_FILES="$(git diff --name-only "$BEFORE_SHA" "$AFTER_SHA")"
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          has_change() {
+            local pattern="$1"
+            echo "$CHANGED_FILES" | grep -Eq "$pattern"
+          }
+
+          matrix='{"include":[]}'
+          has_builds=false
+          deploy_all=false
+          declare -a services=()
+
+          add_service() {
+            local service_name="$1"
+            local image_name="$2"
+            local context="$3"
+            local file="$4"
+            local cache_scope="$5"
+            local build_args="${6:-}"
+
+            if [[ -n "$build_args" ]]; then
+              item=$(printf '{"image_name":"%s","context":"%s","file":"%s","cache_scope":"%s","build_args":"%s"}' \
+                "$image_name" "$context" "$file" "$cache_scope" "$build_args")
+            else
+              item=$(printf '{"image_name":"%s","context":"%s","file":"%s","cache_scope":"%s"}' \
+                "$image_name" "$context" "$file" "$cache_scope")
+            fi
+
+            matrix=$(jq -c --argjson item "$item" '.include += [$item]' <<< "$matrix")
+            services+=("$service_name")
+            has_builds=true
+          }
+
+          if has_change '^backend/(docker-compose\.yml|docker/)'; then
+            deploy_all=true
+          fi
+
+          if has_change '^backend/DotNet/(IdentityTest|ClassLibrary)/'; then
+            add_service 'identity-server' 'hits-patterns-identity-server' './backend/DotNet' './backend/DotNet/IdentityTest/Dockerfile' 'identity-server'
+          fi
+
+          if has_change '^backend/DotNet/(patternsUsers|ClassLibrary)/'; then
+            add_service 'patterns-users' 'hits-patterns-patterns-users' './backend/DotNet' './backend/DotNet/patternsUsers/Dockerfile' 'patterns-users'
+          fi
+
+          if has_change '^backend/DotNet/(patternsUserSetting|ClassLibrary)/'; then
+            add_service 'patterns-user-setting' 'hits-patterns-patterns-user-setting' './backend/DotNet' './backend/DotNet/patternsUserSetting/Dockerfile' 'patterns-user-setting'
+          fi
+
+          if has_change '^backend/money-services/(account|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'account-service' 'hits-patterns-account-service' './backend/money-services' './backend/money-services/Dockerfile' 'account-service' 'SERVICE_NAME=account'
+          fi
+
+          if has_change '^backend/money-services/(credit|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'credit-service' 'hits-patterns-credit-service' './backend/money-services' './backend/money-services/Dockerfile' 'credit-service' 'SERVICE_NAME=credit'
+          fi
+
+          if has_change '^backend/money-services/(transfers|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'transfers-service' 'hits-patterns-transfers-service' './backend/money-services' './backend/money-services/Dockerfile' 'transfers-service' 'SERVICE_NAME=transfers'
+          fi
+
+          if has_change '^backend/money-services/(currency|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'currency-service' 'hits-patterns-currency-service' './backend/money-services' './backend/money-services/Dockerfile' 'currency-service' 'SERVICE_NAME=currency'
+          fi
+
+          service_names="${services[*]}"
+
+          echo "build_matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "has_builds=$has_builds" >> "$GITHUB_OUTPUT"
+          echo "service_names=$service_names" >> "$GITHUB_OUTPUT"
+          echo "deploy_all=$deploy_all" >> "$GITHUB_OUTPUT"
+
   build_and_push:
     runs-on: ubuntu-latest
+    needs: detect_changes
+    if: needs.detect_changes.outputs.has_builds == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect_changes.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,123 +133,63 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # patterns-auth (.NET)
-      - name: Build & push patterns-auth
+      - name: Build & push ${{ matrix.image_name }}
         uses: docker/build-push-action@v6
         with:
-          context: ./backend/DotNet
-          file: ./backend/DotNet/patternsAuth/Dockerfile
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
           push: true
+          build-args: ${{ matrix.build_args || '' }}
           tags: |
-            ghcr.io/pineapplleboy/hits-patterns-patterns-auth:latest
-            ghcr.io/pineapplleboy/hits-patterns-patterns-auth:${{ github.sha }}
-
-      # patterns-users (.NET)
-      - name: Build & push patterns-users
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend/DotNet
-          file: ./backend/DotNet/patternsUsers/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/pineapplleboy/hits-patterns-patterns-users:latest
-            ghcr.io/pineapplleboy/hits-patterns-patterns-users:${{ github.sha }}
-
-      # patterns-user-setting (.NET)
-      - name: Build & push patterns-user-setting
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend/DotNet
-          file: ./backend/DotNet/patternsUserSetting/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/pineapplleboy/hits-patterns-patterns-user-setting:latest
-            ghcr.io/pineapplleboy/hits-patterns-patterns-user-setting:${{ github.sha }}
-
-      # account-service (Java)
-      - name: Build & push account-service
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend/money-services
-          file: ./backend/money-services/Dockerfile
-          push: true
-          build-args: |
-            SERVICE_NAME=account
-          tags: |
-            ghcr.io/pineapplleboy/hits-patterns-account-service:latest
-            ghcr.io/pineapplleboy/hits-patterns-account-service:${{ github.sha }}
-
-      # credit-service (Java)
-      - name: Build & push credit-service
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend/money-services
-          file: ./backend/money-services/Dockerfile
-          push: true
-          build-args: |
-            SERVICE_NAME=credit
-          tags: |
-            ghcr.io/pineapplleboy/hits-patterns-credit-service:latest
-            ghcr.io/pineapplleboy/hits-patterns-credit-service:${{ github.sha }}
-
-      # transfers-service (Java)
-      - name: Build & push transfers-service
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend/money-services
-          file: ./backend/money-services/Dockerfile
-          push: true
-          build-args: |
-            SERVICE_NAME=transfers
-          tags: |
-            ghcr.io/pineapplleboy/hits-patterns-transfers-service:latest
-            ghcr.io/pineapplleboy/hits-patterns-transfers-service:${{ github.sha }}
-
-      # currency-service (Java)
-      - name: Build & push currency-service
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend/money-services
-          file: ./backend/money-services/Dockerfile
-          push: true
-          build-args: |
-            SERVICE_NAME=currency
-          tags: |
-            ghcr.io/pineapplleboy/hits-patterns-currency-service:latest
-            ghcr.io/pineapplleboy/hits-patterns-currency-service:${{ github.sha }}
+            ghcr.io/pineapplleboy/${{ matrix.image_name }}:latest
+            ghcr.io/pineapplleboy/${{ matrix.image_name }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.cache_scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache_scope }}
+          provenance: false
+          sbom: false
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build_and_push
+    needs: [detect_changes, build_and_push]
+    if: always() && needs.detect_changes.result == 'success' && (needs.build_and_push.result == 'success' || needs.build_and_push.result == 'skipped')
     steps:
-      - name: Install SSH client
-        run: sudo apt-get update && sudo apt-get install -y openssh-client
-
       - name: Setup SSH key
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "${VPS_PORT:-22}" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
 
-      - name: Deploy (pull only)
+      - name: Deploy updated services
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          SERVICE_NAMES: ${{ needs.detect_changes.outputs.service_names }}
+          DEPLOY_ALL: ${{ needs.detect_changes.outputs.deploy_all }}
         run: |
-          ssh -p "${VPS_PORT:-22}" "$VPS_USER@$VPS_HOST" << 'EOF'
+          ssh "$VPS_USER@$VPS_HOST" <<EOF
             set -e
             flock -n /tmp/deploy.lock bash -lc '
               set -e
               cd /home/deploy/patterns/hits-patterns
               git pull origin main
               cd backend
-              docker compose pull
-              docker compose up -d --remove-orphans
+
+              if [ "$DEPLOY_ALL" = "true" ]; then
+                echo "Deploying full stack"
+                docker compose pull
+                docker compose up -d --remove-orphans
+              elif [ -n "$SERVICE_NAMES" ]; then
+                echo "Deploying services: $SERVICE_NAMES"
+                docker compose pull $SERVICE_NAMES
+                docker compose up -d --remove-orphans $SERVICE_NAMES
+              else
+                echo "No backend service changes detected. Skipping docker compose pull/up."
+              fi
             ' || { echo "Another deploy is already running (lock /tmp/deploy.lock)."; exit 1; }
           EOF
+
+

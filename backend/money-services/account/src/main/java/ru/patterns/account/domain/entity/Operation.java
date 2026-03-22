@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import ru.patterns.account.application.common.enums.AccountActionType;
+import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.enums.OperationStatus;
 
@@ -35,8 +36,17 @@ public class Operation {
     @Column(name = "recipient_id")
     private UUID recipientId;
 
-    @Column(name = "amount")
-    private BigDecimal amount;
+    @Column(name = "amount_from")
+    private BigDecimal amountFrom = BigDecimal.ZERO;
+
+    @Column(name = "currency_from")
+    private Integer currencyFrom = CurrencyConstants.BASE_CURRENCY_ID;
+
+    @Column(name = "amount_to")
+    private BigDecimal amountTo = BigDecimal.ZERO;
+
+    @Column(name = "currency_to")
+    private Integer currencyTo = CurrencyConstants.BASE_CURRENCY_ID;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transfer_to_account_type")
@@ -49,6 +59,18 @@ public class Operation {
     @Enumerated(EnumType.STRING)
     @Column(name = "operation_status")
     private OperationStatus status = OperationStatus.CREATED;
+
+    @Column(name = "operation_resolve_time")
+    private Instant operationResolveTime = Instant.now(); // время выполнения операции
+
+    @Column(name = "expected_payment_date")
+    private Instant expectedPaymentDate = Instant.now(); // для кредитных операций: ожидаемая дата выплаты
+
+    @Column(name = "dept_left")
+    private BigDecimal deptLeft = BigDecimal.ZERO; // для кредитных операций списания процентов: оставшийся долг
+
+    @Column(name = "is_purchased")
+    private boolean purchased = false; // для кредитных операций списания процентов: просрочена ли операция
 
     @Column(name = "operation_create_time")
     private Instant createTime = Instant.now();
