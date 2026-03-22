@@ -1,4 +1,4 @@
-package com.example.g_bankforemployees.feature.user_create.presentation
+﻿package com.example.g_bankforemployees.feature.user_create.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,36 +18,48 @@ class UserCreateScreenViewModel(
     private val navigatorHolder: com.example.g_bankforemployees.common.navigation.NavigatorHolder,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(UserCreateScreenState())
+    private val _state = MutableStateFlow<UserCreateScreenState>(
+        UserCreateScreenState.Default()
+    )
     val state: StateFlow<UserCreateScreenState> = _state.asStateFlow()
 
     fun onNameChange(name: String) {
-        _state.update { it.copy(name = name, error = null) }
+        val current = _state.value
+        if (current !is UserCreateScreenState.Default) return
+        _state.value = current.copy(name = name)
     }
 
     fun onPhoneChange(phone: String) {
-        _state.update { it.copy(phone = phone, error = null) }
+        val current = _state.value
+        if (current !is UserCreateScreenState.Default) return
+        _state.value = current.copy(phone = phone)
     }
 
     fun onPasswordChange(password: String) {
-        _state.update { it.copy(password = password, error = null) }
+        val current = _state.value
+        if (current !is UserCreateScreenState.Default) return
+        _state.value = current.copy(password = password)
     }
 
     fun onRoleIndexChange(roleIndex: Int) {
-        _state.update { it.copy(roleIndex = roleIndex, error = null) }
+        val current = _state.value
+        if (current !is UserCreateScreenState.Default) return
+        _state.value = current.copy(roleIndex = roleIndex)
     }
 
     fun createUser() {
-        val name = _state.value.name.trim()
-        val phone = _state.value.phone.trim()
-        val password = _state.value.password
+        val current = _state.value
+        if (current !is UserCreateScreenState.Default) return
+        val name = current.name.trim()
+        val phone = current.phone.trim()
+        val password = current.password
         if (name.isBlank() || phone.isBlank() || password.isBlank()) {
-            _state.update { it.copy(error = "Заполните все поля") }
+            _state.value = UserCreateScreenState.Error(message = "Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ")
             return
         }
-        val role = if (_state.value.roleIndex == 0) ROLE_CLIENT else ROLE_EMPLOYEE
+        val role = if (current.roleIndex == 0) ROLE_CLIENT else ROLE_EMPLOYEE
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.value = UserCreateScreenState.Loading
             createUserUseCase(
                 RegisterUserInput(
                     name = name,
@@ -57,22 +69,24 @@ class UserCreateScreenViewModel(
                 )
             )
                 .onSuccess {
-                    _state.update { it.copy(isLoading = false) }
                     (navigatorHolder.navigator as? com.example.g_bankforemployees.common.navigation.AppNavigator)
                         ?.navigateBackFromUserCreate()
                 }
                 .onFailure { e ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = e.message ?: "Не удалось создать пользователя",
-                        )
-                    }
+                    _state.value = UserCreateScreenState.Error(
+                        message = e.message?.takeUnless { it.isBlank() } ?: "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ",
+                    )
                 }
         }
+    }
+
+    fun onErrorDismiss() {
+        _state.value = UserCreateScreenState.Default()
     }
 
     fun onBackClick() {
         navigatorHolder.navigator?.navigateBack()
     }
 }
+
+

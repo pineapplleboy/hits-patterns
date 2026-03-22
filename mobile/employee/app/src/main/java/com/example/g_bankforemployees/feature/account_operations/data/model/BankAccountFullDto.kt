@@ -10,4 +10,5 @@ data class BankAccountFullDto(
     val banned: Boolean = false,
     val operations: List<OperationDto> = emptyList(),
     val createTime: String? = null,
+    val currency: CurrencyDto? = null,
 )

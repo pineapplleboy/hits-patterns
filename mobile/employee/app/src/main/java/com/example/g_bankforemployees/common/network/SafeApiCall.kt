@@ -1,6 +1,6 @@
-package com.example.g_bankforemployees.common.network
+﻿package com.example.g_bankforemployees.common.network
 
-import retrofit2.HttpException
+import org.json.JSONObject
 import retrofit2.Response
 
 suspend fun <T, R> safeApiCall(
@@ -17,7 +17,7 @@ suspend fun <T, R> safeApiCall(
                 Result.failure(NullPointerException("Empty response"))
             }
         } else {
-            Result.failure(HttpException(response))
+            Result.failure(IllegalStateException(extractErrorMessage(response)))
         }
     } catch (e: Exception) {
         Result.failure(e)
@@ -32,9 +32,27 @@ suspend fun safeApiCallUnit(
         if (response.isSuccessful) {
             Result.success(Unit)
         } else {
-            Result.failure(HttpException(response))
+            Result.failure(IllegalStateException(extractErrorMessage(response)))
         }
     } catch (e: Exception) {
         Result.failure(e)
     }
+}
+
+private fun extractErrorMessage(response: Response<*>): String {
+    val errorBody = runCatching { response.errorBody()?.string().orEmpty() }
+        .getOrDefault("")
+        .trim()
+
+    if (errorBody.isBlank()) {
+        return response.message().takeUnless { it.isBlank() } ?: "Unknown error"
+    }
+
+    val messageFromJson = runCatching {
+        JSONObject(errorBody).optString("message")
+    }.getOrNull()
+
+    return messageFromJson
+        ?.takeUnless { it.isBlank() }
+        ?: errorBody
 }

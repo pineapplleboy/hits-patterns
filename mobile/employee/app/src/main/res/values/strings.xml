@@ -1,7 +1,5 @@
-<resources>
+﻿<resources>
     <string name="app_name">G-bank for employees</string>
-
-    <!-- Authorization -->
     <string name="login_for_employees">Вход для сотрудников</string>
     <string name="login">Логин</string>
     <string name="password">Пароль</string>
@@ -12,8 +10,6 @@
     <string name="phone">Телефон</string>
     <string name="name">Имя</string>
     <string name="brand_name">OG-BANK</string>
-
-    <!-- Common -->
     <string name="retry">Повторить</string>
     <string name="error">Ошибка</string>
     <string name="loading">Загрузка…</string>
@@ -22,21 +18,17 @@
     <string name="ban">Заблокировать</string>
     <string name="user_default">Пользователь</string>
     <string name="name_empty">—</string>
-
-    <!-- Users list-->
     <string name="tab_users">Пользователи</string>
     <string name="tab_tariffs">Тарифы</string>
     <string name="tab_clients">Клиенты</string>
     <string name="tab_employees">Сотрудники</string>
-
-    <!-- User create -->
+    <string name="settings">Настройки</string>
+    <string name="dark_theme">Тёмная тема</string>
     <string name="new_user">Новый пользователь</string>
     <string name="role_client">Клиент</string>
     <string name="role_employee">Сотрудник</string>
     <string name="create">Создать</string>
     <string name="creating">Создание…</string>
-
-    <!-- Credit rate -->
     <string name="new_rate">Новый тариф</string>
     <string name="new_credit_rate_title">Новый кредитный тариф</string>
     <string name="tariff_name">Название тарифа</string>
@@ -46,8 +38,6 @@
     <string name="hours">Часы</string>
     <string name="minutes">Минуты</string>
     <string name="create_rate">Создать тариф</string>
-
-    <!-- Client details-->
     <string name="tab_accounts">Счета</string>
     <string name="tab_credits">Кредиты</string>
     <string name="balance_format">Баланс: %1$.2f</string>
@@ -57,8 +47,13 @@
     <string name="next_write_off">След. списание: %1$s</string>
     <string name="error_load_accounts">Не удалось загрузить счета</string>
     <string name="error_load_credits">Не удалось загрузить кредиты</string>
-
-    <!-- Account details -->
+    <string name="hidden_account">Скрытый счёт</string>
+    <string name="credit_history_button">Кредитная история</string>
+    <string name="credit_rating_value">Рейтинг: %1$d</string>
+    <string name="total_credits_value">Всего кредитов: %1$d</string>
+    <string name="closed_credits_value">Закрыто кредитов: %1$d</string>
+    <string name="active_credit_amount_value">Активных кредитов: %1$d</string>
+    <string name="expired_operations_amount_value">Просроченных операций: %1$d</string>
     <string name="account_details">Детали счёта</string>
     <string name="account_type_bank">Банковский счёт</string>
     <string name="account_type_credit">Кредитный счёт</string>
@@ -68,20 +63,27 @@
     <string name="to_recipient">Кому: %1$s</string>
     <string name="account_label">счёт %1$s</string>
     <string name="status_label">Статус: %1$s</string>
-
-    <!-- Operation types -->
+    <string name="currency_label">Валюта</string>
+    <string name="created_at_label">Дата открытия</string>
+    <string name="next_write_off_label">Следующее списание</string>
+    <string name="credit_expired_label">Просрочка</string>
+    <string name="credit_expired_yes">Есть</string>
+    <string name="credit_expired_no">Нет</string>
+    <string name="credit_history_title">Кредитная история</string>
+    <string name="expired_operations_title">Просроченные операции</string>
+    <string name="no_expired_operations">Просроченных операций нет</string>
     <string name="op_open_account">Открытие счёта</string>
     <string name="op_close_account">Закрытие счёта</string>
     <string name="op_transfer_received">Перевод получен</string>
     <string name="op_transfer_sent">Перевод отправлен</string>
+    <string name="op_credit_dept_percent">Начисление процентов по кредиту</string>
     <string name="status_created">Создана</string>
     <string name="status_in_process">В процессе</string>
     <string name="status_success">Успешно</string>
     <string name="status_rejected">Отклонена</string>
-
-    <!-- Auth errors -->
     <string name="error_login_title">Ошибка входа</string>
     <string name="error_register_title">Ошибка регистрации</string>
     <string name="account_banned">Счёт заблокирован</string>
     <string name="account_unbanned">Счёт разблокирован</string>
 </resources>
+

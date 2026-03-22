@@ -1,4 +1,4 @@
-package com.example.g_bankforemployees.feature.credit_rate.presentation
+﻿package com.example.g_bankforemployees.feature.credit_rate.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,46 +15,64 @@ class CreditRateCreateScreenViewModel(
     private val navigatorHolder: com.example.g_bankforemployees.common.navigation.NavigatorHolder,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(CreditRateCreateScreenState())
+    private val _state = MutableStateFlow<CreditRateCreateScreenState>(
+        CreditRateCreateScreenState.Default()
+    )
     val state: StateFlow<CreditRateCreateScreenState> = _state.asStateFlow()
 
     fun onNameChange(name: String) {
-        _state.update { it.copy(name = name, error = null) }
+        val current = _state.value
+        if (current !is CreditRateCreateScreenState.Default) return
+        _state.value = current.copy(name = name)
     }
 
     fun onPercentChange(percent: String) {
-        _state.update { it.copy(percent = percent, error = null) }
+        val current = _state.value
+        if (current !is CreditRateCreateScreenState.Default) return
+        _state.value = current.copy(percent = percent)
     }
 
     fun onDaysChange(days: String) {
-        _state.update { it.copy(days = days.filter { ch -> ch.isDigit() }, error = null) }
+        val current = _state.value
+        if (current !is CreditRateCreateScreenState.Default) return
+        _state.value = current.copy(days = days.filter { ch -> ch.isDigit() })
     }
 
     fun onHoursChange(hours: String) {
-        _state.update { it.copy(hours = hours.filter { ch -> ch.isDigit() }, error = null) }
+        val current = _state.value
+        if (current !is CreditRateCreateScreenState.Default) return
+        _state.value = current.copy(hours = hours.filter { ch -> ch.isDigit() })
     }
 
     fun onMinutesChange(minutes: String) {
-        _state.update { it.copy(minutes = minutes.filter { ch -> ch.isDigit() }, error = null) }
+        val current = _state.value
+        if (current !is CreditRateCreateScreenState.Default) return
+        _state.value = current.copy(minutes = minutes.filter { ch -> ch.isDigit() })
     }
 
     fun createRate() {
-        val name = _state.value.name.trim()
-        val percent = _state.value.percent.toIntOrNull()
-        val days = _state.value.days.toIntOrNull() ?: 0
-        val hours = _state.value.hours.toIntOrNull() ?: 0
-        val minutes = _state.value.minutes.toIntOrNull() ?: 0
+        val current = _state.value
+        if (current !is CreditRateCreateScreenState.Default) return
+        val name = current.name.trim()
+        val percent = current.percent.toIntOrNull()
+        val days = current.days.toIntOrNull() ?: 0
+        val hours = current.hours.toIntOrNull() ?: 0
+        val minutes = current.minutes.toIntOrNull() ?: 0
         if (name.isBlank() || percent == null || percent !in 0..100) {
-            _state.update { it.copy(error = "Заполните название и ставку (0–100%)") }
+            _state.value = CreditRateCreateScreenState.Error(
+                message = "Р—Р°РїРѕР»РЅРёС‚Рµ РЅР°Р·РІР°РЅРёРµ Рё СЃС‚Р°РІРєСѓ (0вЂ“100%)",
+            )
             return
         }
         if (days == 0 && hours == 0 && minutes == 0) {
-            _state.update { it.copy(error = "Задайте период списания (дни, часы или минуты)") }
+            _state.value = CreditRateCreateScreenState.Error(
+                message = "Р—Р°РґР°Р№С‚Рµ РїРµСЂРёРѕРґ СЃРїРёСЃР°РЅРёСЏ (РґРЅРё, С‡Р°СЃС‹ РёР»Рё РјРёРЅСѓС‚С‹)",
+            )
             return
         }
         val writeOffPeriod = "${days}d${hours}h${minutes}m"
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.value = CreditRateCreateScreenState.Loading
             createCreditRateUseCase(
                 CreditRateInput(
                     name = name,
@@ -63,30 +81,24 @@ class CreditRateCreateScreenViewModel(
                 )
             )
                 .onSuccess {
-                    _state.update { it.copy(isLoading = false) }
                     (navigatorHolder.navigator as? com.example.g_bankforemployees.common.navigation.AppNavigator)
                         ?.navigateBackFromCreditRateCreate()
                 }
                 .onFailure { e ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = e.message ?: "Не удалось создать тариф",
-                        )
-                    }
+                    _state.value = CreditRateCreateScreenState.Error(
+                        message = e.message?.takeUnless { it.isBlank() } ?: "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ С‚Р°СЂРёС„",
+                    )
                 }
         }
     }
 
-    fun onCreatedHandled() {
-        _state.update { it.copy(created = false) }
-    }
-
     fun onErrorDismiss() {
-        _state.update { it.copy(error = null) }
+        _state.value = CreditRateCreateScreenState.Default()
     }
 
     fun onBackClick() {
         navigatorHolder.navigator?.navigateBack()
     }
 }
+
+

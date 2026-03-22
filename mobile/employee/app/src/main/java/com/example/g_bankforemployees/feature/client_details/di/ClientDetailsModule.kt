@@ -1,13 +1,13 @@
-package com.example.g_bankforemployees.feature.client_details.di
+﻿package com.example.g_bankforemployees.feature.client_details.di
 
 import androidx.lifecycle.SavedStateHandle
-import com.example.g_bankforemployees.common.navigation.NavigatorHolder
 import com.example.g_bankforemployees.feature.client_details.data.remote.ClientAccountsApi
 import com.example.g_bankforemployees.feature.client_details.data.repository.ClientAccountsRepositoryImpl
 import com.example.g_bankforemployees.feature.client_details.domain.repository.ClientAccountsRepository
 import com.example.g_bankforemployees.feature.client_details.domain.usecase.GetUserBankAccountsUseCase
 import com.example.g_bankforemployees.feature.client_details.domain.usecase.GetUserCreditAccountsUseCase
 import com.example.g_bankforemployees.feature.client_details.presentation.ClientDetailsViewModel
+import com.example.g_bankforemployees.feature.users_list.domain.usecase.GetUsersUseCase
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -30,6 +30,7 @@ val clientDetailsModule = module {
             savedStateHandle = savedStateHandle,
             getUserBankAccountsUseCase = get(),
             getUserCreditAccountsUseCase = get(),
+            getUsersUseCase = get<GetUsersUseCase>(),
             navigatorHolder = get(),
         )
     }

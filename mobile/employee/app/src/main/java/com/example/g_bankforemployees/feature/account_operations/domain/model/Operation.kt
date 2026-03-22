@@ -6,7 +6,7 @@ data class Operation(
     val userIdFrom: String?,
     val recipientAccountNumber: String?,
     val recipientName: String?,
-    val amount: Double,
+    val amount: String,
     val transferAccountType: String,
     val actionType: String,
     val status: String,

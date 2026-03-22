@@ -1,4 +1,4 @@
-package com.example.g_bankforemployees.feature.account_operations.presentation
+﻿package com.example.g_bankforemployees.feature.account_operations.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
@@ -19,14 +19,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforemployees.R
 import com.example.g_bankforemployees.common.presentation.component.BankTopBar
+import com.example.g_bankforemployees.common.presentation.component.ErrorState
 import com.example.g_bankforemployees.common.presentation.component.InfoCard
-import com.example.g_bankforemployees.common.presentation.component.InlineErrorText
-import com.example.g_bankforemployees.common.presentation.component.InlineLoadingText
 import com.example.g_bankforemployees.common.presentation.component.ListItemCard
+import com.example.g_bankforemployees.common.presentation.component.LoadingState
 import com.example.g_bankforemployees.common.presentation.component.TariffCard
 import com.example.g_bankforemployees.common.presentation.util.formatDateTime
-import com.example.g_bankforemployees.common.domain.model.BankAccount
-import com.example.g_bankforemployees.common.domain.model.CreditAccount
 import com.example.g_bankforemployees.feature.account_operations.domain.model.ActionType
 import com.example.g_bankforemployees.feature.account_operations.domain.model.Operation
 import com.example.g_bankforemployees.feature.account_operations.domain.model.OperationStatus
@@ -36,35 +34,19 @@ private const val TRANSFER_TYPE_CREDIT = "CREDIT_ACCOUNT"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountOperationsScreen(viewModel: AccountOperationsViewModel) {
-    val bankAccount by viewModel.bankAccount.collectAsStateWithLifecycle()
-    val creditAccount by viewModel.creditAccount.collectAsStateWithLifecycle()
-    val operations by viewModel.operations.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     AccountOperationsScreenContent(
-        accountNumber = viewModel.accountNumber,
-        userName = viewModel.userName,
-        transferType = viewModel.transferType,
-        bankAccount = bankAccount,
-        creditAccount = creditAccount,
-        operations = operations,
-        isLoading = isLoading,
-        errorMessage = errorMessage,
+        state = state,
         onBackClick = viewModel::onBackClick,
+        onRetry = viewModel::load,
     )
 }
 
 @Composable
 private fun AccountOperationsScreenContent(
-    accountNumber: String,
-    userName: String,
-    transferType: String,
-    bankAccount: BankAccount?,
-    creditAccount: CreditAccount?,
-    operations: List<Operation>,
-    isLoading: Boolean,
-    errorMessage: String?,
+    state: AccountOperationsScreenState,
     onBackClick: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -74,100 +56,175 @@ private fun AccountOperationsScreenContent(
             )
         },
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            item {
-                InfoCard {
-                    Text(
-                        text = if (transferType == TRANSFER_TYPE_CREDIT) {
-                            stringResource(R.string.account_type_credit)
-                        } else {
-                            stringResource(R.string.account_type_bank)
-                        },
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = accountNumber,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    if (userName.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
+        when (state) {
+            AccountOperationsScreenState.Loading -> LoadingState()
+            is AccountOperationsScreenState.Error -> ErrorState(
+                title = stringResource(R.string.error),
+                description = state.message,
+                onRetry = onRetry,
+            )
+
+            is AccountOperationsScreenState.Default -> LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item {
+                    InfoCard {
+                        state.warningMessage?.let { warning ->
+                            Text(
+                                text = warning,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
                         Text(
-                            text = userName,
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = if (state.transferType == TRANSFER_TYPE_CREDIT) {
+                                stringResource(R.string.account_type_credit)
+                            } else {
+                                stringResource(R.string.account_type_bank)
+                            },
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    }
-                    if (bankAccount?.banned == true || creditAccount?.banned == true) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = stringResource(R.string.banned),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
-            }
-            if (transferType != TRANSFER_TYPE_CREDIT && bankAccount != null) {
-                item {
-                    InfoCard {
-                        Text(
-                            text = stringResource(R.string.balance_format, bankAccount.balance),
+                            text = state.accountNumber,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
+
+                        if (state.userName.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = state.userName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+
+                        if (state.bankAccount?.banned == true || state.creditAccount?.banned == true) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.banned),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
                     }
                 }
-            }
-            if (transferType == TRANSFER_TYPE_CREDIT && creditAccount != null) {
+
+                if (state.transferType != TRANSFER_TYPE_CREDIT && state.bankAccount != null) {
+                    item {
+                        InfoCard {
+                            Text(
+                                text = state.bankAccount.balanceText ?: stringResource(R.string.balance_format, state.bankAccount.balance),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+
+                            state.bankAccount.currency?.let { currency ->
+                                Spacer(modifier = Modifier.height(8.dp))
+                                AccountDetailLine(
+                                    label = stringResource(R.string.currency_label),
+                                    value = listOf(currency.name, currency.charCode, currency.symbol)
+                                        .filter { it.isNotBlank() }
+                                        .joinToString(" "),
+                                )
+                            }
+
+                            state.bankAccount.createTime?.takeIf { it.isNotBlank() }?.let { createTime ->
+                                Spacer(modifier = Modifier.height(4.dp))
+                                AccountDetailLine(
+                                    label = stringResource(R.string.created_at_label),
+                                    value = formatDateTime(createTime),
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (state.transferType == TRANSFER_TYPE_CREDIT && state.creditAccount != null) {
+                    item {
+                        TariffCard(
+                            name = state.creditAccount.creditRateName,
+                            percent = "${state.creditAccount.creditRatePercent}%",
+                            writeOffPeriod = state.creditAccount.writeOffPeriod,
+                        )
+                    }
+                    item {
+                        InfoCard {
+                            Text(
+                                text = state.creditAccount.deptText ?: stringResource(R.string.debt_format, state.creditAccount.dept),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            AccountDetailLine(
+                                label = stringResource(R.string.next_write_off_label),
+                                value = formatDateTime(state.creditAccount.nextWriteOffDate),
+                            )
+                            state.isCreditExpired?.let { isExpired ->
+                                Spacer(modifier = Modifier.height(4.dp))
+                                AccountDetailLine(
+                                    label = stringResource(R.string.credit_expired_label),
+                                    value = stringResource(
+                                        if (isExpired) R.string.credit_expired_yes else R.string.credit_expired_no,
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(8.dp)) }
                 item {
-                    TariffCard(
-                        name = creditAccount.creditRateName,
-                        percent = "${creditAccount.creditRatePercent}%",
-                        writeOffPeriod = creditAccount.writeOffPeriod,
+                    Text(
+                        text = stringResource(R.string.operations_history),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                item {
-                    InfoCard {
-                        Text(
-                            text = stringResource(R.string.debt_format, creditAccount.dept),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
+                items(state.operations) { operation ->
+                    OperationCard(operation = operation)
                 }
             }
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-            if (isLoading) item { InlineLoadingText() }
-            errorMessage?.let { message -> item { InlineErrorText(message = message) } }
-            item {
-                Text(
-                    text = stringResource(R.string.operations_history),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            items(operations) { operation -> OperationCard(operation = operation) }
         }
     }
+}
+
+@Composable
+private fun AccountDetailLine(
+    label: String,
+    value: String,
+) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    Text(
+        text = value,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
 }
 
 @Composable
 private fun actionTypeToTitle(actionType: ActionType?, fallback: String): String = when (actionType) {
     ActionType.OPEN_ACCOUNT -> stringResource(R.string.op_open_account)
     ActionType.CLOSE_ACCOUNT -> stringResource(R.string.op_close_account)
+    ActionType.TRANSFER -> stringResource(R.string.op_transfer_sent)
     ActionType.TRANSFER_RECEIVED -> stringResource(R.string.op_transfer_received)
     ActionType.TRANSFER_SENT -> stringResource(R.string.op_transfer_sent)
     ActionType.ACCOUNT_BANNED -> stringResource(R.string.account_banned)
     ActionType.ACCOUNT_UNBANNED -> stringResource(R.string.account_unbanned)
+    ActionType.CREDIT_DEPT_PERCENT -> stringResource(R.string.op_credit_dept_percent)
     null -> fallback
 }
 
@@ -194,10 +251,11 @@ private fun OperationCard(operation: Operation) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "%.2f".format(operation.amount),
+            text = operation.amount,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
+
         when (actionType) {
             ActionType.TRANSFER_RECEIVED -> operation.accountNumberFrom?.let { from ->
                 Spacer(modifier = Modifier.height(4.dp))
@@ -207,6 +265,8 @@ private fun OperationCard(operation: Operation) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+
+            ActionType.TRANSFER,
             ActionType.TRANSFER_SENT -> {
                 val parts = buildList {
                     operation.recipientName?.let { add(it) }
@@ -221,10 +281,11 @@ private fun OperationCard(operation: Operation) {
                     )
                 }
             }
+
             else -> {
                 val parts = buildList {
-                    operation.accountNumberFrom?.let { add("со счёта $it") }
-                    operation.recipientAccountNumber?.let { add("на счёт $it") }
+                    operation.accountNumberFrom?.let { add(stringResource(R.string.from_account, it)) }
+                    operation.recipientAccountNumber?.let { add(stringResource(R.string.account_label, it)) }
                 }
                 if (parts.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
@@ -236,6 +297,7 @@ private fun OperationCard(operation: Operation) {
                 }
             }
         }
+
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = stringResource(R.string.status_label, statusLabel),
@@ -250,3 +312,6 @@ private fun OperationCard(operation: Operation) {
         )
     }
 }
+
+
+

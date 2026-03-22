@@ -1,26 +1,23 @@
 package com.example.g_bankforemployees.feature.authorization.data.remote
 
+import android.os.Handler
+import android.os.Looper
+import com.example.g_bankforemployees.common.navigation.NavigatorHolder
+import com.example.g_bankforemployees.common.realtime.domain.RealtimeSessionManager
+import com.example.g_bankforemployees.feature.authorization.domain.AuthSessionCoordinator
 import com.example.g_bankforemployees.feature.authorization.domain.TokenStorage
 import okhttp3.Interceptor
 import okhttp3.Response
 
 class AuthInterceptor(
     private val tokenStorage: TokenStorage,
+    private val authSessionCoordinator: AuthSessionCoordinator,
+    private val navigatorHolder: NavigatorHolder,
+    private val realtimeSessionManager: RealtimeSessionManager,
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        val path = request.url.encodedPath
-
-        if (
-            path.endsWith("/auth/employee-login") ||
-            path.endsWith("/auth/client-login") ||
-            path.endsWith("/auth/employee-register") ||
-            path.endsWith("/auth/client-register")
-        ) {
-            return chain.proceed(request)
-        }
-
         val token = tokenStorage.getToken()
         val newRequest = if (token != null) {
             request.newBuilder()
@@ -30,6 +27,15 @@ class AuthInterceptor(
             request
         }
 
-        return chain.proceed(newRequest)
+        val response = chain.proceed(newRequest)
+        if (response.code == 401 && authSessionCoordinator.tryStartUnauthorizedRedirect()) {
+            tokenStorage.clearToken()
+            realtimeSessionManager.disconnect()
+            Handler(Looper.getMainLooper()).post {
+                navigatorHolder.navigator?.navigateToSsoLoginAndClearStack()
+            }
+        }
+        return response
     }
 }
+

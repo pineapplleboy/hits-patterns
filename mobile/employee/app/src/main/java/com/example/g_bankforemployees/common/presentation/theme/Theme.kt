@@ -1,6 +1,7 @@
 package com.example.g_bankforemployees.common.presentation.theme
 
 import androidx.compose.material3.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 
 private val LightColorScheme = lightColorScheme(
@@ -23,12 +24,32 @@ private val LightColorScheme = lightColorScheme(
     onError = White
 )
 
+private val DarkColorScheme = darkColorScheme(
+    primary = ExtraLightGray,
+    onPrimary = Black,
+    secondary = DarkGray,
+    onSecondary = White,
+
+    background = DarkBackground,
+    onBackground = DarkOnBackground,
+
+    surface = DarkSurface,
+    onSurface = DarkOnSurface,
+
+    surfaceVariant = DarkSurfaceVariant,
+    outline = DarkOutline,
+
+    error = ErrorRed,
+    onError = White,
+)
+
 @Composable
 fun BankTheme(
+    isDarkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = LightColorScheme,
+        colorScheme = if (isDarkTheme) DarkColorScheme else LightColorScheme,
         typography = BankTypography,
         content = content
     )

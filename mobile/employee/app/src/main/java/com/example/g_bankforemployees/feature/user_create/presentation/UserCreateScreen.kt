@@ -26,7 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforemployees.R
 import com.example.g_bankforemployees.common.presentation.component.BankTopBar
-import com.example.g_bankforemployees.common.presentation.component.FormCard
+import com.example.g_bankforemployees.common.presentation.component.CenteredFormScreen
+import com.example.g_bankforemployees.common.presentation.component.CommonTabRow
+import com.example.g_bankforemployees.common.presentation.component.ErrorState
+import com.example.g_bankforemployees.common.presentation.component.LoadingState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +43,7 @@ fun UserCreateScreen(viewModel: UserCreateScreenViewModel) {
         onPasswordChange = viewModel::onPasswordChange,
         onRoleIndexChange = viewModel::onRoleIndexChange,
         onCreateUser = viewModel::createUser,
+        onErrorDismiss = viewModel::onErrorDismiss,
     )
 }
 
@@ -52,6 +56,7 @@ private fun UserCreateScreenContent(
     onPasswordChange: (String) -> Unit,
     onRoleIndexChange: (Int) -> Unit,
     onCreateUser: () -> Unit,
+    onErrorDismiss: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -61,34 +66,25 @@ private fun UserCreateScreenContent(
             )
         },
     ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            FormCard(modifier = Modifier.padding(horizontal = 24.dp)) {
-                Text(
-                    text = stringResource(R.string.new_user),
-                    style = MaterialTheme.typography.displayMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-
-                TabRow(
+        when (state) {
+            UserCreateScreenState.Loading -> LoadingState()
+            is UserCreateScreenState.Error -> ErrorState(
+                title = stringResource(R.string.error),
+                description = state.message,
+                onRetry = onErrorDismiss,
+            )
+            is UserCreateScreenState.Default -> CenteredFormScreen(
+                title = stringResource(R.string.new_user),
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+            ) {
+                CommonTabRow(
+                    titles = listOf(
+                        stringResource(R.string.role_client),
+                        stringResource(R.string.role_employee),
+                    ),
                     selectedTabIndex = state.roleIndex,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ) {
-                    Tab(
-                        selected = state.roleIndex == 0,
-                        onClick = { onRoleIndexChange(0) },
-                        text = { Text(stringResource(R.string.role_client)) },
-                    )
-                    Tab(
-                        selected = state.roleIndex == 1,
-                        onClick = { onRoleIndexChange(1) },
-                        text = { Text(stringResource(R.string.role_employee)) },
-                    )
-                }
+                    onSelectedTabIndexChange = onRoleIndexChange,
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -114,26 +110,16 @@ private fun UserCreateScreenContent(
                     label = { Text(stringResource(R.string.password)) },
                 )
 
-                state.error?.let { message ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = onCreateUser,
-                    enabled = !state.isLoading &&
-                        state.name.isNotBlank() &&
+                    enabled = state.name.isNotBlank() &&
                         state.phone.isNotBlank() &&
                         state.password.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = if (state.isLoading) stringResource(R.string.creating) else stringResource(R.string.create),
+                        text = stringResource(R.string.create),
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }

@@ -8,12 +8,12 @@ import retrofit2.http.Path
 
 interface ClientAccountsApi {
 
-    @GET("/core/patterns/api/v1/users/{userId}/bank-accounts")
+    @GET("/core/patterns/api/v2/users/{userId}/bank-accounts/all")
     suspend fun getUserBankAccounts(
         @Path("userId") userId: String,
     ): Response<List<BankAccountShortDto>>
 
-    @GET("/core/patterns/api/v1/users/{userId}/credit-accounts")
+    @GET("/core/patterns/api/v2/users/{userId}/credit-accounts")
     suspend fun getUserCreditAccounts(
         @Path("userId") userId: String,
     ): Response<List<CreditAccountShortDto>>

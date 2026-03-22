@@ -4,7 +4,24 @@
     "title": "patternsUsers",
     "version": "1.0"
   },
+  "servers": [
+    {
+      "url": "http://91.227.18.176/users"
+    }
+  ],
   "paths": {
+    "/actuator/health": {
+      "get": {
+        "tags": [
+          "HealthUsers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/patterns/api/v1/users/get-my-profile": {
       "get": {
         "tags": [
@@ -215,17 +232,25 @@
       }
     },
     "securitySchemes": {
-      "Bearer": {
-        "type": "http",
-        "description": "Please enter token",
-        "scheme": "Bearer",
-        "bearerFormat": "JWT"
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "http://91.227.18.176/identity/connect/authorize",
+            "tokenUrl": "http://91.227.18.176/identity/connect/token",
+            "scopes": {
+              "SampleAPI": "Sample API - full access"
+            }
+          }
+        }
       }
     }
   },
   "security": [
     {
-      "Bearer": [ ]
+      "oauth2": [
+        "SampleAPI"
+      ]
     }
   ]
 }

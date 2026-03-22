@@ -8,17 +8,26 @@ import com.example.g_bankforemployees.feature.client_details.data.model.CreditAc
 fun BankAccountShortDto.toDomain(): BankAccount = BankAccount(
     id = id,
     accountNumber = accountNumber,
-    balance = balance,
+    balance = balance.toDisplayBalanceNumber(),
+    balanceText = balance,
     banned = banned,
+    hidden = hidden,
 )
 
 fun CreditAccountShortDto.toDomain(): CreditAccount = CreditAccount(
     id = id,
     accountNumber = accountNumber,
-    dept = dept,
+    dept = dept.toDisplayBalanceNumber(),
+    deptText = dept,
     creditRateName = creditRateName,
     creditRatePercent = creditRatePercent,
     writeOffPeriod = writeOffPeriod,
     nextWriteOffDate = nextWriteOffDate,
     banned = banned,
 )
+
+private fun String.toDisplayBalanceNumber(): Double =
+    replace(',', '.')
+        .replace(Regex("[^0-9.-]"), "")
+        .toDoubleOrNull()
+        ?: 0.0

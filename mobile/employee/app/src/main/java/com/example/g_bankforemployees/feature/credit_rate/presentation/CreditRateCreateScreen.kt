@@ -24,7 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.g_bankforemployees.R
 import com.example.g_bankforemployees.common.presentation.component.BankTopBar
-import com.example.g_bankforemployees.common.presentation.component.FormCard
+import com.example.g_bankforemployees.common.presentation.component.CenteredFormScreen
+import com.example.g_bankforemployees.common.presentation.component.ErrorState
+import com.example.g_bankforemployees.common.presentation.component.LoadingState
 
 @Composable
 fun CreditRateCreateScreen(viewModel: CreditRateCreateScreenViewModel) {
@@ -38,6 +40,7 @@ fun CreditRateCreateScreen(viewModel: CreditRateCreateScreenViewModel) {
         onHoursChange = viewModel::onHoursChange,
         onMinutesChange = viewModel::onMinutesChange,
         onCreateRate = viewModel::createRate,
+        onErrorDismiss = viewModel::onErrorDismiss,
     )
 }
 
@@ -51,6 +54,7 @@ private fun CreditRateCreateScreenContent(
     onHoursChange: (String) -> Unit,
     onMinutesChange: (String) -> Unit,
     onCreateRate: () -> Unit,
+    onErrorDismiss: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -60,17 +64,17 @@ private fun CreditRateCreateScreenContent(
             )
         },
     ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            FormCard(modifier = Modifier.padding(horizontal = 24.dp)) {
-                Text(
-                    text = stringResource(R.string.new_credit_rate_title),
-                    style = MaterialTheme.typography.displayMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+        when (state) {
+            CreditRateCreateScreenState.Loading -> LoadingState()
+            is CreditRateCreateScreenState.Error -> ErrorState(
+                title = stringResource(R.string.error),
+                description = state.message,
+                onRetry = onErrorDismiss,
+            )
+            is CreditRateCreateScreenState.Default -> CenteredFormScreen(
+                title = stringResource(R.string.new_credit_rate_title),
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+            ) {
                 OutlinedTextField(
                     value = state.name,
                     onValueChange = onNameChange,
@@ -115,25 +119,16 @@ private fun CreditRateCreateScreenContent(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     )
                 }
-                state.error?.let { message ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = onCreateRate,
-                    enabled = !state.isLoading &&
-                        state.name.isNotBlank() &&
+                    enabled = state.name.isNotBlank() &&
                         state.percent.toIntOrNull() != null &&
                         state.percent.toIntOrNull() in 0..100,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = if (state.isLoading) stringResource(R.string.creating) else stringResource(R.string.create_rate),
+                        text = stringResource(R.string.create_rate),
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }

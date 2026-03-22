@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class BankAccountShortDto(
     val id: String,
     val accountNumber: String,
-    val balance: Double,
+    val balance: String,
     val banned: Boolean = false,
+    val hidden: Boolean = false,
 )

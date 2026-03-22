@@ -17,6 +17,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // For AppAuth redirect URI handling:
+        // redirectUri example: com.employee.android:/callback
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.employee.android"
     }
 
     buildTypes {
@@ -71,4 +75,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
+
+    // AppAuth for SSO (OIDC / OAuth2)
+    implementation("net.openid:appauth:0.11.1")
 }

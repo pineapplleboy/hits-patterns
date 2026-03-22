@@ -11,13 +11,19 @@ class AppNavigator(
 
     override fun navigateToUsersList() {
         navController.navigate(ScreenRoute.UsersList.route) {
-            popUpTo(ScreenRoute.Authorization.route) { inclusive = true }
+            popUpTo(ScreenRoute.SsoLogin.route) { inclusive = true }
         }
     }
 
-    override fun navigateToAuthorizationAndClearStack() {
-        navController.navigate(ScreenRoute.Authorization.route) {
+    override fun navigateToSsoLoginAndClearStack() {
+        navController.navigate(ScreenRoute.SsoLogin.route) {
             popUpTo(ScreenRoute.UsersList.route) { inclusive = true }
+        }
+    }
+
+    override fun navigateToSsoGate() {
+        navController.navigate(ScreenRoute.SsoGate.route) {
+            popUpTo(ScreenRoute.SsoLogin.route) { inclusive = true }
         }
     }
 
@@ -50,12 +56,26 @@ class AppNavigator(
         )
     }
 
+    override fun navigateToCreditHistory(userId: String, userName: String) {
+        navController.navigate(
+            ScreenRoute.CreditHistory.buildRoute(userId, userName),
+        )
+    }
+
     override fun navigateToUserCreate() {
         navController.navigate(ScreenRoute.UserCreate.route)
     }
 
     override fun navigateToCreditRateCreate() {
         navController.navigate(ScreenRoute.CreditRateCreate.route)
+    }
+
+    override fun navigateToTariffsList() {
+        navController.navigate(ScreenRoute.TariffsList.route)
+    }
+
+    override fun navigateToSettings() {
+        navController.navigate(ScreenRoute.Settings.route)
     }
 
     override fun navigateBackFromUserCreate() {
