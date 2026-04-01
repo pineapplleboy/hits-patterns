@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: patterns-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: identity-server
+              uri: ${services.identity-server.url:http://identity-server:5001}
+              predicates:
+                - Path=/identity/**
+              filters:
+                - StripPrefix=1
+
+            - id: patterns-users
+              uri: ${services.patterns-users.url:http://patterns-users:8080}
+              predicates:
+                - Path=/users/**
+              filters:
+                - StripPrefix=1
+
+            - id: patterns-user-setting
+              uri: ${services.patterns-user-setting.url:http://patterns-user-setting:8080}
+              predicates:
+                - Path=/settings/**
+              filters:
+                - StripPrefix=1
+
+            - id: account-service
+              uri: ${services.account-service.url:http://account-service:8082}
+              predicates:
+                - Path=/core/**
+              filters:
+                - StripPrefix=1
+
+            - id: credit-service
+              uri: ${services.credit-service.url:http://credit-service:8081}
+              predicates:
+                - Path=/credit/**
+              filters:
+                - StripPrefix=1
+
+            - id: transfers-service
+              uri: ${services.transfers-service.url:http://transfers-service:8083}
+              predicates:
+                - Path=/transfers/**
+              filters:
+                - StripPrefix=1
+
+            - id: currency-service
+              uri: ${services.currency-service.url:http://currency-service:8084}
+              predicates:
+                - Path=/currency/**
+              filters:
+                - StripPrefix=1
+
+server:
+  port: 8085
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

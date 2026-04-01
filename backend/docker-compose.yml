@@ -286,5 +286,35 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  patterns-gateway:
+    image: ghcr.io/pineapplleboy/hits-patterns-patterns-gateway:latest
+    container_name: patterns-gateway
+    depends_on:
+      - identity-server
+      - patterns-users
+      - patterns-user-setting
+      - account-service
+      - credit-service
+      - transfers-service
+      - currency-service
+    environment:
+      SERVICES_IDENTITY_SERVER_URL: http://identity-server:5001
+      SERVICES_PATTERNS_USERS_URL: http://patterns-users:8080
+      SERVICES_PATTERNS_USER_SETTING_URL: http://patterns-user-setting:8080
+      SERVICES_ACCOUNT_SERVICE_URL: http://account-service:8082
+      SERVICES_CREDIT_SERVICE_URL: http://credit-service:8081
+      SERVICES_TRANSFERS_SERVICE_URL: http://transfers-service:8083
+      SERVICES_CURRENCY_SERVICE_URL: http://currency-service:8084
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
+    ports:
+      - "127.0.0.1:8085:8085"
+    restart: unless-stopped
+    mem_limit: 320m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres-data:

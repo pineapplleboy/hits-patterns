@@ -1,4 +1,4 @@
-﻿name: Build & Deploy to VPS
+name: Build & Deploy to VPS
 
 on:
   push:
@@ -20,6 +20,7 @@ jobs:
       has_builds: ${{ steps.matrix.outputs.has_builds }}
       service_names: ${{ steps.matrix.outputs.service_names }}
       deploy_all: ${{ steps.matrix.outputs.deploy_all }}
+      reload_nginx: ${{ steps.matrix.outputs.reload_nginx }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,6 +52,7 @@ jobs:
           matrix='{"include":[]}'
           has_builds=false
           deploy_all=false
+          reload_nginx=false
           declare -a services=()
 
           add_service() {
@@ -76,6 +78,10 @@ jobs:
 
           if has_change '^backend/(docker-compose\.yml|docker/)'; then
             deploy_all=true
+          fi
+
+          if has_change '^backend/docker/nginx/'; then
+            reload_nginx=true
           fi
 
           if has_change '^backend/DotNet/(IdentityTest|ClassLibrary)/'; then
@@ -106,12 +112,17 @@ jobs:
             add_service 'currency-service' 'hits-patterns-currency-service' './backend/money-services' './backend/money-services/Dockerfile' 'currency-service' 'SERVICE_NAME=currency'
           fi
 
+          if has_change '^backend/money-services/(patterns-gateway|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'patterns-gateway' 'hits-patterns-patterns-gateway' './backend/money-services' './backend/money-services/Dockerfile' 'patterns-gateway' 'SERVICE_NAME=patterns-gateway'
+          fi
+
           service_names="${services[*]}"
 
           echo "build_matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "has_builds=$has_builds" >> "$GITHUB_OUTPUT"
           echo "service_names=$service_names" >> "$GITHUB_OUTPUT"
           echo "deploy_all=$deploy_all" >> "$GITHUB_OUTPUT"
+          echo "reload_nginx=$reload_nginx" >> "$GITHUB_OUTPUT"
 
   build_and_push:
     runs-on: ubuntu-latest
@@ -169,6 +180,7 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           SERVICE_NAMES: ${{ needs.detect_changes.outputs.service_names }}
           DEPLOY_ALL: ${{ needs.detect_changes.outputs.deploy_all }}
+          RELOAD_NGINX: ${{ needs.detect_changes.outputs.reload_nginx }}
         run: |
           ssh "$VPS_USER@$VPS_HOST" <<EOF
             set -e
@@ -189,7 +201,12 @@ jobs:
               else
                 echo "No backend service changes detected. Skipping docker compose pull/up."
               fi
+
+              if [ "$RELOAD_NGINX" = "true" ]; then
+                echo "Reloading nginx config"
+                sudo install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
+                sudo nginx -t
+                sudo systemctl reload nginx
+              fi
             ' || { echo "Another deploy is already running (lock /tmp/deploy.lock)."; exit 1; }
           EOF
-
-
