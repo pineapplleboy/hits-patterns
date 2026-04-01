@@ -183,39 +183,39 @@ jobs:
           DEPLOY_ALL: ${{ needs.detect_changes.outputs.deploy_all }}
           RELOAD_NGINX: ${{ needs.detect_changes.outputs.reload_nginx }}
         run: |
-          ssh "$VPS_USER@$VPS_HOST" <<EOF
+          ssh "$VPS_USER@$VPS_HOST" \
+            "HAS_BUILDS='$HAS_BUILDS' SERVICE_NAMES='$SERVICE_NAMES' DEPLOY_ALL='$DEPLOY_ALL' RELOAD_NGINX='$RELOAD_NGINX' bash -s" <<'EOF'
+          set -e
+          flock -n -E 42 /tmp/deploy.lock bash -lc '
             set -e
-            if ! flock -n -E 42 /tmp/deploy.lock bash -lc '
-              set -e
-              cd /home/deploy/patterns/hits-patterns
-              git pull origin main
-              cd backend
+            cd /home/deploy/patterns/hits-patterns
+            git pull origin main
+            cd backend
 
-              if [ "$DEPLOY_ALL" = "true" ]; then
-                echo "Reconciling full stack"
-                if [ "$HAS_BUILDS" = "true" ] && [ -n "$SERVICE_NAMES" ]; then
-                  docker compose pull $SERVICE_NAMES
-                fi
-                docker compose up -d --remove-orphans
-              elif [ -n "$SERVICE_NAMES" ]; then
-                echo "Deploying services: $SERVICE_NAMES"
+            if [ "$DEPLOY_ALL" = "true" ]; then
+              echo "Reconciling full stack"
+              if [ "$HAS_BUILDS" = "true" ] && [ -n "$SERVICE_NAMES" ]; then
                 docker compose pull $SERVICE_NAMES
-                docker compose up -d --remove-orphans $SERVICE_NAMES
-              else
-                echo "No backend service changes detected. Skipping docker compose pull/up."
               fi
-
-              if [ "$RELOAD_NGINX" = "true" ]; then
-                echo "Reloading nginx config"
-                sudo install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
-                sudo nginx -t
-                sudo systemctl reload nginx
-              fi
-            '; then
-              status=$?
-              if [ "$status" -eq 42 ]; then
-                echo "Another deploy is already running (lock /tmp/deploy.lock)."
-              fi
-              exit "$status"
+              docker compose up -d --remove-orphans
+            elif [ -n "$SERVICE_NAMES" ]; then
+              echo "Deploying services: $SERVICE_NAMES"
+              docker compose pull $SERVICE_NAMES
+              docker compose up -d --remove-orphans $SERVICE_NAMES
+            else
+              echo "No backend service changes detected. Skipping docker compose pull/up."
             fi
+
+            if [ "$RELOAD_NGINX" = "true" ]; then
+              echo "Reloading nginx config"
+              sudo install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
+              sudo nginx -t
+              sudo systemctl reload nginx
+            fi
+          '
+          status=$?
+          if [ "$status" -eq 42 ]; then
+            echo "Another deploy is already running (lock /tmp/deploy.lock)."
+          fi
+          exit "$status"
           EOF
