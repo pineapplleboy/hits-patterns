@@ -76,7 +76,7 @@ jobs:
             has_builds=true
           }
 
-          if has_change '^backend/(docker-compose\.yml|docker/)'; then
+          if has_change '^backend/docker-compose\.yml$'; then
             deploy_all=true
           fi
 
@@ -178,21 +178,24 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          HAS_BUILDS: ${{ needs.detect_changes.outputs.has_builds }}
           SERVICE_NAMES: ${{ needs.detect_changes.outputs.service_names }}
           DEPLOY_ALL: ${{ needs.detect_changes.outputs.deploy_all }}
           RELOAD_NGINX: ${{ needs.detect_changes.outputs.reload_nginx }}
         run: |
           ssh "$VPS_USER@$VPS_HOST" <<EOF
             set -e
-            flock -n /tmp/deploy.lock bash -lc '
+            if ! flock -n -E 42 /tmp/deploy.lock bash -lc '
               set -e
               cd /home/deploy/patterns/hits-patterns
               git pull origin main
               cd backend
 
               if [ "$DEPLOY_ALL" = "true" ]; then
-                echo "Deploying full stack"
-                docker compose pull
+                echo "Reconciling full stack"
+                if [ "$HAS_BUILDS" = "true" ] && [ -n "$SERVICE_NAMES" ]; then
+                  docker compose pull $SERVICE_NAMES
+                fi
                 docker compose up -d --remove-orphans
               elif [ -n "$SERVICE_NAMES" ]; then
                 echo "Deploying services: $SERVICE_NAMES"
@@ -208,5 +211,11 @@ jobs:
                 sudo nginx -t
                 sudo systemctl reload nginx
               fi
-            ' || { echo "Another deploy is already running (lock /tmp/deploy.lock)."; exit 1; }
+            '; then
+              status=$?
+              if [ "$status" -eq 42 ]; then
+                echo "Another deploy is already running (lock /tmp/deploy.lock)."
+              fi
+              exit "$status"
+            fi
           EOF
