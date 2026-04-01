@@ -76,7 +76,7 @@ jobs:
             has_builds=true
           }
 
-          if has_change '^backend/docker-compose\.yml$'; then
+          if has_change '^backend/docker-compose\.yml$' || has_change '^backend/docker/postgres/init/'; then
             deploy_all=true
           fi
 
@@ -110,6 +110,10 @@ jobs:
 
           if has_change '^backend/money-services/(currency|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
             add_service 'currency-service' 'hits-patterns-currency-service' './backend/money-services' './backend/money-services/Dockerfile' 'currency-service' 'SERVICE_NAME=currency'
+          fi
+
+          if has_change '^backend/money-services/(monitoring|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'monitoring-service' 'hits-patterns-monitoring-service' './backend/money-services' './backend/money-services/Dockerfile' 'monitoring-service' 'SERVICE_NAME=monitoring'
           fi
 
           if has_change '^backend/money-services/(patterns-gateway|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
@@ -195,6 +199,11 @@ jobs:
             cd backend
 
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+
+            if docker ps --format "{{.Names}}" | grep -qx "patterns-postgres"; then
+              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'patterns_monitoring'" | grep -q 1 \
+                || docker exec patterns-postgres psql -U postgres -c "CREATE DATABASE \"patterns_monitoring\";"
+            fi
 
             if [ "$DEPLOY_ALL" = "true" ]; then
               echo "Reconciling full stack"

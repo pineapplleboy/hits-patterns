@@ -104,6 +104,7 @@ services:
       SWAGGER_TRANSFERS_URL: http://91.227.18.176/transfers
       SWAGGER_CURRENCY_URL: http://91.227.18.176/currency
       SWAGGER_CREDIT_URL: http://91.227.18.176/credit
+      SWAGGER_MONITORING_URL: http://91.227.18.176/monitoring
     ports:
       - "127.0.0.1:5001:5001"
     restart: unless-stopped
@@ -286,6 +287,36 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  monitoring-service:
+    image: ghcr.io/pineapplleboy/hits-patterns-monitoring-service:latest
+    container_name: monitoring-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_monitoring
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      KAFKA_URL: kafka:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
+      SWAGGER_CLIENT_ID: api_swagger_monitoring
+      SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
+      SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/monitoring/swagger-ui/oauth2-redirect.html
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
+    ports:
+      - "127.0.0.1:8086:8086"
+    restart: unless-stopped
+    mem_limit: 350m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   patterns-gateway:
     image: ghcr.io/pineapplleboy/hits-patterns-patterns-gateway:latest
     container_name: patterns-gateway
@@ -297,6 +328,7 @@ services:
       - credit-service
       - transfers-service
       - currency-service
+      - monitoring-service
     environment:
       SERVICES_IDENTITY_SERVER_URL: http://identity-server:5001
       SERVICES_PATTERNS_USERS_URL: http://patterns-users:8080
@@ -305,6 +337,7 @@ services:
       SERVICES_CREDIT_SERVICE_URL: http://credit-service:8081
       SERVICES_TRANSFERS_SERVICE_URL: http://transfers-service:8083
       SERVICES_CURRENCY_SERVICE_URL: http://currency-service:8084
+      SERVICES_MONITORING_SERVICE_URL: http://monitoring-service:8086
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
     ports:
       - "127.0.0.1:8085:8085"

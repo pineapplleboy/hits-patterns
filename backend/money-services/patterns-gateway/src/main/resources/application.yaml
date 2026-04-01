@@ -56,6 +56,13 @@ spring:
               filters:
                 - StripPrefix=1
 
+            - id: monitoring-service
+              uri: ${services.monitoring-service.url:http://monitoring-service:8086}
+              predicates:
+                - Path=/monitoring/**
+              filters:
+                - StripPrefix=1
+
 server:
   port: 8085
   forward-headers-strategy: framework

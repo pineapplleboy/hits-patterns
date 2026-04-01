@@ -18,12 +18,14 @@ namespace IdentityTest
         private static readonly string TransfersSwaggerUrl = GetEnvironmentVariable("SWAGGER_TRANSFERS_URL", "http://localhost:8083");
         private static readonly string CurrencySwaggerUrl = GetEnvironmentVariable("SWAGGER_CURRENCY_URL", "http://localhost:8084");
         private static readonly string CreditSwaggerUrl = GetEnvironmentVariable("SWAGGER_CREDIT_URL", "http://localhost:8081");
+        private static readonly string MonitoringSwaggerUrl = GetEnvironmentVariable("SWAGGER_MONITORING_URL", "http://localhost:8086");
         private static readonly string UsersSwaggerOrigin = GetOrigin(UsersSwaggerUrl);
         private static readonly string UserSettingsSwaggerOrigin = GetOrigin(UserSettingsSwaggerUrl);
         private static readonly string AccountSwaggerOrigin = GetOrigin(AccountSwaggerUrl);
         private static readonly string TransfersSwaggerOrigin = GetOrigin(TransfersSwaggerUrl);
         private static readonly string CurrencySwaggerOrigin = GetOrigin(CurrencySwaggerUrl);
         private static readonly string CreditSwaggerOrigin = GetOrigin(CreditSwaggerUrl);
+        private static readonly string MonitoringSwaggerOrigin = GetOrigin(MonitoringSwaggerUrl);
 
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[]
@@ -145,6 +147,24 @@ namespace IdentityTest
 
                     RedirectUris = {$"{CreditSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
                     AllowedCorsOrigins = {CreditSwaggerOrigin},
+                    AllowedScopes = new List<string>
+                    {
+                        "SampleAPI"
+                    }
+                },
+                new Client
+                {
+                    ClientId = "api_swagger_monitoring",
+                    ClientName = "Swagger UI for Monitoring API",
+
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
+
+                    RedirectUris = {$"{MonitoringSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
+                    AllowedCorsOrigins = {MonitoringSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
                         "SampleAPI"
