@@ -76,3 +76,6 @@ management:
     health:
       probes:
         enabled: true
+
+unstable:
+  enabled: true
