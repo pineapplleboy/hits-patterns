@@ -8,6 +8,7 @@ import ru.patterns.credit.application.common.model.account.CreditAccountHistoryM
 import ru.patterns.credit.application.common.model.operation.CreditOperationModel;
 import ru.patterns.credit.application.common.model.operation.CreditStats;
 import ru.patterns.credit.application.common.model.response.CreditRatingModel;
+import ru.patterns.shared.utility.RestClientRetryUtility;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -56,12 +57,12 @@ public class CreditRatingService {
     }
 
     private List<CreditAccountHistoryModel> getUserCreditHistory(UUID userId, String token) {
-        return accountClient.get()
+        return RestClientRetryUtility.execute(() -> accountClient.get()
                 .uri("/{userId}/credit-accounts/history", userId)
                 .header("Authorization", token)
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {
-                });
+                }));
     }
 
     private int calculateDebtPenalty(BigDecimal totalCurrentDebt) {
