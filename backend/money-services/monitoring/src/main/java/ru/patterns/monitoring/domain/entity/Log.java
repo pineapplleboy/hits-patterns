@@ -1,41 +1,61 @@
 package ru.patterns.monitoring.domain.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import ru.patterns.monitoring.application.common.enums.LogStatus;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
+@Table(name = "log")
 @Getter
 @Setter
+@Accessors(chain = true)
 public class Log {
 
     @Id
-    private UUID id = UUID.randomUUID();
+    @Column(name = "log_id")
+    private UUID logId = UUID.randomUUID();
 
-    private String serviceId = null;
+    @Column(name = "service_id")
+    private String serviceId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private LogStatus status = LogStatus.INFO;
 
-    private String message = null;
+    @Column(name = "message")
+    private String message;
 
-    private String path = null;
+    @Column(name = "path")
+    private String path;
 
-    private String requestBody = null;
+    @Column(name = "request_body")
+    private String requestBody;
 
-    private String responseBody = null;
+    @Column(name = "response_body")
+    private String responseBody;
 
-    private UUID requestUserId = null;
+    @Column(name = "request_user_id")
+    private UUID requestUserId;
 
-    private String authorization = null;
+    @Column(name = "authorization")
+    private String authorization;
 
-    private String traceId = null;
+    @Column(name = "trace_id")
+    private String traceId;
 
-    private String spanId = null;
+    @Column(name = "span_id")
+    private String spanId;
 
+    @Column(name = "log_time")
     private Instant logTime = Instant.now();
 }
