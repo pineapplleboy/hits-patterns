@@ -1,4 +1,4 @@
-package ru.patterns.monitoring.application.common.enums;
+package ru.patterns.shared.model.monitoring;
 
 public enum LogStatus {
     INFO,

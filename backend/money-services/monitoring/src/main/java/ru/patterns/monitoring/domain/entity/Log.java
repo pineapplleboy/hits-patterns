@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import ru.patterns.monitoring.application.common.enums.LogStatus;
+import ru.patterns.shared.model.monitoring.LogStatus;
 
 import java.time.Instant;
 import java.util.UUID;
