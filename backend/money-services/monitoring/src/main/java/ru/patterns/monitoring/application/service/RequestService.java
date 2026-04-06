@@ -26,6 +26,7 @@ public class RequestService {
                         .setRequestId(request.getRequestId())
                         .setPath(request.getPath())
                         .setServiceId(request.getServiceId())
+                        .setRequestResult(request.getRequestResult())
                         .setResponseTime(request.getResponseTime())
                         .setRequestTime(request.getRequestTime()))
                 .toList();

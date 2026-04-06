@@ -14,6 +14,8 @@ public class RequestMonitoringModel {
 
     private String serviceId;
 
+    private RequestResult requestResult = RequestResult.OK;
+
     private Duration responseTime = Duration.ZERO;
 
     private Instant requestTime = Instant.now();

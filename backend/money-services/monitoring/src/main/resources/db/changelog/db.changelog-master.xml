@@ -9,5 +9,6 @@
     <include file="/db/changelog/000-connect-pgcrypto.xml"/>
     <include file="/db/changelog/001-create-request.xml"/>
     <include file="/db/changelog/002-create-log.xml"/>
+    <include file="/db/changelog/003-add-request-result-to-request.xml"/>
 
 </databaseChangeLog>
