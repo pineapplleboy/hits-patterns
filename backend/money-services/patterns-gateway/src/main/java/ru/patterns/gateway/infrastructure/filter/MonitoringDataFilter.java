@@ -1,4 +1,4 @@
-package ru.patterns.gateway.application.filter;
+package ru.patterns.gateway.infrastructure.filter;
 
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
-public class RequestTimingFilter implements GlobalFilter, Ordered {
+public class MonitoringDataFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

@@ -49,3 +49,11 @@ management:
     health:
       probes:
         enabled: true
+
+kafka:
+  url: ${KAFKA_URL:localhost:29092}
+  group: "monitoring-service"
+
+  consumer:
+    log-topic: 00_logs
+    request-topic: 00_requests

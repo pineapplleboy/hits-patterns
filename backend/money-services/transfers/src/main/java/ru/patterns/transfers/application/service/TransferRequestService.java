@@ -12,6 +12,7 @@ import ru.patterns.shared.model.client.CurrencyAmountModel;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.kafka.TransferAssignmentMessage;
 import ru.patterns.shared.model.kafka.TransferRequestMessage;
+import ru.patterns.shared.utility.RestClientRetryUtility;
 import ru.patterns.transfers.application.common.client.CalculatorRequestModel;
 import ru.patterns.transfers.application.kafka.provider.TransferAssignmentProvider;
 
@@ -109,11 +110,11 @@ public class TransferRequestService {
     }
 
     private CurrencyAmountModel calculateCurrency(Integer currencyFrom, Integer currencyTo, BigDecimal amount, String token) {
-        return currencyClient.post()
+        return RestClientRetryUtility.execute(() -> currencyClient.post()
                 .uri("/calculate")
                 .body(new CalculatorRequestModel(currencyFrom, currencyTo, amount))
                 .header("Authorization", token)
                 .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
+                .body(new ParameterizedTypeReference<>() {}));
     }
 }

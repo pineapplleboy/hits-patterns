@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.repository.BankAccountRepository;
+import ru.patterns.shared.utility.RestClientRetryUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,10 +38,10 @@ public class SettingsService {
     }
 
     public List<UUID> getHiddenAccountIds(UUID userId, String token) {
-        return settingsClient.get()
+        return RestClientRetryUtility.execute(() -> settingsClient.get()
                 .uri("/hidden-accounts/{userId}", userId)
                 .header("Authorization", token)
                 .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
+                .body(new ParameterizedTypeReference<>() {}));
     }
 }
