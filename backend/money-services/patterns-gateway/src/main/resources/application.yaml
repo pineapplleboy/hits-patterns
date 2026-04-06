@@ -13,6 +13,7 @@ spring:
                 - Path=/identity/**
               filters:
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /identity
                 - name: CircuitBreaker
                   args:
                     name: identityServerCb
@@ -26,6 +27,7 @@ spring:
                 - Path=/users/**
               filters:
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /users
                 - name: CircuitBreaker
                   args:
                     name: patternsUsersCb
@@ -39,6 +41,7 @@ spring:
                 - Path=/settings/**
               filters:
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /settings
                 - name: CircuitBreaker
                   args:
                     name: patternsUserSettingCb
@@ -52,6 +55,7 @@ spring:
                 - Path=/core/**
               filters:
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /core
                 - name: CircuitBreaker
                   args:
                     name: accountServiceCb
@@ -65,6 +69,7 @@ spring:
                 - Path=/credit/**
               filters:
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /credit
                 - name: CircuitBreaker
                   args:
                     name: creditServiceCb
@@ -78,6 +83,7 @@ spring:
                 - Path=/transfers/**
               filters:
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /transfers
                 - name: CircuitBreaker
                   args:
                     name: transfersServiceCb
@@ -91,6 +97,7 @@ spring:
                 - Path=/currency/**
               filters:
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /currency
                 - name: CircuitBreaker
                   args:
                     name: currencyServiceCb
@@ -104,6 +111,7 @@ spring:
                 - Path=/monitoring/**
               filters:
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /monitoring
                 - name: CircuitBreaker
                   args:
                     name: monitoringServiceCb
@@ -126,7 +134,7 @@ management:
         enabled: true
 
 unstable:
-  enabled: true
+  enabled: false
 
 resilience4j:
   circuitbreaker:
