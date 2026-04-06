@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.patterns.monitoring.application.common.RequestResponseModel;
 import ru.patterns.monitoring.application.common.ServiceAverageResponseTimeModel;
 import ru.patterns.monitoring.application.common.ServiceRequestResultPercentModel;
+import ru.patterns.monitoring.application.common.ServiceRequestsPerSecondModel;
 import ru.patterns.monitoring.domain.entity.Request;
 import ru.patterns.monitoring.domain.repository.RequestRepository;
 import ru.patterns.shared.model.monitoring.RequestResult;
@@ -70,6 +71,21 @@ public class RequestService {
                 .toList();
     }
 
+    public List<ServiceRequestsPerSecondModel> getRequestsPerSecondByServices(Instant startTime, Instant endTime) {
+        var intervalSeconds = Duration.between(startTime, endTime).toMillis() / 1000.0;
+
+        return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
+                .stream()
+                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "Неизвестный сервис" : request.getServiceId()))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new ServiceRequestsPerSecondModel()
+                        .setServiceId(entry.getKey())
+                        .setRequestsPerSecond(calculateRequestsPerSecond(entry.getValue().size(), intervalSeconds)))
+                .toList();
+    }
+
     private Duration calculateAverageDuration(List<Duration> durations) {
         var averageNanos = durations.stream()
                 .mapToLong(Duration::toNanos)
@@ -91,5 +107,13 @@ public class RequestService {
         }
 
         return count * 100.0 / total;
+    }
+
+    private double calculateRequestsPerSecond(int count, double intervalSeconds) {
+        if (intervalSeconds <= 0) {
+            return 0;
+        }
+
+        return count / intervalSeconds;
     }
 }

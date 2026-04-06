@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.patterns.monitoring.application.common.RequestResponseModel;
 import ru.patterns.monitoring.application.common.ServiceAverageResponseTimeModel;
 import ru.patterns.monitoring.application.common.ServiceRequestResultPercentModel;
+import ru.patterns.monitoring.application.common.ServiceRequestsPerSecondModel;
 import ru.patterns.monitoring.application.service.RequestService;
 import ru.patterns.shared.utility.AuthUtility;
 
@@ -55,5 +56,16 @@ public class RequestController {
         AuthUtility.checkUserIfEmployee(authorization);
 
         return requestService.getRequestResultPercentsByServices(startTime, endTime);
+    }
+
+    @GetMapping("/requests-per-second")
+    public List<ServiceRequestsPerSecondModel> getRequestsPerSecondByService(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
+            @Parameter(hidden = true) @RequestHeader String authorization
+    ) {
+        AuthUtility.checkUserIfEmployee(authorization);
+
+        return requestService.getRequestsPerSecondByServices(startTime, endTime);
     }
 }
