@@ -1,5 +1,6 @@
 package ru.patterns.monitoring.application.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import ru.patterns.shared.model.monitoring.LogStatus;
@@ -9,13 +10,14 @@ import java.util.UUID;
 
 @Data
 @Accessors(chain = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class LogResponseModel {
 
-    private UUID logId = UUID.randomUUID();
+    private UUID logId;
 
     private String serviceId;
 
-    private LogStatus status = LogStatus.INFO;
+    private LogStatus status;
 
     private String message;
 
@@ -33,5 +35,5 @@ public class LogResponseModel {
 
     private String spanId;
 
-    private Instant logTime = Instant.now();
+    private Instant logTime;
 }
