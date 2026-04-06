@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.monitoring.application.common.RequestResponseModel;
 import ru.patterns.monitoring.application.common.ServiceAverageResponseTimeModel;
+import ru.patterns.monitoring.application.common.ServiceRequestResultPercentModel;
 import ru.patterns.monitoring.domain.entity.Request;
 import ru.patterns.monitoring.domain.repository.RequestRepository;
+import ru.patterns.shared.model.monitoring.RequestResult;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -48,6 +50,26 @@ public class RequestService {
                 .toList();
     }
 
+    public List<ServiceRequestResultPercentModel> getRequestResultPercentsByServices(Instant startTime, Instant endTime) {
+        return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
+                .stream()
+                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "Неизвестный сервис" : request.getServiceId()))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    var requests = entry.getValue();
+                    var total = requests.size();
+
+                    return new ServiceRequestResultPercentModel()
+                            .setServiceId(entry.getKey())
+                            .setOkPercent(calculatePercent(total, countByResult(requests, RequestResult.OK)))
+                            .setUserErrorPercent(calculatePercent(total, countByResult(requests, RequestResult.USER_ERROR)))
+                            .setServerErrorPercent(calculatePercent(total, countByResult(requests, RequestResult.SERVER_ERROR)));
+                })
+                .toList();
+    }
+
     private Duration calculateAverageDuration(List<Duration> durations) {
         var averageNanos = durations.stream()
                 .mapToLong(Duration::toNanos)
@@ -55,5 +77,19 @@ public class RequestService {
                 .orElse(0);
 
         return Duration.ofNanos((long) averageNanos);
+    }
+
+    private long countByResult(List<Request> requests, RequestResult requestResult) {
+        return requests.stream()
+                .filter(request -> requestResult.equals(request.getRequestResult()))
+                .count();
+    }
+
+    private double calculatePercent(int total, long count) {
+        if (total == 0) {
+            return 0;
+        }
+
+        return count * 100.0 / total;
     }
 }
