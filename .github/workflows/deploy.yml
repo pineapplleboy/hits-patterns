@@ -201,7 +201,7 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
             if docker ps --format "{{.Names}}" | grep -qx "patterns-postgres"; then
-              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'patterns_monitoring'" | grep -q 1 \
+              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = \$\$patterns_monitoring\$\$" | grep -q 1 \
                 || docker exec patterns-postgres psql -U postgres -c "CREATE DATABASE \"patterns_monitoring\";"
             fi
 
