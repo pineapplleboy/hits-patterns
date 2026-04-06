@@ -2,17 +2,13 @@ package ru.patterns.monitoring.application.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import ru.patterns.monitoring.application.service.MonitoringDataService;
 import ru.patterns.shared.model.monitoring.LogModel;
 import ru.patterns.shared.model.monitoring.RequestMonitoringModel;
 import ru.patterns.shared.utility.AuthUtility;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/patterns/api/v2/add-data")
 public class MonitoringDataController {
