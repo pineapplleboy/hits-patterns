@@ -22,6 +22,7 @@ spring:
               predicates:
                 - Path=/identity/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
                 - AddRequestHeader=X-Forwarded-Prefix, /identity
                 - name: CircuitBreaker
