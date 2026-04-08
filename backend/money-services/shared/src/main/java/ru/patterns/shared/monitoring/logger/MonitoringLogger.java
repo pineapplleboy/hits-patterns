@@ -1,4 +1,4 @@
-package ru.patterns.shared.logger;
+package ru.patterns.shared.monitoring.logger;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

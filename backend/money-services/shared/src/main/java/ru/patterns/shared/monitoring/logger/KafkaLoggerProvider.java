@@ -1,4 +1,4 @@
-package ru.patterns.shared.logger;
+package ru.patterns.shared.monitoring.logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

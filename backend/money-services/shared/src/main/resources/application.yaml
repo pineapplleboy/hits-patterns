@@ -5,3 +5,4 @@ spring:
 kafka:
   provider:
     log-topic: 00_logs
+    request-topic: 00_requests
