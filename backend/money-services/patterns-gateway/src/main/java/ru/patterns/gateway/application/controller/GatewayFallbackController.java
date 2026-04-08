@@ -19,6 +19,6 @@ public class GatewayFallbackController {
     @RequestMapping("/{service}")
     public ResponseEntity<ErrorResponse> fallback(@PathVariable String service) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(new ErrorResponse(503, "Сервис " + service + "временно недоступен"));
+                .body(new ErrorResponse(503, "Сервис " + service + " временно недоступен"));
     }
 }

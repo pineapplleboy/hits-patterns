@@ -351,6 +351,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_gateway
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
     ports:
