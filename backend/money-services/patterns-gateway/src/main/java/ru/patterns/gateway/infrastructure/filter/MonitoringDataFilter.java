@@ -1,5 +1,6 @@
 package ru.patterns.gateway.infrastructure.filter;
 
+import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -16,14 +17,25 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.NonNull;
+import ru.patterns.shared.model.log.TracingLog;
+import ru.patterns.shared.model.monitoring.RequestMonitoringModel;
+import ru.patterns.shared.model.monitoring.RequestResult;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
+import ru.patterns.shared.monitoring.request.RequestMonitoringService;
 import ru.patterns.shared.utility.JwtAuthUtility;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
+@RequiredArgsConstructor
 public class MonitoringDataFilter implements GlobalFilter, Ordered {
+
+    private final MonitoringLogger monitoringLogger;
+    private final RequestMonitoringService requestMonitoringService;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -34,6 +46,7 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
         String authorizationHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
         String serviceFromHeader = exchange.getRequest().getHeaders().getFirst("serviceFrom");
+        String traceIdFromHeader = exchange.getRequest().getHeaders().getFirst("traceId");
 
         AtomicReference<String> requestBodyReference = new AtomicReference<>("");
         AtomicReference<StringBuilder> responseBodyReference = new AtomicReference<>(new StringBuilder());
@@ -93,14 +106,30 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
                                 String responseBody = responseBodyReference.get().toString();
 
                                 int responseStatus = responseStatusReference.get();
+                                RequestResult requestResult = getRequestResult(responseStatus);
 
-//                                authorizationHeader
-//                                serviceFromHeader
-//                                endpoint
+                                var requestingUserId = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader).userId();
 
-                                var requestingUserId = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader);
+                                monitoringLogger.logInfo(formLogModel(traceIdFromHeader, UUID.randomUUID().toString(),
+                                                authorizationHeader, requestingUserId, serviceFromHeader, endpoint),
+                                        "Запрос", requestBody, responseBody);
+                                requestMonitoringService.sendRequestToMonitoring(formRequestMonitoringService(endpoint, serviceFromHeader,
+                                        requestResult, Duration.ofMillis(responseTimeMillis)));
                             });
                 });
+    }
+
+    private static RequestResult getRequestResult(int responseStatus) {
+        RequestResult requestResult;
+
+        if (responseStatus >= 200 && responseStatus < 400) {
+            requestResult = RequestResult.OK;
+        } else if (responseStatus >= 400 && responseStatus < 500) {
+            requestResult = RequestResult.USER_ERROR;
+        } else {
+            requestResult = RequestResult.SERVER_ERROR;
+        }
+        return requestResult;
     }
 
     @Override
@@ -122,5 +151,24 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
 
     private static void captureStatus(HttpStatusCode statusCode, AtomicInteger responseStatusReference) {
         responseStatusReference.set(statusCode != null ? statusCode.value() : -1);
+    }
+    
+    private TracingLog formLogModel(String traceId, String spanId, String authorization, UUID requestUserId, String serviceId, String path) {
+        return new TracingLog()
+                .setTraceId(traceId)
+                .setSpanId(spanId)
+                .setAuthorization(authorization)
+                .setRequestUserId(requestUserId)
+                .setServiceId(serviceId)
+                .setPath(path);
+    }
+    
+    private RequestMonitoringModel formRequestMonitoringService(String path, String serviceId, 
+                                                                RequestResult requestResult, Duration responseTime) {
+        return new RequestMonitoringModel()
+                .setPath(path)
+                .setServiceId(serviceId)
+                .setRequestResult(requestResult)
+                .setResponseTime(responseTime);
     }
 }
