@@ -33,7 +33,7 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
 
         String authorizationHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-        String serviceFromHeader = exchange.getRequest().getHeaders().getFirst("X-Service-From");
+        String serviceFromHeader = exchange.getRequest().getHeaders().getFirst("serviceFrom");
 
         AtomicReference<String> requestBodyReference = new AtomicReference<>("");
         AtomicReference<StringBuilder> responseBodyReference = new AtomicReference<>(new StringBuilder());
