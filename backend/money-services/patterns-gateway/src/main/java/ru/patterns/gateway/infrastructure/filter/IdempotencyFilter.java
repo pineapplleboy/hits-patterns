@@ -48,6 +48,11 @@ public class IdempotencyFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
+        String authorizationHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (!StringUtils.hasText(authorizationHeader)) {
+            return chain.filter(exchange);
+        }
+
         String idempotencyKey = exchange.getRequest().getHeaders().getFirst(IDEMPOTENCY_HEADER);
         if (!StringUtils.hasText(idempotencyKey)) {
             idempotencyKey = UUID.randomUUID().toString();
@@ -65,7 +70,7 @@ public class IdempotencyFilter implements GlobalFilter, Ordered {
 
                     String method = exchange.getRequest().getMethod().name();
                     String route = exchange.getRequest().getPath().value();
-                    UUID userId = getUserId(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
+                    UUID userId = getUserId(authorizationHeader);
                     String requestHash = calculateRequestHash(method, userId, new String(requestBodyBytes, StandardCharsets.UTF_8),
                             queryToString(exchange), route);
 

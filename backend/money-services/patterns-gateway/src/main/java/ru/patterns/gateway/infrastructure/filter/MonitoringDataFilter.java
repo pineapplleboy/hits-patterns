@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,6 +27,7 @@ import ru.patterns.shared.utility.JwtAuthUtility;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -108,7 +110,7 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
                                 int responseStatus = responseStatusReference.get();
                                 RequestResult requestResult = getRequestResult(responseStatus);
 
-                                var requestingUserId = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader).userId();
+                                UUID requestingUserId = extractUserId(authorizationHeader).orElse(null);
 
                                 monitoringLogger.logInfo(formLogModel(traceIdFromHeader, UUID.randomUUID().toString(),
                                                 authorizationHeader, requestingUserId, serviceFromHeader, endpoint),
@@ -151,6 +153,18 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
 
     private static void captureStatus(HttpStatusCode statusCode, AtomicInteger responseStatusReference) {
         responseStatusReference.set(statusCode != null ? statusCode.value() : -1);
+    }
+
+    private Optional<UUID> extractUserId(String authorizationHeader) {
+        if (!StringUtils.hasText(authorizationHeader)) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(JwtAuthUtility.parseAuthorizationHeader(authorizationHeader).userId());
+        } catch (Exception exception) {
+            return Optional.empty();
+        }
     }
     
     private TracingLog formLogModel(String traceId, String spanId, String authorization, UUID requestUserId, String serviceId, String path) {
