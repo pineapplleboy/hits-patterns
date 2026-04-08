@@ -6,12 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import ru.patterns.monitoring.application.service.MonitoringDataService;
 import ru.patterns.shared.model.monitoring.LogModel;
-import ru.patterns.shared.utility.AuthUtility;
 
 @Slf4j
 @Component
@@ -25,13 +23,11 @@ public class LogsListener {
     private String topic;
 
     @KafkaListener(topics = "${kafka.consumer.log-topic}", groupId = "${kafka.group}")
-    public void listen(@Payload String message, @Header("Authorization") String token, Acknowledgment ack) {
+    public void listen(@Payload String message, Acknowledgment ack) {
         try {
             log.info("Получено сообщение из топика {}: {}", topic, message);
 
             LogModel msg = objectMapper.readValue(message, LogModel.class);
-
-            AuthUtility.isAuthorized(token);
 
             monitoringDataService.addLog(msg);
 

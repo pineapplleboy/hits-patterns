@@ -10,12 +10,16 @@ public class TraceLogUtility {
 
     public TracingLog createDataForLogs(String traceId,
                                         String authorization,
-                                        String serviceId) {
+                                        String serviceId,
+                                        String path,
+                                        UUID userId) {
         return new TracingLog()
                 .setTraceId(traceId)
                 .setSpanId(generateSpanId())
                 .setAuthorization(authorization)
-                .setServiceId(serviceId);
+                .setServiceId(serviceId)
+                .setPath(path)
+                .setRequestUserId(userId);
     }
 
     private String generateSpanId()

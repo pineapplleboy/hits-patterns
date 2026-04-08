@@ -1,6 +1,7 @@
 package ru.patterns.monitoring.application.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,6 +16,7 @@ import ru.patterns.monitoring.application.common.ServiceRequestResultPercentMode
 import ru.patterns.monitoring.application.common.ServiceRequestsPerSecondModel;
 import ru.patterns.monitoring.application.service.RequestService;
 import ru.patterns.shared.utility.AuthUtility;
+import ru.patterns.shared.utility.JwtAuthUtility;
 import ru.patterns.shared.utility.TraceLogUtility;
 
 import java.time.Instant;
@@ -35,10 +37,12 @@ public class RequestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String traceId
+            @RequestHeader(value = "traceId") String traceId,
+            HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);
-        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
         return requestService.getRequests(startTime, endTime, logData);
     }
@@ -48,10 +52,12 @@ public class RequestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String traceId
+            @RequestHeader(value = "traceId") String traceId,
+            HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);
-        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
         return requestService.getAverageResponseTimeByServices(startTime, endTime, logData);
     }
@@ -61,10 +67,12 @@ public class RequestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String traceId
+            @RequestHeader(value = "traceId") String traceId,
+            HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);
-        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
         return requestService.getRequestResultPercentsByServices(startTime, endTime, logData);
     }
@@ -74,10 +82,12 @@ public class RequestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String traceId
+            @RequestHeader(value = "traceId") String traceId,
+            HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);
-        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
         return requestService.getRequestsPerSecondByServices(startTime, endTime, logData);
     }

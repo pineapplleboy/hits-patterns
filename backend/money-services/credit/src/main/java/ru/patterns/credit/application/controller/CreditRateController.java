@@ -2,6 +2,7 @@ package ru.patterns.credit.application.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,8 +36,9 @@ public class CreditRateController {
 
     @GetMapping("/available-plans")
     @Operation(summary = "Получение доступных кредитных тарифов [Все]")
-    public List<CreditRateModel> getAvailablePlans(@RequestHeader(value = "traceId") String traceId) {
-        var logData = TraceLogUtility.createDataForLogs(traceId, "", serviceName);
+    public List<CreditRateModel> getAvailablePlans(@RequestHeader(value = "traceId") String traceId,
+                                                   HttpServletRequest request) {
+        var logData = TraceLogUtility.createDataForLogs(traceId, "", serviceName, request.getRequestURI(), null);
 
         return creditRateCRUDService.getCreditRates(logData);
     }
@@ -45,9 +47,10 @@ public class CreditRateController {
     @Operation(summary = "Получение детальной информации о кредитном тарифе [Все]")
     public CreditRateModel getAvailablePlan(@PathVariable UUID id,
                                             @Parameter(hidden = true) @RequestHeader String authorization,
-                                            @RequestHeader(value = "traceId") String traceId) {
-        JwtAuthUtility.parseAuthorizationHeader(authorization);
-        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
+                                            @RequestHeader(value = "traceId") String traceId,
+                                            HttpServletRequest request) {
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
         return creditRateCRUDService.getCreditRateById(id, logData);
     }
@@ -56,20 +59,23 @@ public class CreditRateController {
     @Operation(summary = "Создание кредитного тарифа [Сотрудник]")
     public UuidResponseModel createCreditRate(@RequestBody CreditRateDataModel creditRateDataModel,
                                               @Parameter(hidden = true) @RequestHeader String authorization,
-                                              @RequestHeader(value = "traceId") String traceId) {
-        JwtAuthUtility.parseAuthorizationHeader(authorization);
-        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
+                                              @RequestHeader(value = "traceId") String traceId,
+                                              HttpServletRequest request) {
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
         return creditRateCRUDService.createCreditRate(creditRateDataModel, logData);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Обновление кредитного тарифа [Сотрудник]")
-    public void updateCreateRate(@PathVariable UUID id, @RequestBody CreditRateDataModel creditRateDataModel,
+    public void updateCreateRate(@PathVariable UUID id,
+                                 @RequestBody CreditRateDataModel creditRateDataModel,
                                  @Parameter(hidden = true) @RequestHeader String authorization,
-                                 @RequestHeader(value = "traceId") String traceId) {
-        JwtAuthUtility.parseAuthorizationHeader(authorization);
-        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
+                                 @RequestHeader(value = "traceId") String traceId,
+                                 HttpServletRequest request) {
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
         creditRateCRUDService.updateCreditRateModel(id, creditRateDataModel, logData);
     }
@@ -78,9 +84,10 @@ public class CreditRateController {
     @Operation(summary = "Удаление кредитного тарифа [Сотрудник]")
     public void deleteCreateRate(@PathVariable UUID id,
                                  @Parameter(hidden = true) @RequestHeader String authorization,
-                                 @RequestHeader(value = "traceId") String traceId) {
-        JwtAuthUtility.parseAuthorizationHeader(authorization);
-        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
+                                 @RequestHeader(value = "traceId") String traceId,
+                                 HttpServletRequest request) {
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
         creditRateCRUDService.deactivateCreditRateById(id, logData);
     }
