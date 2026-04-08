@@ -19,6 +19,7 @@ import ru.patterns.currency.domain.mapper.CurrencyMapper;
 import ru.patterns.currency.domain.repository.CurrencyRepository;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.exception.NotFoundException;
+import ru.patterns.shared.model.log.TracingLog;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -74,7 +75,7 @@ public class CurrencyService {
         }
     }
 
-    public List<CurrencyResponseModel> getCurrencies() {
+    public List<CurrencyResponseModel> getCurrencies(TracingLog dataForLog) {
         List<Currency> currencies = currencyRepository.findAllByActiveTrue();
 
         if (currencies.isEmpty() || currencies.stream()
@@ -87,7 +88,7 @@ public class CurrencyService {
                 .toList();
     }
 
-    public CurrencyResponseModel getCurrencyInfo(Integer currencyId) {
+    public CurrencyResponseModel getCurrencyInfo(Integer currencyId, TracingLog logData) {
         var currency = currencyRepository.findByIdAndActiveTrue(currencyId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.CURRENCY_NOT_FOUND));
 
@@ -98,7 +99,7 @@ public class CurrencyService {
         return currency.toResponseModel();
     }
 
-    public CurrencyAmountModel calculateAmount(Integer currencyIdFrom, Integer currencyIdTo, BigDecimal amount) {
+    public CurrencyAmountModel calculateAmount(Integer currencyIdFrom, Integer currencyIdTo, BigDecimal amount, TracingLog logData) {
         Currency currencyFrom = currencyRepository.findByIdAndActiveTrue(currencyIdFrom)
                 .orElseThrow(() -> new NotFoundException("Валюта с айди " + currencyIdFrom + " не найдена"));
         Currency currencyTo = currencyRepository.findByIdAndActiveTrue(currencyIdTo)

@@ -8,6 +8,7 @@ import ru.patterns.credit.application.common.model.account.CreditAccountHistoryM
 import ru.patterns.credit.application.common.model.operation.CreditOperationModel;
 import ru.patterns.credit.application.common.model.operation.CreditStats;
 import ru.patterns.credit.application.common.model.response.CreditRatingModel;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.utility.RestClientRetryUtility;
 
 import java.math.BigDecimal;
@@ -26,7 +27,7 @@ public class CreditRatingService {
     // Рейтинг формируется автоматически с учетом платежной дисциплины, долговой нагрузки,
     // количества заявок на кредиты и срока кредитной истории
 
-    public CreditRatingModel getUserCreditRating(UUID userId, String token) {
+    public CreditRatingModel getUserCreditRating(UUID userId, String token, TracingLog logData) {
         var creditHistory = getUserCreditHistory(userId, token);
         var stats = collectCreditStats(creditHistory);
 

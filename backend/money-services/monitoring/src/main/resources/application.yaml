@@ -57,3 +57,6 @@ kafka:
   consumer:
     log-topic: 00_logs
     request-topic: 00_requests
+
+service:
+  name: patterns-monitoring-service

@@ -20,6 +20,7 @@ import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
+import ru.patterns.shared.model.log.TracingLog;
 
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +52,10 @@ public class BankAccountService {
         return new AccountNumberResponseModel(bankAccount.getAccountNumber());
     }
 
+    public AccountNumberResponseModel createBankAccount(UUID userId, Integer currencyId, TracingLog logData) {
+        return createBankAccount(userId, currencyId);
+    }
+
     public void closeBankAccount(UUID userId, String accountNumber) {
         var bankAccount = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
@@ -59,6 +64,10 @@ public class BankAccountService {
         bankAccountRepository.save(bankAccount);
 
         operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(bankAccount, AccountActionType.CLOSE_ACCOUNT);
+    }
+
+    public void closeBankAccount(UUID userId, String accountNumber, TracingLog logData) {
+        closeBankAccount(userId, accountNumber);
     }
 
     public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, boolean hidden, String token) {
@@ -83,6 +92,10 @@ public class BankAccountService {
                 .toList();
     }
 
+    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, boolean hidden, String token, TracingLog logData) {
+        return getAllUserBankAccounts(userId, hidden, token);
+    }
+
     public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, String token) {
         var userBankAccounts = bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true);
 
@@ -96,12 +109,20 @@ public class BankAccountService {
                 .toList();
     }
 
+    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, String token, TracingLog logData) {
+        return getAllUserBankAccounts(userId, token);
+    }
+
     public List<BankAccountShortModel> getAllRubUserBankAccounts(UUID userId) {
         return  bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true)
                 .stream()
                 .filter(account -> account.getCurrencyId().equals(CurrencyConstants.BASE_CURRENCY_ID))
                 .map(account -> account.toShortModel(false))
                 .toList();
+    }
+
+    public List<BankAccountShortModel> getAllRubUserBankAccounts(UUID userId, TracingLog logData) {
+        return getAllRubUserBankAccounts(userId);
     }
 
     public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber, String token) {
@@ -122,5 +143,9 @@ public class BankAccountService {
         accountFullModel.setOperations(operations);
 
         return accountFullModel;
+    }
+
+    public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber, String token, TracingLog logData) {
+        return getBankAccountFullModel(userId, accountNumber, token);
     }
 }

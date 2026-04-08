@@ -20,6 +20,7 @@ import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
+import ru.patterns.shared.model.log.TracingLog;
 
 import java.util.Comparator;
 import java.util.List;
@@ -75,12 +76,20 @@ public class CreditAccountService {
                 .toList();
     }
 
+    public List<CreditAccountFullModel> getUsersAllCreditHistory(UUID userId, TracingLog logData) {
+        return getUsersAllCreditHistory(userId);
+    }
+
     public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {
         return creditAccountRepository.getCreditAccountsByUserIdAndClosedIsFalse(userId)
                 .stream()
                 .sorted(Comparator.comparing(CreditAccount::isClosed))
                 .map(account -> account.toModel())
                 .toList();
+    }
+
+    public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId, TracingLog logData) {
+        return getUsersCreditsHistory(userId);
     }
 
     public CreditAccountFullModel getUserCreditFullInfo(UUID userId, String accountNumber) {
@@ -93,5 +102,9 @@ public class CreditAccountService {
         accountFullModel.setOperations(operations);
 
         return accountFullModel;
+    }
+
+    public CreditAccountFullModel getUserCreditFullInfo(UUID userId, String accountNumber, TracingLog logData) {
+        return getUserCreditFullInfo(userId, accountNumber);
     }
 }

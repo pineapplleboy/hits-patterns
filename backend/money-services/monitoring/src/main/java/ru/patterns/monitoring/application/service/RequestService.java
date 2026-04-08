@@ -8,6 +8,7 @@ import ru.patterns.monitoring.application.common.ServiceRequestResultPercentMode
 import ru.patterns.monitoring.application.common.ServiceRequestsPerSecondModel;
 import ru.patterns.monitoring.domain.entity.Request;
 import ru.patterns.monitoring.domain.repository.RequestRepository;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.monitoring.RequestResult;
 
 import java.time.Duration;
@@ -22,7 +23,7 @@ public class RequestService {
 
     private final RequestRepository requestRepository;
 
-    public List<RequestResponseModel> getRequests(Instant startTime, Instant endTime) {
+    public List<RequestResponseModel> getRequests(Instant startTime, Instant endTime, TracingLog logData) {
         return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
                 .stream()
                 .map(request -> new RequestResponseModel()
@@ -35,10 +36,10 @@ public class RequestService {
                 .toList();
     }
 
-    public List<ServiceAverageResponseTimeModel> getAverageResponseTimeByServices(Instant startTime, Instant endTime) {
+    public List<ServiceAverageResponseTimeModel> getAverageResponseTimeByServices(Instant startTime, Instant endTime, TracingLog logData) {
         return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
                 .stream()
-                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "Неизвестный сервис" : request.getServiceId()))
+                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "РќРµРёР·РІРµСЃС‚РЅС‹Р№ СЃРµСЂРІРёСЃ" : request.getServiceId()))
                 .entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByKey())
@@ -51,10 +52,10 @@ public class RequestService {
                 .toList();
     }
 
-    public List<ServiceRequestResultPercentModel> getRequestResultPercentsByServices(Instant startTime, Instant endTime) {
+    public List<ServiceRequestResultPercentModel> getRequestResultPercentsByServices(Instant startTime, Instant endTime, TracingLog logData) {
         return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
                 .stream()
-                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "Неизвестный сервис" : request.getServiceId()))
+                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "РќРµРёР·РІРµСЃС‚РЅС‹Р№ СЃРµСЂРІРёСЃ" : request.getServiceId()))
                 .entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByKey())
@@ -71,12 +72,12 @@ public class RequestService {
                 .toList();
     }
 
-    public List<ServiceRequestsPerSecondModel> getRequestsPerSecondByServices(Instant startTime, Instant endTime) {
+    public List<ServiceRequestsPerSecondModel> getRequestsPerSecondByServices(Instant startTime, Instant endTime, TracingLog logData) {
         var intervalSeconds = Duration.between(startTime, endTime).toMillis() / 1000.0;
 
         return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
                 .stream()
-                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "Неизвестный сервис" : request.getServiceId()))
+                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "РќРµРёР·РІРµСЃС‚РЅС‹Р№ СЃРµСЂРІРёСЃ" : request.getServiceId()))
                 .entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByKey())

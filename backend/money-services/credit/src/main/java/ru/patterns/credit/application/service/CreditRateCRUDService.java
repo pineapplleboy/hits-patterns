@@ -3,13 +3,14 @@ package ru.patterns.credit.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.credit.application.common.constants.ErrorMessages;
-import ru.patterns.shared.exception.BadRequestException;
-import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.credit.application.common.model.request.CreditRateDataModel;
 import ru.patterns.credit.application.common.model.response.CreditRateModel;
 import ru.patterns.credit.domain.entity.CreditRate;
 import ru.patterns.credit.domain.mapper.CreditRateMapper;
 import ru.patterns.credit.domain.repository.CreditRateRepository;
+import ru.patterns.shared.exception.BadRequestException;
+import ru.patterns.shared.exception.NotFoundException;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.response.UuidResponseModel;
 
 import java.time.Instant;
@@ -22,19 +23,19 @@ import java.util.UUID;
 public class CreditRateCRUDService {
     private final CreditRateRepository creditRateRepository;
 
-    public List<CreditRateModel> getCreditRates() {
+    public List<CreditRateModel> getCreditRates(TracingLog logData) {
         return creditRateRepository.findByIsActiveTrue().stream()
                 .map(CreditRateMapper::toModel)
                 .toList();
     }
 
-    public CreditRateModel getCreditRateById(UUID id) {
+    public CreditRateModel getCreditRateById(UUID id, TracingLog logData) {
         return creditRateRepository.findById(id)
                 .map(CreditRateMapper::toModel)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.CREDIT_RATE_NOT_FOUND + id));
     }
 
-    public UuidResponseModel createCreditRate(CreditRateDataModel request) {
+    public UuidResponseModel createCreditRate(CreditRateDataModel request, TracingLog logData) {
         Optional<CreditRate> activeCreditRate = creditRateRepository.findByNameAndIsActiveTrue(request.getName());
 
         if (activeCreditRate.isPresent()) {
@@ -47,7 +48,7 @@ public class CreditRateCRUDService {
         return new UuidResponseModel(newCreditRate.getRateId());
     }
 
-    public void updateCreditRateModel(UUID id, CreditRateDataModel creditRateDataModel) {
+    public void updateCreditRateModel(UUID id, CreditRateDataModel creditRateDataModel, TracingLog logData) {
         CreditRate creditRate = findCreditByIdOrThrowException(id);
 
         creditRate.setName(creditRateDataModel.getName());
@@ -58,7 +59,7 @@ public class CreditRateCRUDService {
         creditRateRepository.save(creditRate);
     }
 
-    public void deactivateCreditRateById(UUID id) {
+    public void deactivateCreditRateById(UUID id, TracingLog logData) {
         CreditRate creditRate = findCreditByIdOrThrowException(id);
 
         creditRate.setActive(false);

@@ -6,6 +6,7 @@ import ru.patterns.monitoring.domain.entity.Log;
 import ru.patterns.monitoring.domain.entity.Request;
 import ru.patterns.monitoring.domain.repository.LogRepository;
 import ru.patterns.monitoring.domain.repository.RequestRepository;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.monitoring.LogModel;
 import ru.patterns.shared.model.monitoring.RequestMonitoringModel;
 
@@ -33,6 +34,10 @@ public class MonitoringDataService {
         logRepository.save(newLog);
     }
 
+    public void addLog(LogModel log, TracingLog logData) {
+        addLog(log);
+    }
+
     public void addRequest(RequestMonitoringModel request) {
         var newRequest = new Request()
                 .setPath(request.getPath())
@@ -42,5 +47,9 @@ public class MonitoringDataService {
                 .setRequestTime(request.getRequestTime());
 
         requestRepository.save(newRequest);
+    }
+
+    public void addRequest(RequestMonitoringModel request, TracingLog logData) {
+        addRequest(request);
     }
 }

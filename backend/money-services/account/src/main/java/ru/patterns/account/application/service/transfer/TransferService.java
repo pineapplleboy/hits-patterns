@@ -11,6 +11,7 @@ import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.kafka.TransferRequestMessage;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
 
 import java.util.UUID;
@@ -32,6 +33,13 @@ public class TransferService {
         return new OperationStatusResponseModel(OperationStatus.CREATED);
     }
 
+    public OperationStatusResponseModel replenishMoney(UUID userId, String bankAccountNumber,
+                                                       MoneyAmountRequestModel requestModel,
+                                                       String token,
+                                                       TracingLog logData) {
+        return replenishMoney(userId, bankAccountNumber, requestModel, token);
+    }
+
     public OperationStatusResponseModel withdrawMoney(UUID userId, String bankAccountNumber,
                                                       MoneyAmountRequestModel requestModel,
                                                       String token) {
@@ -41,6 +49,13 @@ public class TransferService {
                 TransferAccountType.BANK_ACCOUNT), token);
 
         return new OperationStatusResponseModel(OperationStatus.CREATED);
+    }
+
+    public OperationStatusResponseModel withdrawMoney(UUID userId, String bankAccountNumber,
+                                                      MoneyAmountRequestModel requestModel,
+                                                      String token,
+                                                      TracingLog logData) {
+        return withdrawMoney(userId, bankAccountNumber, requestModel, token);
     }
 
     public OperationStatusResponseModel transferToBankAccount(UUID userId, String bankAccountFrom,
@@ -56,6 +71,12 @@ public class TransferService {
         return new OperationStatusResponseModel(OperationStatus.CREATED);
     }
 
+    public OperationStatusResponseModel transferToBankAccount(UUID userId, String bankAccountFrom,
+                                                              String bankAccountTo, MoneyAmountRequestModel requestModel,
+                                                              String token,
+                                                              TracingLog logData) {
+        return transferToBankAccount(userId, bankAccountFrom, bankAccountTo, requestModel, token);
+    }
 
     public OperationStatusResponseModel payCredit(UUID userId, String bankAccountNumber,
                                                   String creditAccountNumber,
@@ -67,6 +88,14 @@ public class TransferService {
                         TransferAccountType.CREDIT_ACCOUNT), token);
 
         return new OperationStatusResponseModel(OperationStatus.CREATED);
+    }
+
+    public OperationStatusResponseModel payCredit(UUID userId, String bankAccountNumber,
+                                                  String creditAccountNumber,
+                                                  MoneyAmountRequestModel requestModel,
+                                                  String token,
+                                                  TracingLog logData) {
+        return payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel, token);
     }
 
     private TransferRequestMessage createOperationTransferRequestContext(UUID userIdFrom, UUID userIdTo, String accountNumberFrom,

@@ -12,6 +12,7 @@ import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
 
 import java.util.*;
@@ -42,6 +43,10 @@ public class OperationService {
                 .toList().reversed();
     }
 
+    public List<OperationModel> getUserOperations(UUID userId, TracingLog logData) {
+        return getUserOperations(userId);
+    }
+
     public List<OperationModel> getAccountOperations(String accountNumber, TransferAccountType transferAccountType) {
         Stream<Operation> operations = getOperationsByType(accountNumber, transferAccountType);
         if (transferAccountType == TransferAccountType.BANK_ACCOUNT) {
@@ -63,6 +68,10 @@ public class OperationService {
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList()
                 .reversed();
+    }
+
+    public List<OperationModel> getAccountOperations(String accountNumber, TransferAccountType transferAccountType, TracingLog logData) {
+        return getAccountOperations(accountNumber, transferAccountType);
     }
 
     public Map<String, List<OperationModel>> getAccountOperations(Set<String> accountNumbers, TransferAccountType transferAccountType) {
@@ -110,6 +119,10 @@ public class OperationService {
                 .toList();
     }
 
+    public List<OperationModel> getExpiredCreditOperations(UUID userId, TracingLog logData) {
+        return getExpiredCreditOperations(userId);
+    }
+
     private Stream<Operation> getOperationsByType(String accountNumber, TransferAccountType transferAccountType) {
         var outgoingOperations = operationRepository
                 .findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType);
@@ -140,6 +153,10 @@ public class OperationService {
 
     public OperationStatusResponseModel getOperationStatus(UUID operationId) {
         return new OperationStatusResponseModel(getOperationById(operationId).getStatus());
+    }
+
+    public OperationStatusResponseModel getOperationStatus(UUID operationId, TracingLog logData) {
+        return getOperationStatus(operationId);
     }
 
     private Operation getOperationById(UUID operationId) {

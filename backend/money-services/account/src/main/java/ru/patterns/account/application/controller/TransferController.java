@@ -3,11 +3,13 @@ package ru.patterns.account.application.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import ru.patterns.account.application.common.model.request.MoneyAmountRequestModel;
 import ru.patterns.account.application.service.transfer.TransferService;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
 import ru.patterns.shared.utility.AuthUtility;
+import ru.patterns.shared.utility.TraceLogUtility;
 
 import java.util.UUID;
 
@@ -18,15 +20,20 @@ public class TransferController {
 
     private final TransferService transferService;
 
+    @Value("${service.name}")
+    private String serviceName;
+
     @PostMapping("/replenish")
     @Operation(summary = "Пополнить счёт [Пользователь]")
     public OperationStatusResponseModel replenishMoney(@PathVariable UUID userId,
                                                        @PathVariable String bankAccountNumber,
                                                        @RequestBody MoneyAmountRequestModel requestModel,
-                                                       @Parameter(hidden = true) @RequestHeader String authorization) {
+                                                       @Parameter(hidden = true) @RequestHeader String authorization,
+                                                       @RequestHeader(value = "traceId") String traceId) {
         AuthUtility.checkUserIdEquality(authorization, userId);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
 
-        return transferService.replenishMoney(userId, bankAccountNumber, requestModel, authorization);
+        return transferService.replenishMoney(userId, bankAccountNumber, requestModel, authorization, logData);
     }
 
     @PostMapping("/withdraw")
@@ -34,10 +41,12 @@ public class TransferController {
     public OperationStatusResponseModel withdrawMoney(@PathVariable UUID userId,
                                                       @PathVariable String bankAccountNumber,
                                                       @RequestBody MoneyAmountRequestModel requestModel,
-                                                      @Parameter(hidden = true) @RequestHeader String authorization) {
+                                                      @Parameter(hidden = true) @RequestHeader String authorization,
+                                                      @RequestHeader(value = "traceId") String traceId) {
         AuthUtility.checkUserIdEquality(authorization, userId);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
 
-        return transferService.withdrawMoney(userId, bankAccountNumber, requestModel, authorization);
+        return transferService.withdrawMoney(userId, bankAccountNumber, requestModel, authorization, logData);
     }
 
     @PostMapping("/credit-payments/{creditAccountNumber}")
@@ -46,10 +55,12 @@ public class TransferController {
                                                   @PathVariable String bankAccountNumber,
                                                   @PathVariable String creditAccountNumber,
                                                   @RequestBody MoneyAmountRequestModel requestModel,
-                                                  @Parameter(hidden = true) @RequestHeader String authorization) {
+                                                  @Parameter(hidden = true) @RequestHeader String authorization,
+                                                  @RequestHeader(value = "traceId") String traceId) {
         AuthUtility.checkUserIdEquality(authorization, userId);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
 
-        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel, authorization);
+        return transferService.payCredit(userId, bankAccountNumber, creditAccountNumber, requestModel, authorization, logData);
     }
 
     @PostMapping("/bankAccountTo/{bankAccountTo}")
@@ -58,10 +69,12 @@ public class TransferController {
                                                               @PathVariable String bankAccountNumber,
                                                               @PathVariable String bankAccountTo,
                                                               @RequestBody MoneyAmountRequestModel requestModel,
-                                                              @Parameter(hidden = true) @RequestHeader String authorization) {
+                                                              @Parameter(hidden = true) @RequestHeader String authorization,
+                                                              @RequestHeader(value = "traceId") String traceId) {
         AuthUtility.checkUserIdEquality(authorization, userId);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName);
 
-        return transferService.transferToBankAccount(userId, bankAccountNumber, bankAccountTo, requestModel, authorization);
+        return transferService.transferToBankAccount(userId, bankAccountNumber, bankAccountTo, requestModel, authorization, logData);
     }
 
 }
