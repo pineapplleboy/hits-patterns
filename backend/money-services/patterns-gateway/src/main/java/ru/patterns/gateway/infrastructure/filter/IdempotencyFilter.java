@@ -160,7 +160,7 @@ public class IdempotencyFilter implements GlobalFilter, Ordered {
         idempotencyService.updateResponse(record, new ResponseData()
                 .setResponseCode(responseCode)
                 .setResponseBody(response.getBody())
-                .setStatus(responseCode >= 200 && responseCode < 400
+                .setStatus(responseCode >= 200 && responseCode < 500
                         ? IdempotencyStatus.COMPLETED
                         : IdempotencyStatus.FAILED));
     }
