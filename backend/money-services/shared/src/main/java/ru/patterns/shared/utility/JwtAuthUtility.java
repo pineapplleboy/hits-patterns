@@ -222,6 +222,6 @@ public class JwtAuthUtility {
     }
 
     private UnauthorizedException unauthorizedException() {
-        return new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
+        return new UnauthorizedException(ErrorMessages.UNAUTHORIZED, null);
     }
 }

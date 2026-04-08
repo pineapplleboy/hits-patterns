@@ -25,7 +25,10 @@ public class TransfersRequestListener {
     private String topic;
 
     @KafkaListener(topics = "${kafka.consumer.transfer-request}", groupId = "${kafka.group}")
-    public void listen(@Payload String message, @Header("Authorization") String token, Acknowledgment ack) {
+    public void listen(@Payload String message,
+                       @Header("Authorization") String token,
+                       @Header(value = "traceId", required = false) String traceId,
+                       Acknowledgment ack) {
         try {
             log.info("Получено сообщение из топика {}: {}", topic, message);
 
@@ -34,15 +37,14 @@ public class TransfersRequestListener {
             AuthUtility.isAuthorized(token);
 
             try {
-                transferRequestService.processTransferRequest(msg, token);
-            }
-            catch (Exception e) {
-                transferRequestService.processReject(msg, token);
+                transferRequestService.processTransferRequest(msg, token, traceId);
+            } catch (Exception exception) {
+                transferRequestService.processReject(msg, token, traceId);
             }
 
             ack.acknowledge();
         } catch (Exception exception) {
-            log.error("Ошибка при обработке сообщения, {}", exception.getMessage());
+            log.error("Ошибка при обработке сообщения: {}", exception.getMessage());
 
             ack.acknowledge();
         }

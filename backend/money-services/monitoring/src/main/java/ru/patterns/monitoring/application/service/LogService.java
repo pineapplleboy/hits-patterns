@@ -10,6 +10,7 @@ import ru.patterns.monitoring.domain.entity.Log;
 import ru.patterns.monitoring.domain.repository.LogRepository;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.model.log.TracingLog;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 
 import java.time.Instant;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class LogService {
 
     private final LogRepository logRepository;
+    private final MonitoringLogger monitoringLogger;
 
     public List<LogResponseModel> getLogs(
             Instant startTime,
@@ -35,8 +37,10 @@ public class LogService {
             TracingLog logData
     ) {
         if (startTime.isAfter(endTime)) {
-            throw new BadRequestException("endTime РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ РїРѕР·Р¶Рµ, С‡РµРј startTime");
+            throw new BadRequestException("endTime должно быть позже startTime", logData);
         }
+
+        monitoringLogger.logInfo(logData, "Получен запрос на получение логов пользователем " + requestUserId);
 
         var selectedFields = LogField.fromStrings(fields);
         var sort = Sort.by(Sort.Direction.DESC, "logTime");

@@ -14,6 +14,11 @@ public class MonitoringLogger {
 
     private final KafkaLoggerProvider kafkaLoggerProvider;
 
+    public void logError(String message, String serviceId) {
+        logError(new TracingLog()
+                .setServiceId(serviceId), message, "-", "-");
+    }
+
     public void logInfo(TracingLog logData, String message) {
         logInfo(logData, message, "-", "-");
     }
@@ -24,10 +29,6 @@ public class MonitoringLogger {
 
     public void logError(TracingLog logData, String message) {
         logError(logData, message, "-", "-");
-    }
-
-    public void logDebug(TracingLog logData, String message) {
-        logDebug(logData, message, "-", "-");
     }
 
     public void logInfo(TracingLog logData, String message, String requestBody, String responseBody) {

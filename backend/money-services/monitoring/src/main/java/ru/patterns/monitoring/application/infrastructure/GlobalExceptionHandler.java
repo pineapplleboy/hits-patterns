@@ -1,4 +1,4 @@
-package ru.patterns.currency.application.infrastructure;
+package ru.patterns.monitoring.application.infrastructure;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

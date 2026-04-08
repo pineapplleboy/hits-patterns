@@ -20,7 +20,7 @@ public class KafkaRequestProvider {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${kafka.provider.request-topic}")
+    @Value("${kafka.provider.request-topic:00_requests}")
     private String topic;
 
     public void send(RequestMonitoringModel message) {

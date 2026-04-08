@@ -9,7 +9,6 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.model.kafka.TransferRequestMessage;
 
 import java.nio.charset.StandardCharsets;
@@ -27,6 +26,10 @@ public class TransferRequestProvider {
     private String topic;
 
     public void send(TransferRequestMessage message, String token) {
+        send(message, token, null);
+    }
+
+    public void send(TransferRequestMessage message, String token, String traceId) {
         try {
             String payload = objectMapper.writeValueAsString(message);
 
@@ -36,6 +39,12 @@ public class TransferRequestProvider {
             record.headers().add(
                     new RecordHeader("Authorization", token.getBytes(StandardCharsets.UTF_8))
             );
+
+            if (traceId != null) {
+                record.headers().add(
+                        new RecordHeader("traceId", traceId.getBytes(StandardCharsets.UTF_8))
+                );
+            }
 
             kafkaTemplate
                     .send(record)

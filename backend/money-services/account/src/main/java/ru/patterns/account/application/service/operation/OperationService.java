@@ -14,6 +14,7 @@ import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 
 import java.util.*;
 import java.util.function.Function;
@@ -26,6 +27,7 @@ import java.util.stream.Stream;
 public class OperationService {
 
     private final OperationRepository operationRepository;
+    private final MonitoringLogger monitoringLogger;
 
     public List<OperationModel> getUserOperations(UUID userId) {
         var outgoingOperations = operationRepository.findByUserIdFrom(userId);
@@ -44,6 +46,8 @@ public class OperationService {
     }
 
     public List<OperationModel> getUserOperations(UUID userId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение операций пользователя");
+
         return getUserOperations(userId);
     }
 
@@ -71,6 +75,8 @@ public class OperationService {
     }
 
     public List<OperationModel> getAccountOperations(String accountNumber, TransferAccountType transferAccountType, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение операций по счёту");
+
         return getAccountOperations(accountNumber, transferAccountType);
     }
 
@@ -120,6 +126,8 @@ public class OperationService {
     }
 
     public List<OperationModel> getExpiredCreditOperations(UUID userId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение просроченных кредитных операций");
+
         return getExpiredCreditOperations(userId);
     }
 
@@ -156,11 +164,13 @@ public class OperationService {
     }
 
     public OperationStatusResponseModel getOperationStatus(UUID operationId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение статуса операции");
+
         return getOperationStatus(operationId);
     }
 
     private Operation getOperationById(UUID operationId) {
         return operationRepository.findById(operationId)
-                .orElseThrow(() -> new NotFoundException(ErrorMessages.OPERATION_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.OPERATION_NOT_FOUND, null));
     }
 }

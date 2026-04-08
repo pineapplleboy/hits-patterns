@@ -22,7 +22,7 @@ public class TransferAssignmentProvider {
     @Value("${kafka.provider.transfer-assignment}")
     private String topic;
 
-    public void send(TransferAssignmentMessage message, String token) {
+    public void send(TransferAssignmentMessage message, String token, String traceId) {
         try {
             String payload = objectMapper.writeValueAsString(message);
 
@@ -32,6 +32,12 @@ public class TransferAssignmentProvider {
             record.headers().add(
                     new RecordHeader("Authorization", token.getBytes(StandardCharsets.UTF_8))
             );
+
+            if (traceId != null) {
+                record.headers().add(
+                        new RecordHeader("traceId", traceId.getBytes(StandardCharsets.UTF_8))
+                );
+            }
 
             kafkaTemplate
                     .send(record)

@@ -9,6 +9,7 @@ import ru.patterns.credit.application.common.model.operation.CreditOperationMode
 import ru.patterns.credit.application.common.model.operation.CreditStats;
 import ru.patterns.credit.application.common.model.response.CreditRatingModel;
 import ru.patterns.shared.model.log.TracingLog;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 import ru.patterns.shared.utility.RestClientRetryUtility;
 
 import java.math.BigDecimal;
@@ -19,16 +20,24 @@ import java.util.UUID;
 public class CreditRatingService {
 
     private final RestClient accountClient;
+    private final MonitoringLogger monitoringLogger;
 
-    public CreditRatingService(@Qualifier("accountClient") RestClient accountClient) {
+    public CreditRatingService(@Qualifier("accountClient") RestClient accountClient,
+                               MonitoringLogger monitoringLogger) {
         this.accountClient = accountClient;
+        this.monitoringLogger = monitoringLogger;
     }
 
     // Рейтинг формируется автоматически с учетом платежной дисциплины, долговой нагрузки,
     // количества заявок на кредиты и срока кредитной истории
 
     public CreditRatingModel getUserCreditRating(UUID userId, String token, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на расчёт кредитного рейтинга пользователя");
+
         var creditHistory = getUserCreditHistory(userId, token);
+        if (creditHistory == null || creditHistory.isEmpty()) {
+            monitoringLogger.logWarn(logData, "Кредитная история пользователя пуста, будет использован базовый рейтинг");
+        }
         var stats = collectCreditStats(creditHistory);
 
         var creditRating = calculateCreditRating(stats);

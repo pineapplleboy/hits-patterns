@@ -20,7 +20,7 @@ public class KafkaLoggerProvider {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${kafka.provider.log-topic}")
+    @Value("${kafka.provider.log-topic:00_logs}")
     private String topic;
 
     public void send(LogModel message) {
