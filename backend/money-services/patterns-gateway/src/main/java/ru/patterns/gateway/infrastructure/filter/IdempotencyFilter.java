@@ -37,7 +37,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class IdempotencyFilter implements GlobalFilter, Ordered {
 
-    private static final String IDEMPOTENCY_HEADER = "Idempotency-Key";
+    private static final String IDEMPOTENCY_HEADER = "idempotencyKey";
 
     private final IdempotencyService idempotencyService;
     private final ObjectMapper objectMapper;
@@ -88,7 +88,7 @@ public class IdempotencyFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
+        return Ordered.HIGHEST_PRECEDENCE + 2;
     }
 
     private Mono<Void> processRequest(ServerWebExchange exchange,
