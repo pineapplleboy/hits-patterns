@@ -8,6 +8,8 @@ topics=(
   "00_ban_user_auth"
   "00_ban_user_bank_accounts"
   "00_create_user"
+  "00_logs"
+  "00_requests"
   "00_take_credit"
   "00_transfer_request"
   "00_transfer_assignment"
