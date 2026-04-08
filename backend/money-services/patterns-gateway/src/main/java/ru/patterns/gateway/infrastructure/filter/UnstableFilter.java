@@ -14,6 +14,7 @@ import reactor.util.annotation.NonNull;
 import ru.patterns.shared.model.response.ErrorResponse;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -63,7 +64,8 @@ public class UnstableFilter implements GlobalFilter, Ordered {
         exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 
         try {
-            byte[] responseBody = mapper.writeValueAsBytes(new ErrorResponse(500, "Ошибка сервера!"));
+            String body = mapper.writeValueAsString(new ErrorResponse(500, "Ошибка сервера"));
+            byte[] responseBody = body.getBytes(StandardCharsets.UTF_8);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(responseBody);
             return exchange.getResponse().writeWith(Mono.just(buffer));
         } catch (IOException exception) {

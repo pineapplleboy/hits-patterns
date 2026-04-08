@@ -321,14 +321,24 @@ services:
     image: ghcr.io/pineapplleboy/hits-patterns-patterns-gateway:latest
     container_name: patterns-gateway
     depends_on:
-      - identity-server
-      - patterns-users
-      - patterns-user-setting
-      - account-service
-      - credit-service
-      - transfers-service
-      - currency-service
-      - monitoring-service
+      postgres:
+        condition: service_healthy
+      identity-server:
+        condition: service_started
+      patterns-users:
+        condition: service_started
+      patterns-user-setting:
+        condition: service_started
+      account-service:
+        condition: service_started
+      credit-service:
+        condition: service_started
+      transfers-service:
+        condition: service_started
+      currency-service:
+        condition: service_started
+      monitoring-service:
+        condition: service_started
     environment:
       SERVICES_IDENTITY_SERVER_URL: http://identity-server:5001
       SERVICES_PATTERNS_USERS_URL: http://patterns-users:8080
@@ -338,6 +348,10 @@ services:
       SERVICES_TRANSFERS_SERVICE_URL: http://transfers-service:8083
       SERVICES_CURRENCY_SERVICE_URL: http://currency-service:8084
       SERVICES_MONITORING_SERVICE_URL: http://monitoring-service:8086
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_gateway
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
     ports:
       - "127.0.0.1:8085:8085"

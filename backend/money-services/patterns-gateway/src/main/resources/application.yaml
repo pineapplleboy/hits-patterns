@@ -2,6 +2,16 @@ spring:
   application:
     name: patterns-gateway
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/patterns_gateway
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
   cloud:
     gateway:
       server:
