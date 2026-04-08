@@ -98,6 +98,7 @@ services:
       ASPNETCORE_URLS: http://+:5001
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=testIdentity;Username=postgres;Password=postgres
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DataProtection__KeysPath: /var/app/data-protection-keys
       SWAGGER_USERS_URL: http://91.227.18.176/users
       SWAGGER_USER_SETTINGS_URL: http://91.227.18.176/settings
       SWAGGER_ACCOUNT_URL: http://91.227.18.176/core
@@ -105,6 +106,8 @@ services:
       SWAGGER_CURRENCY_URL: http://91.227.18.176/currency
       SWAGGER_CREDIT_URL: http://91.227.18.176/credit
       SWAGGER_MONITORING_URL: http://91.227.18.176/monitoring
+    volumes:
+      - identity-data-protection:/var/app/data-protection-keys
     ports:
       - "127.0.0.1:5001:5001"
     restart: unless-stopped
@@ -366,3 +369,4 @@ services:
 
 volumes:
   postgres-data:
+  identity-data-protection:
