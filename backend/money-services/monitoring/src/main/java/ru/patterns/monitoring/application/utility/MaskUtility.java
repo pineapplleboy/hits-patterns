@@ -16,7 +16,7 @@ public class MaskUtility {
     }
 
     public String maskBody(String path, String body) {
-        if (path.contains("/swagger-ui") || path.contains("api-docs")) {
+        if (path.contains("/swagger-ui") || path.contains("api-docs") || path.contains("token")) {
             return "*";
         }
 
