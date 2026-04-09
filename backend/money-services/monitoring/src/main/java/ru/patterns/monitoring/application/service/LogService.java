@@ -40,7 +40,7 @@ public class LogService {
             throw new BadRequestException("endTime должно быть позже startTime", logData);
         }
 
-        monitoringLogger.logInfo(logData, "Получен запрос на получение логов пользователем " + requestUserId);
+        monitoringLogger.logInfo(logData, buildLogsRequestedMessage(logData));
 
         var selectedFields = LogField.fromStrings(fields);
         var sort = Sort.by(Sort.Direction.DESC, "logTime");
@@ -50,6 +50,10 @@ public class LogService {
                 .stream()
                 .map(log -> mapToResponse(log, selectedFields))
                 .toList();
+    }
+
+    private String buildLogsRequestedMessage(TracingLog logData) {
+        return "Получен запрос на получение логов пользователем " + logData.getRequestUserId();
     }
 
     private Specification<Log> buildQuerySpecification(

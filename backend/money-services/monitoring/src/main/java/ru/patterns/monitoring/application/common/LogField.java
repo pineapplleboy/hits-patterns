@@ -28,7 +28,7 @@ public enum LogField {
     }
 
     public static Set<LogField> fromStrings(List<String> fields) {
-        if (fields.isEmpty()) {
+        if (fields == null || fields.isEmpty()) {
             return EnumSet.allOf(LogField.class);
         }
 
