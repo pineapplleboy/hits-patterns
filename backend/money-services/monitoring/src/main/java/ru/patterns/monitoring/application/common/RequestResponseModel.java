@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import ru.patterns.shared.model.monitoring.RequestResult;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -20,7 +19,7 @@ public class RequestResponseModel {
 
     private RequestResult requestResult = RequestResult.OK;
 
-    private Duration responseTime = Duration.ZERO;
+    private String responseTime;
 
     private Instant requestTime = Instant.now();
 }

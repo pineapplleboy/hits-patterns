@@ -2,6 +2,7 @@ package ru.patterns.monitoring.application.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.patterns.monitoring.application.utility.MonitoringFormatUtility;
 import ru.patterns.monitoring.application.common.RequestResponseModel;
 import ru.patterns.monitoring.application.common.ServiceAverageResponseTimeModel;
 import ru.patterns.monitoring.application.common.ServiceRequestResultPercentModel;
@@ -26,12 +27,13 @@ public class RequestService {
     public List<RequestResponseModel> getRequests(Instant startTime, Instant endTime, TracingLog logData) {
         return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
                 .stream()
+                .filter(request -> MonitoringFormatUtility.hasKnownServiceId(request.getServiceId()))
                 .map(request -> new RequestResponseModel()
                         .setRequestId(request.getRequestId())
                         .setPath(request.getPath())
-                        .setServiceId(request.getServiceId())
+                        .setServiceId(MonitoringFormatUtility.formatServiceId(request.getServiceId()))
                         .setRequestResult(request.getRequestResult())
-                        .setResponseTime(request.getResponseTime())
+                        .setResponseTime(MonitoringFormatUtility.formatDuration(request.getResponseTime()))
                         .setRequestTime(request.getRequestTime()))
                 .toList();
     }
@@ -39,23 +41,24 @@ public class RequestService {
     public List<ServiceAverageResponseTimeModel> getAverageResponseTimeByServices(Instant startTime, Instant endTime, TracingLog logData) {
         return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
                 .stream()
-                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "РќРµРёР·РІРµСЃС‚РЅС‹Р№ СЃРµСЂРІРёСЃ" : request.getServiceId()))
+                .filter(request -> MonitoringFormatUtility.hasKnownServiceId(request.getServiceId()))
+                .collect(Collectors.groupingBy(request -> MonitoringFormatUtility.formatServiceId(request.getServiceId())))
                 .entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> new ServiceAverageResponseTimeModel()
                         .setServiceId(entry.getKey())
-                        .setAverageResponseTime(calculateAverageDuration(entry.getValue()
-                                .stream()
-                                .map(Request::getResponseTime)
-                                .toList())))
+                        .setAverageResponseTime(MonitoringFormatUtility.formatDuration(calculateAverageDuration(
+                                entry.getValue().stream().map(Request::getResponseTime).toList()
+                        ))))
                 .toList();
     }
 
     public List<ServiceRequestResultPercentModel> getRequestResultPercentsByServices(Instant startTime, Instant endTime, TracingLog logData) {
         return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
                 .stream()
-                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "РќРµРёР·РІРµСЃС‚РЅС‹Р№ СЃРµСЂРІРёСЃ" : request.getServiceId()))
+                .filter(request -> MonitoringFormatUtility.hasKnownServiceId(request.getServiceId()))
+                .collect(Collectors.groupingBy(request -> MonitoringFormatUtility.formatServiceId(request.getServiceId())))
                 .entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByKey())
@@ -77,7 +80,8 @@ public class RequestService {
 
         return requestRepository.findAllByRequestTimeBetweenOrderByRequestTimeDesc(startTime, endTime)
                 .stream()
-                .collect(Collectors.groupingBy(request -> request.getServiceId() == null ? "РќРµРёР·РІРµСЃС‚РЅС‹Р№ СЃРµСЂРІРёСЃ" : request.getServiceId()))
+                .filter(request -> MonitoringFormatUtility.hasKnownServiceId(request.getServiceId()))
+                .collect(Collectors.groupingBy(request -> MonitoringFormatUtility.formatServiceId(request.getServiceId())))
                 .entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByKey())
