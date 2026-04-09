@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public class MaskUtility {
 
     private static final Pattern SENSITIVE_AMOUNT_OR_BALANCE_PATTERN = Pattern.compile(
-            "(?i)(\"[^\"]*(?:amount|balance)[^\"]*\"\\s*:\\s*)(\"[^\"]*\"|-?\\d+(?:\\.\\d+)?)"
+            "(?i)(\"[^\"]*(?:amount|balance|access_token)[^\"]*\"\\s*:\\s*)(\"[^\"]*\"|-?\\d+(?:\\.\\d+)?)"
     );
 
     public String maskAuthorization(String authorization) {
@@ -16,7 +16,7 @@ public class MaskUtility {
     }
 
     public String maskBody(String path, String body) {
-        if (path.contains("/swagger-ui")) {
+        if (path.contains("/swagger-ui") || path.contains("api-docs")) {
             return "*";
         }
 
