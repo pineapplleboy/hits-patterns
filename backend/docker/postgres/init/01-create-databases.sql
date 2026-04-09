@@ -64,6 +64,14 @@ $$;
 
 DO $$
 BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'patterns_notification') THEN
+        EXECUTE 'CREATE DATABASE "patterns_notification"';
+    END IF;
+END
+$$;
+
+DO $$
+BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'patterns_gateway') THEN
         EXECUTE 'CREATE DATABASE "patterns_gateway"';
     END IF;

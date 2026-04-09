@@ -116,6 +116,10 @@ jobs:
             add_service 'monitoring-service' 'hits-patterns-monitoring-service' './backend/money-services' './backend/money-services/Dockerfile' 'monitoring-service' 'SERVICE_NAME=monitoring'
           fi
 
+          if has_change '^backend/money-services/(notification|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'notification-service' 'hits-patterns-notification-service' './backend/money-services' './backend/money-services/Dockerfile' 'notification-service' 'SERVICE_NAME=notification'
+          fi
+
           if has_change '^backend/money-services/(patterns-gateway|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
             add_service 'patterns-gateway' 'hits-patterns-patterns-gateway' './backend/money-services' './backend/money-services/Dockerfile' 'patterns-gateway' 'SERVICE_NAME=patterns-gateway'
           fi
@@ -203,6 +207,8 @@ jobs:
             if docker ps --format "{{.Names}}" | grep -qx "patterns-postgres"; then
               docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = \$\$patterns_monitoring\$\$" | grep -q 1 \
                 || docker exec patterns-postgres psql -U postgres -c "CREATE DATABASE \"patterns_monitoring\";"
+              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = \$\$patterns_notification\$\$" | grep -q 1 \
+                || docker exec patterns-postgres psql -U postgres -c "CREATE DATABASE \"patterns_notification\";"
             fi
 
             if [ "$DEPLOY_ALL" = "true" ]; then

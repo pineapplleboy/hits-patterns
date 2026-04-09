@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: notification
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/patterns_notification
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+server:
+  port: 8087
+  forward-headers-strategy: framework
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+    oauth2-redirect-url: ${SWAGGER_OAUTH2_REDIRECT_URL:http://localhost:8087/swagger-ui/oauth2-redirect.html}
+    oauth:
+      client-id: ${SWAGGER_CLIENT_ID:api_swagger_notification}
+      use-pkce-with-authorization-code-grant: true
+      scopes: ${SWAGGER_OAUTH_SCOPES:SampleAPI}
+  api-docs:
+    path: /v3/api-docs
+  cache:
+    disabled: true
+
+app:
+  security:
+    oauth2:
+      authorization-url: ${SWAGGER_AUTHORIZATION_URL:https://localhost:5001/connect/authorize}
+      token-url: ${SWAGGER_TOKEN_URL:https://localhost:5001/connect/token}
+      scope: ${SWAGGER_OAUTH_SCOPE:SampleAPI}
+      scope-description: ${SWAGGER_OAUTH_SCOPE_DESCRIPTION:Sample API - full access}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+service:
+  name: patterns-notification-service

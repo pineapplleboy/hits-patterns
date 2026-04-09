@@ -5,12 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
 import ru.patterns.shared.model.response.ErrorResponse;
-
-import java.time.OffsetDateTime;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/fallback")
