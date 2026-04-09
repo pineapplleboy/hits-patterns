@@ -10,5 +10,6 @@
     <include file="/db/changelog/001-create-request.xml"/>
     <include file="/db/changelog/002-create-log.xml"/>
     <include file="/db/changelog/003-add-request-result-to-request.xml"/>
+    <include file="/db/changelog/004-rename-log-authorization-column.xml"/>
 
 </databaseChangeLog>

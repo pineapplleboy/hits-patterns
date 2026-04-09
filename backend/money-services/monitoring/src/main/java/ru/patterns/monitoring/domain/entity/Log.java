@@ -47,7 +47,7 @@ public class Log {
     @Column(name = "request_user_id")
     private UUID requestUserId;
 
-    @Column(name = "authorization")
+    @Column(name = "authorization_header")
     private String authorization;
 
     @Column(name = "trace_id")

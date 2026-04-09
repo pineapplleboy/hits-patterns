@@ -56,15 +56,19 @@ public class MonitoringLogger {
     }
 
     private void sendMessage(TracingLog logData, String message, String requestBody, String responseBody, LogStatus status) {
+        var safeLogData = logData != null
+                ? logData
+                : new TracingLog().setRequestUserId(null);
+
         var logModel = new LogModel()
-                .setServiceId(logData.getServiceId())
-                .setPath(logData.getPath())
+                .setServiceId(safeLogData.getServiceId())
+                .setPath(safeLogData.getPath())
                 .setStatus(status)
                 .setMessage(message)
-                .setRequestUserId(logData.getRequestUserId())
-                .setAuthorization(logData.getAuthorization())
-                .setTraceId(logData.getTraceId())
-                .setSpanId(logData.getSpanId())
+                .setRequestUserId(safeLogData.getRequestUserId())
+                .setAuthorization(safeLogData.getAuthorization())
+                .setTraceId(safeLogData.getTraceId())
+                .setSpanId(safeLogData.getSpanId())
                 .setRequestBody(requestBody)
                 .setResponseBody(responseBody);
 
