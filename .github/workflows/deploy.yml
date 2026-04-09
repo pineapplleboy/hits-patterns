@@ -186,6 +186,7 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SUDO_PASSWORD: ${{ secrets.VPS_SUDO_PASSWORD }}
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HAS_BUILDS: ${{ needs.detect_changes.outputs.has_builds }}
@@ -194,7 +195,7 @@ jobs:
           RELOAD_NGINX: ${{ needs.detect_changes.outputs.reload_nginx }}
         run: |
           ssh "$VPS_USER@$VPS_HOST" \
-            "GHCR_USERNAME='$GHCR_USERNAME' GHCR_TOKEN='$GHCR_TOKEN' HAS_BUILDS='$HAS_BUILDS' SERVICE_NAMES='$SERVICE_NAMES' DEPLOY_ALL='$DEPLOY_ALL' RELOAD_NGINX='$RELOAD_NGINX' bash -s" <<'EOF'
+            "GHCR_USERNAME='$GHCR_USERNAME' GHCR_TOKEN='$GHCR_TOKEN' VPS_SUDO_PASSWORD='$VPS_SUDO_PASSWORD' HAS_BUILDS='$HAS_BUILDS' SERVICE_NAMES='$SERVICE_NAMES' DEPLOY_ALL='$DEPLOY_ALL' RELOAD_NGINX='$RELOAD_NGINX' bash -s" <<'EOF'
           set -e
           flock -n -E 42 /tmp/deploy.lock bash -lc '
             set -e
@@ -227,9 +228,15 @@ jobs:
 
             if [ "$RELOAD_NGINX" = "true" ]; then
               echo "Reloading nginx config"
-              sudo install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
-              sudo nginx -t
-              sudo systemctl reload nginx
+              if [ -n "$VPS_SUDO_PASSWORD" ]; then
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k nginx -t
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k systemctl reload nginx
+              else
+                sudo -n install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
+                sudo -n nginx -t
+                sudo -n systemctl reload nginx
+              fi
             fi
           '
           status=$?
