@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.route.Route;
+import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
@@ -49,6 +51,7 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
 
         String serviceFromHeader = exchange.getRequest().getHeaders().getFirst("serviceFrom");
         String traceIdFromHeader = exchange.getRequest().getHeaders().getFirst("traceId");
+        String serviceId = resolveServiceId(exchange, serviceFromHeader);
 
         AtomicReference<String> requestBodyReference = new AtomicReference<>("");
         AtomicReference<StringBuilder> responseBodyReference = new AtomicReference<>(new StringBuilder());
@@ -113,9 +116,9 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
                                 UUID requestingUserId = extractUserId(authorizationHeader).orElse(null);
 
                                 monitoringLogger.logInfo(formLogModel(traceIdFromHeader, UUID.randomUUID().toString(),
-                                                authorizationHeader, requestingUserId, serviceFromHeader, endpoint),
+                                                authorizationHeader, requestingUserId, serviceId, endpoint),
                                         "Запрос", requestBody, responseBody);
-                                requestMonitoringService.sendRequestToMonitoring(formRequestMonitoringService(endpoint, serviceFromHeader,
+                                requestMonitoringService.sendRequestToMonitoring(formRequestMonitoringService(endpoint, serviceId,
                                         requestResult, Duration.ofMillis(responseTimeMillis)));
                             });
                 });
@@ -165,6 +168,15 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
         } catch (Exception exception) {
             return Optional.empty();
         }
+    }
+
+    private String resolveServiceId(ServerWebExchange exchange, String serviceFromHeader) {
+        if (StringUtils.hasText(serviceFromHeader)) {
+            return serviceFromHeader;
+        }
+
+        Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
+        return route != null ? route.getId() : null;
     }
     
     private TracingLog formLogModel(String traceId, String spanId, String authorization, UUID requestUserId, String serviceId, String path) {
