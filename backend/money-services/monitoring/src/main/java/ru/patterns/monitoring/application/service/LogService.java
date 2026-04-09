@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.patterns.monitoring.application.common.LogField;
 import ru.patterns.monitoring.application.common.LogResponseModel;
+import ru.patterns.monitoring.application.utility.MaskUtility;
 import ru.patterns.monitoring.domain.entity.Log;
 import ru.patterns.monitoring.domain.repository.LogRepository;
 import ru.patterns.shared.exception.BadRequestException;
@@ -108,16 +109,16 @@ public class LogService {
             response.setPath(log.getPath());
         }
         if (selectedFields.contains(LogField.REQUEST_BODY)) {
-            response.setRequestBody(log.getRequestBody());
+            response.setRequestBody(MaskUtility.maskBody(log.getPath(), log.getRequestBody()));
         }
         if (selectedFields.contains(LogField.RESPONSE_BODY)) {
-            response.setResponseBody(log.getResponseBody());
+            response.setResponseBody(MaskUtility.maskBody(log.getPath(), log.getResponseBody()));
         }
         if (selectedFields.contains(LogField.REQUEST_USER_ID)) {
             response.setRequestUserId(log.getRequestUserId());
         }
         if (selectedFields.contains(LogField.AUTHORIZATION)) {
-            response.setAuthorization(log.getAuthorization());
+            response.setAuthorization(MaskUtility.maskAuthorization(log.getAuthorization()));
         }
         if (selectedFields.contains(LogField.TRACE_ID)) {
             response.setTraceId(log.getTraceId());
