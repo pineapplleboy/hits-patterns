@@ -35,7 +35,7 @@ public class CurrencyController {
     @GetMapping("/all-rates")
     @Operation(summary = "Получение всех доступных валют с тарифами [Все]")
     public List<CurrencyResponseModel> getAllCurrencies(@Parameter(hidden = true) @RequestHeader String authorization,
-                                                        @RequestHeader(value = "traceId") String traceId,
+                                                        @RequestHeader(value = "traceId", required = false) String traceId,
                                                         HttpServletRequest request) {
         AuthUtility.isAuthorized(authorization);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -48,7 +48,7 @@ public class CurrencyController {
     @Operation(summary = "Получение информации о конкретной валюте [Все]")
     public CurrencyResponseModel getCurrency(@PathVariable("currencyId") Integer currencyId,
                                              @Parameter(hidden = true) @RequestHeader String authorization,
-                                             @RequestHeader(value = "traceId") String traceId,
+                                             @RequestHeader(value = "traceId", required = false) String traceId,
                                              HttpServletRequest request) {
         AuthUtility.isAuthorized(authorization);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -61,7 +61,7 @@ public class CurrencyController {
     @Operation(summary = "Конвертация валюты [Все]")
     public CurrencyAmountModel calculateTransferBetweenCurrencies(@RequestBody CalculatorRequestModel calculatorRequest,
                                                                   @Parameter(hidden = true) @RequestHeader String authorization,
-                                                                  @RequestHeader(value = "traceId") String traceId,
+                                                                  @RequestHeader(value = "traceId", required = false) String traceId,
                                                                   HttpServletRequest request) {
         AuthUtility.isAuthorized(authorization);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);

@@ -42,7 +42,7 @@ public class LogController {
             @RequestParam(required = false) String spanId,
             @RequestParam(required = false) List<String> fields,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String requestTraceId,
+            @RequestHeader(value = "traceId", required = false) String requestTraceId,
             HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);

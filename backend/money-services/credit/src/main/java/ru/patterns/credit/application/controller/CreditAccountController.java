@@ -37,7 +37,7 @@ public class CreditAccountController {
                                                    @RequestParam BigDecimal sum,
                                                    @RequestParam String bankAccountNum,
                                                    @Parameter(hidden = true) @RequestHeader String authorization,
-                                                   @RequestHeader(value = "traceId") String traceId,
+                                                   @RequestHeader(value = "traceId", required = false) String traceId,
                                                    HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);

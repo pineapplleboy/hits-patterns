@@ -34,7 +34,7 @@ public class CreditAccountController {
     @Operation(summary = "Получение информации о кредитах пользователя [Сотрудник или Пользователь]")
     public List<CreditAccountShortModel> getUsersCreditsHistory(@PathVariable UUID userId,
                                                                 @Parameter(hidden = true) @RequestHeader String authorization,
-                                                                @RequestHeader(value = "traceId") String traceId,
+                                                                @RequestHeader(value = "traceId", required = false) String traceId,
                                                                 HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -47,7 +47,7 @@ public class CreditAccountController {
     @Operation(summary = "Получение кредитной истории пользователя [Сотрудник или Пользователь]")
     public List<CreditAccountFullModel> getUserCreditHistory(@PathVariable UUID userId,
                                                              @Parameter(hidden = true) @RequestHeader String authorization,
-                                                             @RequestHeader(value = "traceId") String traceId,
+                                                             @RequestHeader(value = "traceId", required = false) String traceId,
                                                              HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -61,7 +61,7 @@ public class CreditAccountController {
     public CreditAccountFullModel getUserCreditFullInfo(@PathVariable UUID userId,
                                                         @PathVariable String accountNumber,
                                                         @Parameter(hidden = true) @RequestHeader String authorization,
-                                                        @RequestHeader(value = "traceId") String traceId,
+                                                        @RequestHeader(value = "traceId", required = false) String traceId,
                                                         HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);

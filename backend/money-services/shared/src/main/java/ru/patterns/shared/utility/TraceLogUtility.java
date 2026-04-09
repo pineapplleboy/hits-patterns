@@ -1,6 +1,7 @@
 package ru.patterns.shared.utility;
 
 import lombok.experimental.UtilityClass;
+import org.springframework.util.StringUtils;
 import ru.patterns.shared.model.log.TracingLog;
 
 import java.util.UUID;
@@ -14,12 +15,20 @@ public class TraceLogUtility {
                                         String path,
                                         UUID userId) {
         return new TracingLog()
-                .setTraceId(traceId)
+                .setTraceId(resolveTraceId(traceId))
                 .setSpanId(generateSpanId())
                 .setAuthorization(authorization)
                 .setServiceId(serviceId)
                 .setPath(path)
                 .setRequestUserId(userId);
+    }
+
+    private String resolveTraceId(String traceId) {
+        if (StringUtils.hasText(traceId)) {
+            return traceId;
+        }
+
+        return UUID.randomUUID().toString();
     }
 
     private String generateSpanId()

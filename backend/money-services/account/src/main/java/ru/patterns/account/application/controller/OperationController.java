@@ -36,7 +36,7 @@ public class OperationController {
     @Operation(summary = "Получение операций пользователя [Сотрудник или Пользователь]")
     public List<OperationModel> getUserOperations(@PathVariable UUID userId,
                                                   @Parameter(hidden = true) @RequestHeader String authorization,
-                                                  @RequestHeader(value = "traceId") String traceId,
+                                                  @RequestHeader(value = "traceId", required = false) String traceId,
                                                   HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -51,7 +51,7 @@ public class OperationController {
                                                      @PathVariable String accountNumber,
                                                      @RequestParam TransferAccountType transferType,
                                                      @Parameter(hidden = true) @RequestHeader String authorization,
-                                                     @RequestHeader(value = "traceId") String traceId,
+                                                     @RequestHeader(value = "traceId", required = false) String traceId,
                                                      HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -65,7 +65,7 @@ public class OperationController {
     public OperationStatusResponseModel getOperationStatus(@PathVariable UUID userId,
                                                            @PathVariable UUID operationId,
                                                            @Parameter(hidden = true) @RequestHeader String authorization,
-                                                           @RequestHeader(value = "traceId") String traceId,
+                                                           @RequestHeader(value = "traceId", required = false) String traceId,
                                                            HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -78,7 +78,7 @@ public class OperationController {
     @Operation(summary = "Получение просроченных платежей по кредитам пользователя [Сотрудник или Пользователь]")
     public List<OperationModel> getExpiredOperations(@PathVariable UUID userId,
                                                      @Parameter(hidden = true) @RequestHeader String authorization,
-                                                     @RequestHeader(value = "traceId") String traceId,
+                                                     @RequestHeader(value = "traceId", required = false) String traceId,
                                                      HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);

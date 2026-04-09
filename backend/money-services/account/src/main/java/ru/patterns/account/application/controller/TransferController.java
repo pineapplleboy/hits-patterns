@@ -36,7 +36,7 @@ public class TransferController {
                                                        @PathVariable String bankAccountNumber,
                                                        @RequestBody MoneyAmountRequestModel requestModel,
                                                        @Parameter(hidden = true) @RequestHeader String authorization,
-                                                       @RequestHeader(value = "traceId") String traceId,
+                                                       @RequestHeader(value = "traceId", required = false) String traceId,
                                                        HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -51,7 +51,7 @@ public class TransferController {
                                                       @PathVariable String bankAccountNumber,
                                                       @RequestBody MoneyAmountRequestModel requestModel,
                                                       @Parameter(hidden = true) @RequestHeader String authorization,
-                                                      @RequestHeader(value = "traceId") String traceId,
+                                                      @RequestHeader(value = "traceId", required = false) String traceId,
                                                       HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -67,7 +67,7 @@ public class TransferController {
                                                   @PathVariable String creditAccountNumber,
                                                   @RequestBody MoneyAmountRequestModel requestModel,
                                                   @Parameter(hidden = true) @RequestHeader String authorization,
-                                                  @RequestHeader(value = "traceId") String traceId,
+                                                  @RequestHeader(value = "traceId", required = false) String traceId,
                                                   HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -83,7 +83,7 @@ public class TransferController {
                                                               @PathVariable String bankAccountTo,
                                                               @RequestBody MoneyAmountRequestModel requestModel,
                                                               @Parameter(hidden = true) @RequestHeader String authorization,
-                                                              @RequestHeader(value = "traceId") String traceId,
+                                                              @RequestHeader(value = "traceId", required = false) String traceId,
                                                               HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);

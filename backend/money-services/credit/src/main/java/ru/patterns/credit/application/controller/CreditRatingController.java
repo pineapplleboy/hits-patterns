@@ -32,7 +32,7 @@ public class CreditRatingController {
     @Operation(description = "Получение кредитного рейтинга пользователя")
     public CreditRatingModel getUserCreditRating(@PathVariable UUID userId,
                                                  @Parameter(hidden = true) @RequestHeader String authorization,
-                                                 @RequestHeader(value = "traceId") String traceId,
+                                                 @RequestHeader(value = "traceId", required = false) String traceId,
                                                  HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);

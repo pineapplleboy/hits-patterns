@@ -29,7 +29,7 @@ public class MonitoringDataController {
     @PostMapping("/log")
     public void addLog(@RequestBody LogModel log,
                        @Parameter(hidden = true) @RequestHeader String authorization,
-                       @RequestHeader(value = "traceId") String traceId,
+                       @RequestHeader(value = "traceId", required = false) String traceId,
                        HttpServletRequest request) {
         AuthUtility.checkUserIfEmployee(authorization);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -41,7 +41,7 @@ public class MonitoringDataController {
     @PostMapping("/request")
     public void addRequest(@RequestBody RequestMonitoringModel requestModel,
                            @Parameter(hidden = true) @RequestHeader String authorization,
-                           @RequestHeader(value = "traceId") String traceId,
+                           @RequestHeader(value = "traceId", required = false) String traceId,
                            HttpServletRequest request) {
         AuthUtility.checkUserIfEmployee(authorization);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);

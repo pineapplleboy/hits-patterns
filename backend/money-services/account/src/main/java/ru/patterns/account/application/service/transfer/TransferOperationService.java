@@ -268,7 +268,7 @@ public class TransferOperationService {
 
     private TracingLog createLogData(String traceId) {
         return new TracingLog()
-                .setTraceId(traceId == null ? "" : traceId)
+                .setTraceId(traceId == null || traceId.isBlank() ? UUID.randomUUID().toString() : traceId)
                 .setAuthorization(null)
                 .setServiceId(serviceName);
     }

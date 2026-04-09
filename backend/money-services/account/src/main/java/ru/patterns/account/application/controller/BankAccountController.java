@@ -39,7 +39,7 @@ public class BankAccountController {
     public AccountNumberResponseModel createBankAccount(@PathVariable UUID userId,
                                                         @RequestParam Integer currencyId,
                                                         @Parameter(hidden = true) @RequestHeader String authorization,
-                                                        @RequestHeader(value = "traceId") String traceId,
+                                                        @RequestHeader(value = "traceId", required = false) String traceId,
                                                         HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -53,7 +53,7 @@ public class BankAccountController {
     public void closeBankAccount(@PathVariable UUID userId,
                                  @PathVariable String accountNumber,
                                  @Parameter(hidden = true) @RequestHeader String authorization,
-                                 @RequestHeader(value = "traceId") String traceId,
+                                 @RequestHeader(value = "traceId", required = false) String traceId,
                                  HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -67,7 +67,7 @@ public class BankAccountController {
     public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId,
                                                            @RequestParam boolean hidden,
                                                            @Parameter(hidden = true) @RequestHeader String authorization,
-                                                           @RequestHeader(value = "traceId") String traceId,
+                                                           @RequestHeader(value = "traceId", required = false) String traceId,
                                                            HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -80,7 +80,7 @@ public class BankAccountController {
     @Operation(summary = "Получение всех счетов пользователя [Работник]")
     public List<BankAccountShortModel> getUserBankAccounts(@PathVariable UUID userId,
                                                            @Parameter(hidden = true) @RequestHeader String authorization,
-                                                           @RequestHeader(value = "traceId") String traceId,
+                                                           @RequestHeader(value = "traceId", required = false) String traceId,
                                                            HttpServletRequest request) {
         AuthUtility.checkUserIfEmployee(authorization);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -93,7 +93,7 @@ public class BankAccountController {
     @Operation(summary = "Получение всех рублёвых счетов пользователя [Пользователь]")
     public List<BankAccountShortModel> getUserRubBankAccounts(@PathVariable UUID userId,
                                                               @Parameter(hidden = true) @RequestHeader String authorization,
-                                                              @RequestHeader(value = "traceId") String traceId,
+                                                              @RequestHeader(value = "traceId", required = false) String traceId,
                                                               HttpServletRequest request) {
         AuthUtility.checkUserIdEquality(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
@@ -107,7 +107,7 @@ public class BankAccountController {
     public BankAccountFullModel getBankAccountInfo(@PathVariable UUID userId,
                                                    @PathVariable String accountNumber,
                                                    @Parameter(hidden = true) @RequestHeader String authorization,
-                                                   @RequestHeader(value = "traceId") String traceId,
+                                                   @RequestHeader(value = "traceId", required = false) String traceId,
                                                    HttpServletRequest request) {
         AuthUtility.checkUserIdEqualityOrUserEmployee(authorization, userId);
         var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);

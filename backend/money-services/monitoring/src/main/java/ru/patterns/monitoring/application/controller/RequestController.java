@@ -37,7 +37,7 @@ public class RequestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String traceId,
+            @RequestHeader(value = "traceId", required = false) String traceId,
             HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);
@@ -52,7 +52,7 @@ public class RequestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String traceId,
+            @RequestHeader(value = "traceId", required = false) String traceId,
             HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);
@@ -67,7 +67,7 @@ public class RequestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String traceId,
+            @RequestHeader(value = "traceId", required = false) String traceId,
             HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);
@@ -82,7 +82,7 @@ public class RequestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @Parameter(hidden = true) @RequestHeader String authorization,
-            @RequestHeader(value = "traceId") String traceId,
+            @RequestHeader(value = "traceId", required = false) String traceId,
             HttpServletRequest request
     ) {
         AuthUtility.checkUserIfEmployee(authorization);
