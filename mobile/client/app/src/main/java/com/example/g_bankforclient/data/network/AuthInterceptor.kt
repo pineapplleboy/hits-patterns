@@ -27,7 +27,6 @@ class AuthInterceptor(
 
         val authState: AuthState? = authStateStorage.getAuthState()
         if (authState == null) {
-            // Fallback for legacy / transitional cases: use access token if auth state isn't available.
             val token = tokenStorage.getToken()
             if (token != null) {
                 val newRequest = request.newBuilder()
@@ -52,7 +51,6 @@ class AuthInterceptor(
             }
         }
 
-        // Keep legacy TokenStorage in sync for endpoints that still rely on it.
         if (!freshAccessToken.isNullOrBlank()) {
             tokenStorage.setToken(freshAccessToken)
             authStateStorage.setAuthState(authState)
@@ -64,8 +62,6 @@ class AuthInterceptor(
             return response
         }
 
-        // Fallback: if AppAuth state cannot produce a fresh token for this request,
-        // still try last persisted access token.
         val persistedToken = tokenStorage.getToken()
         if (!persistedToken.isNullOrBlank()) {
             val newRequest = request.newBuilder()

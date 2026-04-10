@@ -7,6 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Tag
 import java.util.UUID
 
 interface ApiService {
@@ -16,7 +17,8 @@ interface ApiService {
         @Path("userId") userId: UUID,
         @Path("rateId") rateId: UUID,
         @Query("sum") sum: Double,
-        @Query("bankAccountNum") bankAccountNum: String
+        @Query("bankAccountNum") bankAccountNum: String,
+        @Tag metadata: RequestMetadata
     ): OperationStatusResponseModel
 
     @GET("patterns/api/v1/credit-rate/available-plans")

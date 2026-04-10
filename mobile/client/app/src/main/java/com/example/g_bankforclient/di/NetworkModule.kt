@@ -8,6 +8,8 @@ import com.example.g_bankforclient.data.network.AuthInterceptor
 import com.example.g_bankforclient.data.network.AuthService
 import com.example.g_bankforclient.data.network.CurrencyService
 import com.example.g_bankforclient.data.network.ExchangeRateService
+import com.example.g_bankforclient.data.network.RequestHeadersInterceptor
+import com.example.g_bankforclient.data.network.RetryCircuitBreakerInterceptor
 import com.example.g_bankforclient.data.network.UserService
 import com.example.g_bankforclient.data.network.UserSettingsService
 import com.example.g_bankforclient.data.sso.AllowHttpConnectionBuilder
@@ -93,12 +95,16 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
+        retryCircuitBreakerInterceptor: RetryCircuitBreakerInterceptor,
+        requestHeadersInterceptor: RequestHeadersInterceptor,
         loggingInterceptor: HttpLoggingInterceptor,
         authInterceptor: AuthInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
+            .addInterceptor(retryCircuitBreakerInterceptor)
+            .addInterceptor(requestHeadersInterceptor)
             .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
             .build()
     }
     
@@ -172,8 +178,14 @@ object NetworkModule {
     @Provides
     @Singleton
     @Named("noAuthOkHttpClient")
-    fun provideNoAuthOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
+    fun provideNoAuthOkHttpClient(
+        retryCircuitBreakerInterceptor: RetryCircuitBreakerInterceptor,
+        requestHeadersInterceptor: RequestHeadersInterceptor,
+        loggingInterceptor: HttpLoggingInterceptor
+    ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(retryCircuitBreakerInterceptor)
+            .addInterceptor(requestHeadersInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()
     }

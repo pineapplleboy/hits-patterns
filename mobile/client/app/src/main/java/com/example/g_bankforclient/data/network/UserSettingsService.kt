@@ -5,6 +5,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Tag
 
 interface UserSettingsService {
 
@@ -12,8 +13,14 @@ interface UserSettingsService {
     suspend fun getMySettings(): UserSettingsDTO
 
     @PUT("patterns/api/v1/user/setting/my-settings")
-    suspend fun updateMySettings(@Body settings: UserSettingsDTO): UserSettingsDTO
+    suspend fun updateMySettings(
+        @Body settings: UserSettingsDTO,
+        @Tag metadata: RequestMetadata
+    ): UserSettingsDTO
 
     @PUT("patterns/api/v1/user/setting/account-visibility/{accountId}")
-    suspend fun toggleAccountVisibility(@Path("accountId") accountId: String)
+    suspend fun toggleAccountVisibility(
+        @Path("accountId") accountId: String,
+        @Tag metadata: RequestMetadata
+    )
 }
