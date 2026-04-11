@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.exception.NotFoundException;
@@ -47,6 +48,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> catchBadRequestException(BadRequestException exception) {
         monitoringLogger.logError(exception.getLogData(), exception.getMessage());
+
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), exception.getMessage()),
+                HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> catchMissingRequestHeaderException(MissingRequestHeaderException exception) {
+        if ("authorization".equalsIgnoreCase(exception.getHeaderName())) {
+            log.warn(exception.getMessage());
+
+            return new ResponseEntity<>(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Пользователь не авторизован"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
+        log.warn(exception.getMessage());
 
         return new ResponseEntity<>(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), exception.getMessage()),
                 HttpStatus.BAD_REQUEST);

@@ -19,6 +19,24 @@ spring:
     gateway:
       server:
         webflux:
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns:
+                  - "*"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - PATCH
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                exposedHeaders:
+                  - "*"
+                allowCredentials: false
+                maxAge: 3600
           routes:
             - id: identity-server
               uri: ${services.identity-server.url:http://identity-server:5001}
