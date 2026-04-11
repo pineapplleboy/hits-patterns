@@ -59,6 +59,7 @@ kafka:
 
   provider:
     transfer-request: 00_transfer_request
+    notification: 00_notification
 
 service:
   name: patterns-account-service

@@ -49,3 +49,8 @@ management:
 
 service:
   name: patterns-notification-service
+
+kafka:
+  group: notification-service
+  consumer:
+    notification: 00_notification

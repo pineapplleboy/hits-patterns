@@ -32,8 +32,6 @@ spring:
                   args:
                     name: identityServerCb
                     fallbackUri: forward:/fallback/identity-server
-                    statusCodes:
-                      - 500
 
             - id: patterns-users
               uri: ${services.patterns-users.url:http://patterns-users:8080}
@@ -47,8 +45,6 @@ spring:
                   args:
                     name: patternsUsersCb
                     fallbackUri: forward:/fallback/patterns-users
-                    statusCodes:
-                      - 500
 
             - id: patterns-user-setting
               uri: ${services.patterns-user-setting.url:http://patterns-user-setting:8080}
@@ -62,8 +58,6 @@ spring:
                   args:
                     name: patternsUserSettingCb
                     fallbackUri: forward:/fallback/patterns-user-setting
-                    statusCodes:
-                      - 500
 
             - id: account-service
               uri: ${services.account-service.url:http://account-service:8082}
@@ -77,8 +71,6 @@ spring:
                   args:
                     name: accountServiceCb
                     fallbackUri: forward:/fallback/account-service
-                    statusCodes:
-                      - 500
 
             - id: credit-service
               uri: ${services.credit-service.url:http://credit-service:8081}
@@ -92,8 +84,6 @@ spring:
                   args:
                     name: creditServiceCb
                     fallbackUri: forward:/fallback/credit-service
-                    statusCodes:
-                      - 500
 
             - id: transfers-service
               uri: ${services.transfers-service.url:http://transfers-service:8083}
@@ -107,8 +97,6 @@ spring:
                   args:
                     name: transfersServiceCb
                     fallbackUri: forward:/fallback/transfers-service
-                    statusCodes:
-                      - 500
 
             - id: currency-service
               uri: ${services.currency-service.url:http://currency-service:8084}
@@ -122,8 +110,6 @@ spring:
                   args:
                     name: currencyServiceCb
                     fallbackUri: forward:/fallback/currency-service
-                    statusCodes:
-                      - 500
 
             - id: monitoring-service
               uri: ${services.monitoring-service.url:http://monitoring-service:8086}
@@ -137,8 +123,6 @@ spring:
                   args:
                     name: monitoringServiceCb
                     fallbackUri: forward:/fallback/monitoring-service
-                    statusCodes:
-                      - 500
 
 server:
   port: 8085
