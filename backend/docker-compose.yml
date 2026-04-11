@@ -336,6 +336,7 @@ services:
       SWAGGER_CLIENT_ID: api_swagger_notification
       SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
       SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/notification/swagger-ui/oauth2-redirect.html
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
     ports:
       - "127.0.0.1:8087:8087"
