@@ -25,7 +25,7 @@ public class DurationDeserializer extends JsonDeserializer<Duration> {
 
         Matcher matcher = PATTERN.matcher(s);
         if (!matcher.matches()) {
-            throw new BadRequestException(ErrorMessages.INVALID_WRITE_OFF_DATE);
+            throw new BadRequestException(ErrorMessages.INVALID_WRITE_OFF_DATE, null);
         }
 
         long days = parseDateTimePart(matcher.group(1));
@@ -38,7 +38,7 @@ public class DurationDeserializer extends JsonDeserializer<Duration> {
                 .plusMinutes(minutes);
 
         if (duration.isZero() || duration.isNegative()) {
-            throw new BadRequestException(ErrorMessages.NEGATIVE_WRITE_OFF_DATE);
+            throw new BadRequestException(ErrorMessages.NEGATIVE_WRITE_OFF_DATE, null);
         }
 
         return duration;

@@ -2,6 +2,19 @@ spring:
   application:
     name: patterns-gateway
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/patterns_gateway
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+
   cloud:
     gateway:
       server:
@@ -12,56 +25,117 @@ spring:
               predicates:
                 - Path=/identity/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /identity
+                - name: CircuitBreaker
+                  args:
+                    name: identityServerCb
+                    fallbackUri: forward:/fallback/identity-server
 
             - id: patterns-users
               uri: ${services.patterns-users.url:http://patterns-users:8080}
               predicates:
                 - Path=/users/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /users
+                - name: CircuitBreaker
+                  args:
+                    name: patternsUsersCb
+                    fallbackUri: forward:/fallback/patterns-users
 
             - id: patterns-user-setting
               uri: ${services.patterns-user-setting.url:http://patterns-user-setting:8080}
               predicates:
                 - Path=/settings/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /settings
+                - name: CircuitBreaker
+                  args:
+                    name: patternsUserSettingCb
+                    fallbackUri: forward:/fallback/patterns-user-setting
 
             - id: account-service
               uri: ${services.account-service.url:http://account-service:8082}
               predicates:
                 - Path=/core/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /core
+                - name: CircuitBreaker
+                  args:
+                    name: accountServiceCb
+                    fallbackUri: forward:/fallback/account-service
 
             - id: credit-service
               uri: ${services.credit-service.url:http://credit-service:8081}
               predicates:
                 - Path=/credit/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /credit
+                - name: CircuitBreaker
+                  args:
+                    name: creditServiceCb
+                    fallbackUri: forward:/fallback/credit-service
 
             - id: transfers-service
               uri: ${services.transfers-service.url:http://transfers-service:8083}
               predicates:
                 - Path=/transfers/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /transfers
+                - name: CircuitBreaker
+                  args:
+                    name: transfersServiceCb
+                    fallbackUri: forward:/fallback/transfers-service
 
             - id: currency-service
               uri: ${services.currency-service.url:http://currency-service:8084}
               predicates:
                 - Path=/currency/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /currency
+                - name: CircuitBreaker
+                  args:
+                    name: currencyServiceCb
+                    fallbackUri: forward:/fallback/currency-service
 
             - id: monitoring-service
               uri: ${services.monitoring-service.url:http://monitoring-service:8086}
               predicates:
                 - Path=/monitoring/**
               filters:
+                - PreserveHostHeader
                 - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /monitoring
+                - name: CircuitBreaker
+                  args:
+                    name: monitoringServiceCb
+                    fallbackUri: forward:/fallback/monitoring-service
+
+            - id: notification-service
+              uri: ${services.notification-service.url:http://notification-service:8087}
+              predicates:
+                - Path=/notification/**
+              filters:
+                - PreserveHostHeader
+                - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /notification
+                - name: CircuitBreaker
+                  args:
+                    name: notificationServiceCb
+                    fallbackUri: forward:/fallback/notification-service
 
 server:
   port: 8085
@@ -76,3 +150,37 @@ management:
     health:
       probes:
         enabled: true
+
+unstable:
+  enabled: false
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 70
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      identityServerCb:
+        base-config: default
+      patternsUsersCb:
+        base-config: default
+      patternsUserSettingCb:
+        base-config: default
+      accountServiceCb:
+        base-config: default
+      creditServiceCb:
+        base-config: default
+      transfersServiceCb:
+        base-config: default
+      currencyServiceCb:
+        base-config: default
+      monitoringServiceCb:
+        base-config: default
+      notificationServiceCb:
+        base-config: default

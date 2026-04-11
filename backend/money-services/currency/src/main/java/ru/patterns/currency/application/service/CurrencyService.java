@@ -5,20 +5,23 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.patterns.currency.application.client.RestClientConfig;
-import ru.patterns.shared.constants.ErrorMessages;
-import ru.patterns.shared.model.client.CurrencyAmountModel;
 import ru.patterns.currency.application.common.model.CurrencyResponseModel;
 import ru.patterns.currency.application.common.model.FxRatesResponseModel;
-import ru.patterns.shared.model.client.ProcessedCurrencyModel;
 import ru.patterns.currency.application.config.CurrencyConfig;
 import ru.patterns.currency.domain.entity.Currency;
 import ru.patterns.currency.domain.mapper.CurrencyMapper;
 import ru.patterns.currency.domain.repository.CurrencyRepository;
+import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.exception.NotFoundException;
+import ru.patterns.shared.model.client.CurrencyAmountModel;
+import ru.patterns.shared.model.client.ProcessedCurrencyModel;
+import ru.patterns.shared.model.log.TracingLog;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,6 +36,10 @@ public class CurrencyService {
     private final CurrencyConfig config;
     private final RestClientConfig restConfig;
     private final CurrencyRepository currencyRepository;
+    private final MonitoringLogger monitoringLogger;
+
+    @Value("${service.name}")
+    private String serviceName;
 
     @PostConstruct
     @Transactional
@@ -62,24 +69,27 @@ public class CurrencyService {
             var actualRate = response.getRates().get(currencyModel.getCharCode());
 
             if (actualRate == null) {
+                monitoringLogger.logError("Не получается обновить валюту " + currencyModel.getCharCode(), serviceName);
                 log.error("Не получается обновить валюту {}", currencyModel.getCharCode());
                 continue;
             }
 
             var currency = currencyRepository.findById(currencyModel.getId()).
-                    orElseThrow(() -> new NotFoundException("Валюта с айди" + currencyModel.getId() + " не найдена"));
+                    orElseThrow(() -> new NotFoundException("Валюта с айди" + currencyModel.getId() + " не найдена", null));
 
             currency.setRate(actualRate);
             currencyRepository.save(currency);
         }
     }
 
-    public List<CurrencyResponseModel> getCurrencies() {
+    public List<CurrencyResponseModel> getCurrencies(TracingLog dataForLog) {
         List<Currency> currencies = currencyRepository.findAllByActiveTrue();
+
+        monitoringLogger.logInfo(dataForLog, "Получен запрос на получение валют");
 
         if (currencies.isEmpty() || currencies.stream()
                 .anyMatch(currency -> currency.getRate().equals(BigDecimal.ZERO))) {
-            throwServiceUnavailableException();
+            throwServiceUnavailableException(dataForLog);
         }
 
         return currencies.stream()
@@ -87,26 +97,28 @@ public class CurrencyService {
                 .toList();
     }
 
-    public CurrencyResponseModel getCurrencyInfo(Integer currencyId) {
+    public CurrencyResponseModel getCurrencyInfo(Integer currencyId, TracingLog logData) {
         var currency = currencyRepository.findByIdAndActiveTrue(currencyId)
-                .orElseThrow(() -> new NotFoundException(ErrorMessages.CURRENCY_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.CURRENCY_NOT_FOUND, logData));
 
         if (currency.getRate().equals(BigDecimal.ZERO)) {
-            throwServiceUnavailableException();
+            throwServiceUnavailableException(logData);
         }
 
         return currency.toResponseModel();
     }
 
-    public CurrencyAmountModel calculateAmount(Integer currencyIdFrom, Integer currencyIdTo, BigDecimal amount) {
+    public CurrencyAmountModel calculateAmount(Integer currencyIdFrom, Integer currencyIdTo, BigDecimal amount, TracingLog logData) {
         Currency currencyFrom = currencyRepository.findByIdAndActiveTrue(currencyIdFrom)
-                .orElseThrow(() -> new NotFoundException("Валюта с айди " + currencyIdFrom + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Валюта с айди " + currencyIdFrom + " не найдена", logData));
         Currency currencyTo = currencyRepository.findByIdAndActiveTrue(currencyIdTo)
-                .orElseThrow(() -> new NotFoundException("Валюта с айди " + currencyIdTo + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Валюта с айди " + currencyIdTo + " не найдена", logData));
 
         if (currencyFrom.getRate().equals(BigDecimal.ZERO) || currencyTo.getRate().equals(BigDecimal.ZERO)) {
-            throwServiceUnavailableException();
+            throwServiceUnavailableException(logData);
         }
+
+        monitoringLogger.logInfo(logData, "Текущий курс: " + currencyFrom + " - " + currencyIdTo + " = " + amount);
 
         return new CurrencyAmountModel()
                 .setFromCurrency(currencyFrom.toModel())
@@ -131,7 +143,7 @@ public class CurrencyService {
                 .setScale(2, RoundingMode.HALF_EVEN);
     }
 
-    private void throwServiceUnavailableException() {
-        throw new BadRequestException(ErrorMessages.SERVICE_CURRENTLY_UNAVAILABLE);
+    private void throwServiceUnavailableException(TracingLog dataForLog) {
+        throw new BadRequestException(ErrorMessages.SERVICE_CURRENTLY_UNAVAILABLE, dataForLog);
     }
 }

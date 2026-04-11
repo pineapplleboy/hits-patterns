@@ -1,0 +1,54 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="002-create-log" author="aleksey.z">
+        <createTable tableName="log">
+            <column name="log_id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="service_id" type="VARCHAR(255)"/>
+
+            <column name="status" type="VARCHAR(32)" defaultValue="INFO">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="message" type="TEXT"/>
+
+            <column name="path" type="VARCHAR(1024)"/>
+
+            <column name="request_body" type="TEXT"/>
+
+            <column name="response_body" type="TEXT"/>
+
+            <column name="request_user_id" type="UUID"/>
+
+            <column name="authorization" type="TEXT"/>
+
+            <column name="trace_id" type="VARCHAR(255)"/>
+
+            <column name="span_id" type="VARCHAR(255)"/>
+
+            <column name="log_time" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="log" indexName="idx_log_service_id">
+            <column name="service_id"/>
+        </createIndex>
+
+        <createIndex tableName="log" indexName="idx_log_request_user_id">
+            <column name="request_user_id"/>
+        </createIndex>
+
+        <createIndex tableName="log" indexName="idx_log_log_time">
+            <column name="log_time"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

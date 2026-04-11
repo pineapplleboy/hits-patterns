@@ -116,6 +116,10 @@ jobs:
             add_service 'monitoring-service' 'hits-patterns-monitoring-service' './backend/money-services' './backend/money-services/Dockerfile' 'monitoring-service' 'SERVICE_NAME=monitoring'
           fi
 
+          if has_change '^backend/money-services/(notification|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'notification-service' 'hits-patterns-notification-service' './backend/money-services' './backend/money-services/Dockerfile' 'notification-service' 'SERVICE_NAME=notification'
+          fi
+
           if has_change '^backend/money-services/(patterns-gateway|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
             add_service 'patterns-gateway' 'hits-patterns-patterns-gateway' './backend/money-services' './backend/money-services/Dockerfile' 'patterns-gateway' 'SERVICE_NAME=patterns-gateway'
           fi
@@ -182,6 +186,7 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SUDO_PASSWORD: ${{ secrets.VPS_SUDO_PASSWORD }}
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HAS_BUILDS: ${{ needs.detect_changes.outputs.has_builds }}
@@ -190,7 +195,7 @@ jobs:
           RELOAD_NGINX: ${{ needs.detect_changes.outputs.reload_nginx }}
         run: |
           ssh "$VPS_USER@$VPS_HOST" \
-            "GHCR_USERNAME='$GHCR_USERNAME' GHCR_TOKEN='$GHCR_TOKEN' HAS_BUILDS='$HAS_BUILDS' SERVICE_NAMES='$SERVICE_NAMES' DEPLOY_ALL='$DEPLOY_ALL' RELOAD_NGINX='$RELOAD_NGINX' bash -s" <<'EOF'
+            "GHCR_USERNAME='$GHCR_USERNAME' GHCR_TOKEN='$GHCR_TOKEN' VPS_SUDO_PASSWORD='$VPS_SUDO_PASSWORD' HAS_BUILDS='$HAS_BUILDS' SERVICE_NAMES='$SERVICE_NAMES' DEPLOY_ALL='$DEPLOY_ALL' RELOAD_NGINX='$RELOAD_NGINX' bash -s" <<'EOF'
           set -e
           flock -n -E 42 /tmp/deploy.lock bash -lc '
             set -e
@@ -201,8 +206,10 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
             if docker ps --format "{{.Names}}" | grep -qx "patterns-postgres"; then
-              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'patterns_monitoring'" | grep -q 1 \
+              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = \$\$patterns_monitoring\$\$" | grep -q 1 \
                 || docker exec patterns-postgres psql -U postgres -c "CREATE DATABASE \"patterns_monitoring\";"
+              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = \$\$patterns_notification\$\$" | grep -q 1 \
+                || docker exec patterns-postgres psql -U postgres -c "CREATE DATABASE \"patterns_notification\";"
             fi
 
             if [ "$DEPLOY_ALL" = "true" ]; then
@@ -221,9 +228,15 @@ jobs:
 
             if [ "$RELOAD_NGINX" = "true" ]; then
               echo "Reloading nginx config"
-              sudo install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
-              sudo nginx -t
-              sudo systemctl reload nginx
+              if [ -n "$VPS_SUDO_PASSWORD" ]; then
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k nginx -t
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k systemctl reload nginx
+              else
+                sudo -n install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
+                sudo -n nginx -t
+                sudo -n systemctl reload nginx
+              fi
             fi
           '
           status=$?

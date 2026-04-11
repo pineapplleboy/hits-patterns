@@ -5,6 +5,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import ru.patterns.account.application.common.model.currency.CurrencyModel;
+import ru.patterns.shared.utility.RestClientRetryUtility;
 
 @Service
 public class CurrencyService {
@@ -25,10 +26,10 @@ public class CurrencyService {
     }
 
     private CurrencyModel retrieveCurrency(Integer currencyId, String token) {
-        return currencyClient.get()
+        return RestClientRetryUtility.execute(() -> currencyClient.get()
                 .uri("/all-rates/{currencyId}", currencyId)
                 .header("Authorization", token)
                 .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
+                .body(new ParameterizedTypeReference<>() {}));
     }
 }

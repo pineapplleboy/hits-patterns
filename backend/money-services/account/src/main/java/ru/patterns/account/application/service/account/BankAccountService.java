@@ -20,6 +20,8 @@ import ru.patterns.shared.constants.CurrencyConstants;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
+import ru.patterns.shared.model.log.TracingLog;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,10 +39,27 @@ public class BankAccountService {
     private final OperationHistoryService operationHistoryService;
     private final SettingsService settingsService;
     private final CurrencyService currencyService;
+    private final MonitoringLogger monitoringLogger;
 
     public AccountNumberResponseModel createBankAccount(UUID userId, Integer currencyId) {
         if (!CurrencySymbolUtility.hasCurrency(currencyId)) {
-            throw new NotFoundException(ErrorMessages.CURRENCY_NOT_SUPPORTABLE);
+            throw new NotFoundException(ErrorMessages.CURRENCY_NOT_SUPPORTABLE, null);
+        }
+
+        BankAccount bankAccount = BankAccountFactory.createBankAccount(userId, currencyId);
+        bankAccountRepository.save(bankAccount);
+
+        operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(bankAccount, AccountActionType.OPEN_ACCOUNT);
+
+        return new AccountNumberResponseModel(bankAccount.getAccountNumber());
+    }
+
+    public AccountNumberResponseModel createBankAccount(UUID userId, Integer currencyId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на открытие банковского счёта");
+
+        if (!CurrencySymbolUtility.hasCurrency(currencyId)) {
+            monitoringLogger.logWarn(logData, "Попытка открыть банковский счёт с неподдерживаемой валютой");
+            throw new NotFoundException(ErrorMessages.CURRENCY_NOT_SUPPORTABLE, logData);
         }
 
         BankAccount bankAccount = BankAccountFactory.createBankAccount(userId, currencyId);
@@ -53,7 +72,19 @@ public class BankAccountService {
 
     public void closeBankAccount(UUID userId, String accountNumber) {
         var bankAccount = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
-                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND, null));
+
+        bankAccount.setActive(false);
+        bankAccountRepository.save(bankAccount);
+
+        operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(bankAccount, AccountActionType.CLOSE_ACCOUNT);
+    }
+
+    public void closeBankAccount(UUID userId, String accountNumber, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на закрытие банковского счёта");
+
+        var bankAccount = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND, logData));
 
         bankAccount.setActive(false);
         bankAccountRepository.save(bankAccount);
@@ -66,8 +97,7 @@ public class BankAccountService {
 
         if (hidden) {
             accountsToShow = settingsService.getListOfHiddenBankAccounts(userId, token);
-        }
-        else {
+        } else {
             var userBankAccounts = bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true);
             var hiddenUserBankAccounts = settingsService.getHiddenAccountIds(userId, token);
 
@@ -83,6 +113,12 @@ public class BankAccountService {
                 .toList();
     }
 
+    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, boolean hidden, String token, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение списка банковских счетов пользователя");
+
+        return getAllUserBankAccounts(userId, hidden, token);
+    }
+
     public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, String token) {
         var userBankAccounts = bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true);
 
@@ -96,23 +132,55 @@ public class BankAccountService {
                 .toList();
     }
 
+    public List<BankAccountShortModel> getAllUserBankAccounts(UUID userId, String token, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение всех банковских счетов пользователя");
+
+        return getAllUserBankAccounts(userId, token);
+    }
+
     public List<BankAccountShortModel> getAllRubUserBankAccounts(UUID userId) {
-        return  bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true)
+        return bankAccountRepository.getBankAccountsByUserIdAndActive(userId, true)
                 .stream()
                 .filter(account -> account.getCurrencyId().equals(CurrencyConstants.BASE_CURRENCY_ID))
                 .map(account -> account.toShortModel(false))
                 .toList();
     }
 
+    public List<BankAccountShortModel> getAllRubUserBankAccounts(UUID userId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение рублёвых банковских счетов пользователя");
+
+        return getAllRubUserBankAccounts(userId);
+    }
+
     public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber, String token) {
         var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
-                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND, null));
 
         var currency = currencyService.getCurrencyById(account.getCurrencyId(), token);
 
         var accountFullModel = account.toFullModelWithoutOperations(currency);
         var bankOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.BANK_ACCOUNT);
+        var creditOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);
 
+        var operations = Stream.concat(bankOperations.stream(), creditOperations.stream())
+                .sorted((left, right) -> right.getCreateTime().compareTo(left.getCreateTime()))
+                .toList();
+
+        accountFullModel.setOperations(operations);
+
+        return accountFullModel;
+    }
+
+    public BankAccountFullModel getBankAccountFullModel(UUID userId, String accountNumber, String token, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение детальной информации о банковском счёте");
+
+        var account = bankAccountRepository.getBankAccountByAccountNumberAndActiveAndUserId(accountNumber, true, userId)
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND, logData));
+
+        var currency = currencyService.getCurrencyById(account.getCurrencyId(), token);
+
+        var accountFullModel = account.toFullModelWithoutOperations(currency);
+        var bankOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.BANK_ACCOUNT);
         var creditOperations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);
 
         var operations = Stream.concat(bankOperations.stream(), creditOperations.stream())

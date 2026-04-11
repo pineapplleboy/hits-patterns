@@ -2,13 +2,24 @@ package ru.patterns.credit.application.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.patterns.credit.application.common.model.request.CreditRateDataModel;
 import ru.patterns.credit.application.common.model.response.CreditRateModel;
-import ru.patterns.shared.model.response.UuidResponseModel;
 import ru.patterns.credit.application.service.CreditRateCRUDService;
+import ru.patterns.shared.model.response.UuidResponseModel;
 import ru.patterns.shared.utility.JwtAuthUtility;
+import ru.patterns.shared.utility.TraceLogUtility;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,47 +28,67 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/patterns/api/v1/credit-rate")
 public class CreditRateController {
+
     private final CreditRateCRUDService creditRateCRUDService;
+
+    @Value("${service.name}")
+    private String serviceName;
 
     @GetMapping("/available-plans")
     @Operation(summary = "Получение доступных кредитных тарифов [Все]")
-    public List<CreditRateModel> getAvailablePlans() {
-        return creditRateCRUDService.getCreditRates();
+    public List<CreditRateModel> getAvailablePlans(@RequestHeader(value = "traceId", required = false) String traceId,
+                                                   HttpServletRequest request) {
+        var logData = TraceLogUtility.createDataForLogs(traceId, "", serviceName, request.getRequestURI(), null);
+
+        return creditRateCRUDService.getCreditRates(logData);
     }
 
     @GetMapping("/available-plans/{id}")
     @Operation(summary = "Получение детальной информации о кредитном тарифе [Все]")
     public CreditRateModel getAvailablePlan(@PathVariable UUID id,
-                                            @Parameter(hidden = true) @RequestHeader String authorization) {
-        JwtAuthUtility.parseAuthorizationHeader(authorization);
+                                            @Parameter(hidden = true) @RequestHeader String authorization,
+                                            @RequestHeader(value = "traceId", required = false) String traceId,
+                                            HttpServletRequest request) {
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
-        return creditRateCRUDService.getCreditRateById(id);
+        return creditRateCRUDService.getCreditRateById(id, logData);
     }
 
     @PostMapping()
     @Operation(summary = "Создание кредитного тарифа [Сотрудник]")
     public UuidResponseModel createCreditRate(@RequestBody CreditRateDataModel creditRateDataModel,
-                                              @Parameter(hidden = true) @RequestHeader String authorization) {
-        JwtAuthUtility.parseAuthorizationHeader(authorization);
+                                              @Parameter(hidden = true) @RequestHeader String authorization,
+                                              @RequestHeader(value = "traceId", required = false) String traceId,
+                                              HttpServletRequest request) {
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
-        return creditRateCRUDService.createCreditRate(creditRateDataModel);
+        return creditRateCRUDService.createCreditRate(creditRateDataModel, logData);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Обновление кредитного тарифа [Сотрудник]")
-    public void updateCreateRate(@PathVariable UUID id, @RequestBody CreditRateDataModel creditRateDataModel,
-                                 @Parameter(hidden = true) @RequestHeader String authorization) {
-        JwtAuthUtility.parseAuthorizationHeader(authorization);
+    public void updateCreateRate(@PathVariable UUID id,
+                                 @RequestBody CreditRateDataModel creditRateDataModel,
+                                 @Parameter(hidden = true) @RequestHeader String authorization,
+                                 @RequestHeader(value = "traceId", required = false) String traceId,
+                                 HttpServletRequest request) {
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
-        creditRateCRUDService.updateCreditRateModel(id, creditRateDataModel);
+        creditRateCRUDService.updateCreditRateModel(id, creditRateDataModel, logData);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удаление кредитного тарифа [Сотрудник]")
     public void deleteCreateRate(@PathVariable UUID id,
-                                 @Parameter(hidden = true) @RequestHeader String authorization) {
-        JwtAuthUtility.parseAuthorizationHeader(authorization);
+                                 @Parameter(hidden = true) @RequestHeader String authorization,
+                                 @RequestHeader(value = "traceId", required = false) String traceId,
+                                 HttpServletRequest request) {
+        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
+        var logData = TraceLogUtility.createDataForLogs(traceId, authorization, serviceName, request.getRequestURI(), authUser.userId());
 
-        creditRateCRUDService.deactivateCreditRateById(id);
+        creditRateCRUDService.deactivateCreditRateById(id, logData);
     }
 }

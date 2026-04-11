@@ -12,7 +12,9 @@ import ru.patterns.account.domain.repository.OperationRepository;
 import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 
 import java.util.*;
 import java.util.function.Function;
@@ -25,6 +27,7 @@ import java.util.stream.Stream;
 public class OperationService {
 
     private final OperationRepository operationRepository;
+    private final MonitoringLogger monitoringLogger;
 
     public List<OperationModel> getUserOperations(UUID userId) {
         var outgoingOperations = operationRepository.findByUserIdFrom(userId);
@@ -40,6 +43,12 @@ public class OperationService {
                 )
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList().reversed();
+    }
+
+    public List<OperationModel> getUserOperations(UUID userId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение операций пользователя");
+
+        return getUserOperations(userId);
     }
 
     public List<OperationModel> getAccountOperations(String accountNumber, TransferAccountType transferAccountType) {
@@ -63,6 +72,12 @@ public class OperationService {
                 .sorted(Comparator.comparing(OperationModel::getCreateTime))
                 .toList()
                 .reversed();
+    }
+
+    public List<OperationModel> getAccountOperations(String accountNumber, TransferAccountType transferAccountType, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение операций по счёту");
+
+        return getAccountOperations(accountNumber, transferAccountType);
     }
 
     public Map<String, List<OperationModel>> getAccountOperations(Set<String> accountNumbers, TransferAccountType transferAccountType) {
@@ -110,6 +125,12 @@ public class OperationService {
                 .toList();
     }
 
+    public List<OperationModel> getExpiredCreditOperations(UUID userId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение просроченных кредитных операций");
+
+        return getExpiredCreditOperations(userId);
+    }
+
     private Stream<Operation> getOperationsByType(String accountNumber, TransferAccountType transferAccountType) {
         var outgoingOperations = operationRepository
                 .findByAccountNumberFromAndTransferAccountType(accountNumber, transferAccountType);
@@ -142,8 +163,14 @@ public class OperationService {
         return new OperationStatusResponseModel(getOperationById(operationId).getStatus());
     }
 
+    public OperationStatusResponseModel getOperationStatus(UUID operationId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение статуса операции");
+
+        return getOperationStatus(operationId);
+    }
+
     private Operation getOperationById(UUID operationId) {
         return operationRepository.findById(operationId)
-                .orElseThrow(() -> new NotFoundException(ErrorMessages.OPERATION_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.OPERATION_NOT_FOUND, null));
     }
 }
