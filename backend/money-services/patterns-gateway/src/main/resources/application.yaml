@@ -124,6 +124,19 @@ spring:
                     name: monitoringServiceCb
                     fallbackUri: forward:/fallback/monitoring-service
 
+            - id: notification-service
+              uri: ${services.notification-service.url:http://notification-service:8087}
+              predicates:
+                - Path=/notification/**
+              filters:
+                - PreserveHostHeader
+                - StripPrefix=1
+                - AddRequestHeader=X-Forwarded-Prefix, /notification
+                - name: CircuitBreaker
+                  args:
+                    name: notificationServiceCb
+                    fallbackUri: forward:/fallback/notification-service
+
 server:
   port: 8085
   forward-headers-strategy: framework
@@ -168,4 +181,6 @@ resilience4j:
       currencyServiceCb:
         base-config: default
       monitoringServiceCb:
+        base-config: default
+      notificationServiceCb:
         base-config: default
