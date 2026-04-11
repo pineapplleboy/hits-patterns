@@ -2,23 +2,24 @@ package ru.patterns.shared.monitoring.request;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.monitoring.RequestMonitoringModel;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class KafkaRequestProvider {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final MonitoringLogger monitoringLogger;
 
     @Value("${kafka.provider.request-topic:00_requests}")
     private String topic;
@@ -33,8 +34,12 @@ public class KafkaRequestProvider {
             kafkaTemplate
                     .send(record)
                     .get(10, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            log.error("Ошибка отправления сообщения в Кафку: {}", e.getMessage());
+        } catch (Exception exception) {
+            var logData = new TracingLog()
+                    .setServiceId(message == null ? "" : message.getServiceId())
+                    .setPath(topic);
+            monitoringLogger.logError(logData, "Ошибка отправления сообщения в Kafka: " + exception.getMessage(),
+                    String.valueOf(message), "-");
         }
     }
 }

@@ -3,29 +3,33 @@ package ru.patterns.account.application.kafka.provider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import ru.patterns.shared.model.kafka.TransferRequestMessage;
 import ru.patterns.shared.model.notification.NotificationModel;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
+import ru.patterns.shared.utility.JwtAuthUtility;
+import ru.patterns.shared.utility.TraceLogUtility;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class NotificationProvider {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final MonitoringLogger monitoringLogger;
 
     @Value("${kafka.provider.notification}")
     private String topic;
+
+    @Value("${service.name}")
+    private String serviceName;
 
     public void send(NotificationModel message, String token, String traceId) {
         try {
@@ -47,10 +51,20 @@ public class NotificationProvider {
             kafkaTemplate
                     .send(record)
                     .get(10, TimeUnit.SECONDS);
-        } catch (JsonProcessingException e) {
-            log.error("Ошибка сериализации: {}", e.getOriginalMessage());
-        } catch (Exception e) {
-            log.error("Ошибка отправления сообщения в Кафку: {}", e.getMessage());
+        } catch (JsonProcessingException exception) {
+            var logData = TraceLogUtility.createDataForLogs(traceId, token, serviceName, topic, resolveUserId(token));
+            monitoringLogger.logError(logData, "Ошибка сериализации: " + exception.getOriginalMessage(), String.valueOf(message), "-");
+        } catch (Exception exception) {
+            var logData = TraceLogUtility.createDataForLogs(traceId, token, serviceName, topic, resolveUserId(token));
+            monitoringLogger.logError(logData, "Ошибка отправления сообщения в Kafka: " + exception.getMessage(), String.valueOf(message), "-");
+        }
+    }
+
+    private UUID resolveUserId(String token) {
+        try {
+            return JwtAuthUtility.parseAuthorizationHeader(token).userId();
+        } catch (Exception exception) {
+            return null;
         }
     }
 }

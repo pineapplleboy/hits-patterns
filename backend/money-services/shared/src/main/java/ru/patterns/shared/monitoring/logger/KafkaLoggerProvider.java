@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import ru.patterns.shared.model.monitoring.LogModel;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +31,12 @@ public class KafkaLoggerProvider {
 
             ProducerRecord<String, String> record =
                     new ProducerRecord<>(topic, String.valueOf(UUID.randomUUID()), payload);
+
+            if (message.getTraceId() != null && !message.getTraceId().isBlank()) {
+                record.headers().add(
+                        new RecordHeader("traceId", message.getTraceId().getBytes(StandardCharsets.UTF_8))
+                );
+            }
 
             kafkaTemplate
                     .send(record)

@@ -48,7 +48,7 @@ public class CreditAccountService {
         CreditRate creditRate = creditRateRepository.findById(rateId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessages.CREDIT_RATE_NOT_FOUND, logData));
 
-        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum, bankAccountNum), token);
+        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum, bankAccountNum), token, logData.getTraceId());
 
         monitoringLogger.logInfo(logData, "Заявка на оформление кредита успешно отправлена в обработку");
 
