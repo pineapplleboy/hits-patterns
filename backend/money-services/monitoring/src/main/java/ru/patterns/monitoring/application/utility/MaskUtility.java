@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 @UtilityClass
 public class MaskUtility {
 
+    private static final int MAX_LOG_BODY_LENGTH = 4096;
     private static final Pattern SENSITIVE_AMOUNT_OR_BALANCE_PATTERN = Pattern.compile(
             "(?i)(\"[^\"]*(?:amount|balance|access_token)[^\"]*\"\\s*:\\s*)(\"[^\"]*\"|-?\\d+(?:\\.\\d+)?)"
     );
@@ -24,6 +25,11 @@ public class MaskUtility {
             return body;
         }
 
-        return SENSITIVE_AMOUNT_OR_BALANCE_PATTERN.matcher(body).replaceAll("$1\"*\"");
+        var maskedBody = SENSITIVE_AMOUNT_OR_BALANCE_PATTERN.matcher(body).replaceAll("$1\"*\"");
+        if (maskedBody.length() <= MAX_LOG_BODY_LENGTH) {
+            return maskedBody;
+        }
+
+        return maskedBody.substring(0, MAX_LOG_BODY_LENGTH) + "...[truncated]";
     }
 }

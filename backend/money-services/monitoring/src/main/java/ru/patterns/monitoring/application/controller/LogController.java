@@ -3,6 +3,7 @@ package ru.patterns.monitoring.application.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -28,7 +29,7 @@ public class LogController {
     private String serviceName;
 
     @GetMapping
-    public List<LogResponseModel> getLogs(
+    public Page<LogResponseModel> getLogs(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
             @RequestParam(required = false) String path,
@@ -37,6 +38,8 @@ public class LogController {
             @RequestParam(required = false) UUID requestUserId,
             @RequestParam(required = false) String traceId,
             @RequestParam(required = false) String spanId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
             @RequestParam(required = false) List<String> fields,
             @RequestHeader(value = "traceId", required = false) String requestTraceId,
             HttpServletRequest request
@@ -58,6 +61,8 @@ public class LogController {
                 requestUserId,
                 traceId,
                 spanId,
+                page,
+                size,
                 fields,
                 logData
         );

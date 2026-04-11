@@ -29,6 +29,7 @@ import ru.patterns.shared.utility.JwtAuthUtility;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,6 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 @RequiredArgsConstructor
 public class MonitoringDataFilter implements GlobalFilter, Ordered {
+
+    private static final int MAX_LOG_BODY_LENGTH = 4096;
 
     private final MonitoringLogger monitoringLogger;
     private final RequestMonitoringService requestMonitoringService;
@@ -52,6 +55,7 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
         String serviceFromHeader = exchange.getRequest().getHeaders().getFirst("serviceFrom");
         String traceIdFromHeader = exchange.getRequest().getHeaders().getFirst("traceId");
         String serviceId = resolveServiceId(exchange, serviceFromHeader);
+        boolean skipBodyLogging = shouldSkipBodyLogging(endpoint);
 
         AtomicReference<String> requestBodyReference = new AtomicReference<>("");
         AtomicReference<StringBuilder> responseBodyReference = new AtomicReference<>(new StringBuilder());
@@ -66,7 +70,9 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
                     byte[] requestBodyBytes = new byte[requestBodyBuffer.readableByteCount()];
                     requestBodyBuffer.read(requestBodyBytes);
                     DataBufferUtils.release(requestBodyBuffer);
-                    requestBodyReference.set(new String(requestBodyBytes, StandardCharsets.UTF_8));
+                    if (!skipBodyLogging) {
+                        requestBodyReference.set(limitBody(new String(requestBodyBytes, StandardCharsets.UTF_8)));
+                    }
 
                     var decoratedRequest = new ServerHttpRequestDecorator(exchange.getRequest()) {
                         @Override
@@ -81,7 +87,7 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
                         @NonNull
                         public Mono<Void> writeWith(@NonNull Publisher<? extends DataBuffer> body) {
                             return super.writeWith(Flux.from(body)
-                                    .map(dataBuffer -> copyDataBuffer(dataBuffer, responseBodyReference, bufferFactory))
+                                    .map(dataBuffer -> copyDataBuffer(dataBuffer, responseBodyReference, bufferFactory, skipBodyLogging))
                                     .doFinally(signalType -> captureStatus(getStatusCode(), responseStatusReference)));
                         }
 
@@ -145,12 +151,15 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
     private static DataBuffer copyDataBuffer(
             DataBuffer dataBuffer,
             AtomicReference<StringBuilder> responseBodyReference,
-            DataBufferFactory bufferFactory
+            DataBufferFactory bufferFactory,
+            boolean skipBodyLogging
     ) {
         byte[] responseBodyBytes = new byte[dataBuffer.readableByteCount()];
         dataBuffer.read(responseBodyBytes);
         DataBufferUtils.release(dataBuffer);
-        responseBodyReference.get().append(new String(responseBodyBytes, StandardCharsets.UTF_8));
+        if (!skipBodyLogging && responseBodyReference.get().length() < MAX_LOG_BODY_LENGTH) {
+            responseBodyReference.get().append(limitBody(new String(responseBodyBytes, StandardCharsets.UTF_8)));
+        }
         return bufferFactory.wrap(responseBodyBytes);
     }
 
@@ -177,6 +186,34 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
 
         Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
         return route != null ? route.getId() : null;
+    }
+
+    private static boolean shouldSkipBodyLogging(String endpoint) {
+        if (!StringUtils.hasText(endpoint)) {
+            return false;
+        }
+
+        String normalizedEndpoint = endpoint.toLowerCase(Locale.ROOT);
+        return normalizedEndpoint.contains("/swagger")
+                || normalizedEndpoint.contains("/swagger-ui")
+                || normalizedEndpoint.contains("/v3/api-docs")
+                || normalizedEndpoint.contains("/actuator")
+                || normalizedEndpoint.contains("/favicon")
+                || normalizedEndpoint.contains(".css")
+                || normalizedEndpoint.contains(".js")
+                || normalizedEndpoint.contains(".map")
+                || normalizedEndpoint.contains(".html")
+                || normalizedEndpoint.contains(".png")
+                || normalizedEndpoint.contains(".svg")
+                || normalizedEndpoint.contains("/monitoring/patterns/api/v2/logs");
+    }
+
+    private static String limitBody(String body) {
+        if (!StringUtils.hasText(body) || body.length() <= MAX_LOG_BODY_LENGTH) {
+            return body;
+        }
+
+        return body.substring(0, MAX_LOG_BODY_LENGTH) + "...[truncated]";
     }
     
     private TracingLog formLogModel(String traceId, String spanId, String authorization, UUID requestUserId, String serviceId, String path) {

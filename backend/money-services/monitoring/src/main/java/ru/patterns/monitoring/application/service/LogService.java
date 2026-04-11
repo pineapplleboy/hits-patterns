@@ -1,6 +1,9 @@
 package ru.patterns.monitoring.application.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -22,10 +25,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class LogService {
 
+    private static final int DEFAULT_PAGE_SIZE = 50;
+    private static final int MAX_PAGE_SIZE = 200;
+
     private final LogRepository logRepository;
     private final MonitoringLogger monitoringLogger;
 
-    public List<LogResponseModel> getLogs(
+    public Page<LogResponseModel> getLogs(
             Instant startTime,
             Instant endTime,
             String path,
@@ -34,23 +40,36 @@ public class LogService {
             UUID requestUserId,
             String traceId,
             String spanId,
+            Integer page,
+            Integer size,
             List<String> fields,
             TracingLog logData
     ) {
         if (startTime.isAfter(endTime)) {
             throw new BadRequestException("endTime должно быть позже startTime", logData);
         }
+        if (page != null && page < 0) {
+            throw new BadRequestException("page не может быть меньше 0", logData);
+        }
+        if (size != null && size <= 0) {
+            throw new BadRequestException("size должен быть больше 0", logData);
+        }
 
         monitoringLogger.logInfo(logData, buildLogsRequestedMessage(logData));
 
         var selectedFields = LogField.fromStrings(fields);
         var sort = Sort.by(Sort.Direction.DESC, "logTime");
+        var normalizedPage = page != null ? page : 0;
+        var normalizedSize = size != null ? Math.min(size, MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
+        var pageRequest = PageRequest.of(normalizedPage, normalizedSize, sort);
         var specification = buildQuerySpecification(startTime, endTime, path, serviceId, message, requestUserId, traceId, spanId);
-
-        return logRepository.findAll(specification, sort)
+        var logsPage = logRepository.findAll(specification, pageRequest);
+        var content = logsPage.getContent()
                 .stream()
                 .map(log -> mapToResponse(log, selectedFields))
                 .toList();
+
+        return new PageImpl<>(content, pageRequest, logsPage.getTotalElements());
     }
 
     private String buildLogsRequestedMessage(TracingLog logData) {
