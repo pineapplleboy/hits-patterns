@@ -227,6 +227,37 @@ namespace IdentityTest
                         IdentityServerConstants.StandardScopes.Profile,
                         "SampleAPI"
                     }
+                },
+                new Client {
+                    ClientId = "monitoring-app",
+                    ClientName = "Monitoring app",
+
+                    RedirectUris = { "http://localhost:3000/callback"},
+                    PostLogoutRedirectUris = {  "http://localhost:3000"},
+                                AllowedCorsOrigins = {
+                "http://localhost:3000"
+            },
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
+                    AllowAccessTokensViaBrowser = true,
+                    RequireConsent = false,
+                    AccessTokenLifetime = MobileAccessTokenLifetimeSeconds,
+                    IdentityTokenLifetime = MobileIdentityTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
+
+                    AllowOfflineAccess = true,
+                    RefreshTokenUsage = TokenUsage.ReUse,
+                    RefreshTokenExpiration = TokenExpiration.Sliding,
+                    SlidingRefreshTokenLifetime = SlidingRefreshTokenLifetimeSeconds,
+                    AbsoluteRefreshTokenLifetime = AbsoluteRefreshTokenLifetimeSeconds,
+                    UpdateAccessTokenClaimsOnRefresh = true,
+
+                    AllowedScopes = {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "SampleAPI"
+                    }
                 }
 
             };
