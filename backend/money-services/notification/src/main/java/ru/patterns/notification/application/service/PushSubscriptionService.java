@@ -36,6 +36,14 @@ public class PushSubscriptionService {
         unsubscribe(token, EMPLOYEES_TOPIC, logData);
     }
 
+    public String getEmployeesTopic() {
+        return EMPLOYEES_TOPIC;
+    }
+
+    public String getClientTopic(UUID userId) {
+        return calculateClientTopic(userId);
+    }
+
     private void subscribe(String token, String topic, TracingLog logData) {
         try {
             FirebaseMessaging.getInstance().subscribeToTopic(List.of(token), topic);
