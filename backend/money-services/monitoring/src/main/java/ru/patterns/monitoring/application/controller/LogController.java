@@ -1,6 +1,5 @@
 package ru.patterns.monitoring.application.controller;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.patterns.monitoring.application.common.LogResponseModel;
 import ru.patterns.monitoring.application.service.LogService;
-import ru.patterns.shared.utility.AuthUtility;
-import ru.patterns.shared.utility.JwtAuthUtility;
 import ru.patterns.shared.utility.TraceLogUtility;
 
 import java.time.Instant;
@@ -41,18 +38,15 @@ public class LogController {
             @RequestParam(required = false) String traceId,
             @RequestParam(required = false) String spanId,
             @RequestParam(required = false) List<String> fields,
-            @Parameter(hidden = true) @RequestHeader String authorization,
             @RequestHeader(value = "traceId", required = false) String requestTraceId,
             HttpServletRequest request
     ) {
-        AuthUtility.checkUserIfEmployee(authorization);
-        var authUser = JwtAuthUtility.parseAuthorizationHeader(authorization);
         var logData = TraceLogUtility.createDataForLogs(
                 requestTraceId,
-                authorization,
+                null,
                 serviceName,
                 request.getRequestURI(),
-                authUser.userId()
+                null
         );
 
         return logService.getLogs(
