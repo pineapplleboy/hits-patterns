@@ -51,6 +51,7 @@ service:
   name: patterns-notification-service
 
 kafka:
+  url: ${KAFKA_URL:${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}}
   group: notification-service
   consumer:
     notification: 00_notification
