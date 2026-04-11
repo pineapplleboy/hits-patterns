@@ -15,9 +15,21 @@ namespace IdentityTest
 {
     internal static class HostingExtensions
     {
+        private const string OpenCorsPolicy = "OpenCorsPolicy";
+
         public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
         {
             builder.Services.AddRazorPages();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(OpenCorsPolicy, policy =>
+                {
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders =
@@ -126,6 +138,7 @@ namespace IdentityTest
 
             app.UseStaticFiles();
             app.UseRouting();
+            app.UseCors(OpenCorsPolicy);
             app.UseAuthentication();
             app.UseIdentityServer();
             app.UseAuthorization();
