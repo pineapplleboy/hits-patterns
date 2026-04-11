@@ -15,21 +15,9 @@ namespace IdentityTest
 {
     internal static class HostingExtensions
     {
-        private const string OpenCorsPolicy = "OpenCorsPolicy";
-
         public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
         {
             builder.Services.AddRazorPages();
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(OpenCorsPolicy, policy =>
-                {
-                    policy
-                        .AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                });
-            });
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders =
@@ -120,6 +108,34 @@ namespace IdentityTest
             app.UseSerilogRequestLogging();
             app.UseForwardedHeaders();
             app.UseCookiePolicy();
+            app.Use(async (context, next) =>
+            {
+                if (HttpMethods.IsOptions(context.Request.Method))
+                {
+                    var origin = context.Request.Headers.Origin.ToString();
+                    if (!string.IsNullOrWhiteSpace(origin))
+                    {
+                        context.Response.Headers.TryAdd("Access-Control-Allow-Origin", origin);
+                        context.Response.Headers.TryAdd("Vary", "Origin");
+                        context.Response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
+                        context.Response.Headers.TryAdd("Access-Control-Allow-Methods", "*");
+                        context.Response.StatusCode = StatusCodes.Status204NoContent;
+                        return;
+                    }
+                }
+
+                await next();
+
+                var requestOrigin = context.Request.Headers.Origin.ToString();
+                if (!string.IsNullOrWhiteSpace(requestOrigin)
+                    && !context.Response.Headers.ContainsKey("Access-Control-Allow-Origin"))
+                {
+                    context.Response.Headers.TryAdd("Access-Control-Allow-Origin", requestOrigin);
+                    context.Response.Headers.TryAdd("Vary", "Origin");
+                    context.Response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
+                    context.Response.Headers.TryAdd("Access-Control-Allow-Methods", "*");
+                }
+            });
             app.Use((context, next) =>
             {
                 if (context.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var prefix)
@@ -138,7 +154,6 @@ namespace IdentityTest
 
             app.UseStaticFiles();
             app.UseRouting();
-            app.UseCors(OpenCorsPolicy);
             app.UseAuthentication();
             app.UseIdentityServer();
             app.UseAuthorization();
