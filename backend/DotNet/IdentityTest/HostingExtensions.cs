@@ -108,41 +108,6 @@ namespace IdentityTest
             app.UseSerilogRequestLogging();
             app.UseForwardedHeaders();
             app.UseCookiePolicy();
-            app.Use(async (context, next) =>
-            {
-                var requestOrigin = context.Request.Headers.Origin.ToString();
-
-                if (HttpMethods.IsOptions(context.Request.Method))
-                {
-                    if (!string.IsNullOrWhiteSpace(requestOrigin))
-                    {
-                        context.Response.Headers.TryAdd("Access-Control-Allow-Origin", requestOrigin);
-                        context.Response.Headers.TryAdd("Vary", "Origin");
-                        context.Response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
-                        context.Response.Headers.TryAdd("Access-Control-Allow-Methods", "*");
-                        context.Response.StatusCode = StatusCodes.Status204NoContent;
-                        return;
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(requestOrigin))
-                {
-                    context.Response.OnStarting(() =>
-                    {
-                        if (!context.Response.Headers.ContainsKey("Access-Control-Allow-Origin"))
-                        {
-                            context.Response.Headers.TryAdd("Access-Control-Allow-Origin", requestOrigin);
-                            context.Response.Headers.TryAdd("Vary", "Origin");
-                            context.Response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
-                            context.Response.Headers.TryAdd("Access-Control-Allow-Methods", "*");
-                        }
-
-                        return Task.CompletedTask;
-                    });
-                }
-
-                await next();
-            });
             app.Use((context, next) =>
             {
                 if (context.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var prefix)

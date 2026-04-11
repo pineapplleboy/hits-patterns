@@ -37,8 +37,6 @@ spring:
                   - "*"
                 allowCredentials: false
                 maxAge: 3600
-          default-filters:
-            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Expose-Headers RETAIN_FIRST
           routes:
             - id: identity-server
               uri: ${services.identity-server.url:http://identity-server:5001}
