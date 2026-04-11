@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using patternsUserSetting.UserSettingSetup;
+using patternsUsers.UsersSetup;
 
 #nullable disable
 
-namespace patternsUserSetting.Migrations
+namespace patternsUsers.Migrations
 {
-    [DbContext(typeof(UserSettingDataContext))]
-    partial class UserSettingDataContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(UserDataContext))]
+    [Migration("20260406140052_indKey")]
+    partial class indKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,20 +24,6 @@ namespace patternsUserSetting.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("ClassLibrary.HiddenAccount", b =>
-                {
-                    b.Property<Guid>("HiddenAccountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("HiddenAccountId");
-
-                    b.ToTable("hiddenAccounts");
-                });
 
             modelBuilder.Entity("ClassLibrary.IdempotencyKeyDB", b =>
                 {
@@ -54,18 +43,32 @@ namespace patternsUserSetting.Migrations
                     b.ToTable("idempotencyKeys");
                 });
 
-            modelBuilder.Entity("ClassLibrary.UserSettingDB", b =>
+            modelBuilder.Entity("ClassLibrary.UserDB", b =>
                 {
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("IsDarkMode")
+                    b.Property<Guid?>("Author")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Ban")
                         .HasColumnType("boolean");
 
-                    b.HasKey("UserId");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.ToTable("userSettings");
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserRole")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("users");
                 });
 #pragma warning restore 612, 618
         }

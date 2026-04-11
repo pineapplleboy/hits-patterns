@@ -22,6 +22,24 @@ namespace patternsUsers.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ClassLibrary.IdempotencyKeyDB", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("idempotencyKeys2");
+                });
+
             modelBuilder.Entity("ClassLibrary.UserDB", b =>
                 {
                     b.Property<Guid>("Id")

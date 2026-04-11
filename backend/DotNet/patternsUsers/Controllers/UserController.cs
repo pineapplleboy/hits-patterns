@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using patternsUsers.Services;
+using patternsUsers.UsersSetup;
 
 namespace patternsUsers.Controllers
 {
@@ -41,6 +42,7 @@ namespace patternsUsers.Controllers
 
         [Authorize(Roles = "EMPLOYEE")]
         [HttpPost("ban-user/{id}")]
+        [IdempotencyKeyUsers]
         public async Task<IActionResult> BanUser([FromRoute] Guid id)
         {
             string token = await HttpContext.GetTokenAsync("access_token");
@@ -50,6 +52,7 @@ namespace patternsUsers.Controllers
 
         [Authorize(Roles = "EMPLOYEE")]
         [HttpPost("unban-user/{id}")]
+        [IdempotencyKeyUsers]
         public async Task<IActionResult> UnbanUsers([FromRoute] Guid id)
         {
             string token = await HttpContext.GetTokenAsync("access_token");

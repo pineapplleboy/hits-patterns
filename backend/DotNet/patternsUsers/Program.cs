@@ -1,5 +1,6 @@
 
 
+using ClassLibrary.BaseSetup;
 using patternsUsers.Services;
 using patternsUsers.Services.Implementations;
 using patternsUsers.UsersSetup;
@@ -8,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 ClassLibrary.BaseSetup.SetupAspNet.AddAspNet(builder);
 ClassLibrary.BaseSetup.SetupSwagger.AddSwagger(builder);
+ClassLibrary.BaseSetup.SetupIdempotencyKey.AddFilter<AddHeaderByAttributeFilter<IdempotencyKeyUsersAttribute>>(builder);
+
 ClassLibrary.BaseSetup.SetupDatabases.AddDatabases<UserDataContext>(builder);
 
 //сервисы
