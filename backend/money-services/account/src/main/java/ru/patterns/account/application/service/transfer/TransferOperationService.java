@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.enums.TransactionFinishStatus;
+import ru.patterns.account.application.kafka.provider.NotificationProvider;
 import ru.patterns.account.application.service.operation.OperationHistoryService;
 import ru.patterns.account.application.service.websocket.OperationWebSocketPublisher;
+import ru.patterns.account.application.utility.NotificationUtility;
 import ru.patterns.account.domain.entity.BankAccount;
 import ru.patterns.account.domain.entity.CreditAccount;
 import ru.patterns.account.domain.entity.Operation;
@@ -38,6 +40,7 @@ public class TransferOperationService {
     private final OperationHistoryService operationHistoryService;
     private final OperationWebSocketPublisher operationWebSocketPublisher;
     private final MonitoringLogger monitoringLogger;
+    private final NotificationProvider notificationProvider;
 
     @Value("${master-bank.account-number}")
     private String masterBankAccountNumber;
@@ -46,7 +49,7 @@ public class TransferOperationService {
     private String serviceName;
 
     @Transactional
-    public TransactionFinishStatus makeTransfer(TransferAssignmentMessage assignment, String traceId) {
+    public TransactionFinishStatus makeTransfer(TransferAssignmentMessage assignment, String token, String traceId) {
         var logData = createLogData(traceId);
         monitoringLogger.logInfo(logData, "Получен запрос на выполнение перевода");
 
@@ -54,7 +57,7 @@ public class TransferOperationService {
         Operation operation = findOrCreateOperationById(assignment.getOperationId(), assignment);
 
         operationWebSocketPublisher.publishOperationCreated(operation);
-        saveOperationWithStatus(operation, assignment.getStatus());
+        saveOperationWithStatus(operation, assignment.getStatus(), token, traceId);
 
         if (assignment.getStatus() == OperationStatus.REJECTED) {
             monitoringLogger.logWarn(logData, "Перевод был отклонён до начала выполнения");
@@ -62,15 +65,16 @@ public class TransferOperationService {
         }
 
         if (assignment.getTransferAccountType() == TransferAccountType.BANK_ACCOUNT) {
-            return makeTransferToBankAccount(assignment, bankAccountFrom, operation, logData);
+            return makeTransferToBankAccount(assignment, bankAccountFrom, operation, token, logData);
         }
 
-        return makeTransferToCreditAccount(assignment, bankAccountFrom, operation, logData);
+        return makeTransferToCreditAccount(assignment, bankAccountFrom, operation, token, logData);
     }
 
     private TransactionFinishStatus makeTransferToBankAccount(TransferAssignmentMessage assignment,
                                                               BankAccount bankAccountFrom,
                                                               Operation operation,
+                                                              String token,
                                                               TracingLog logData) {
         BankAccount bankAccountTo = findBankAccountByAccountNumber(assignment.getAccountNumberTo(), logData);
 
@@ -81,7 +85,7 @@ public class TransferOperationService {
 
         if (bankAccountTo.isBanned()) {
             monitoringLogger.logWarn(logData, "Перевод отклонён: счёт получателя заблокирован");
-            return finishRejectedOperation(operation);
+            return finishRejectedOperation(operation, token, logData);
         }
 
         BigDecimal amountFrom = assignment.getAmountFrom();
@@ -89,7 +93,7 @@ public class TransferOperationService {
 
         if (bankAccountFrom.getBalance().compareTo(amountFrom) < 0) {
             monitoringLogger.logWarn(logData, "Перевод отклонён: недостаточно средств на счёте отправителя");
-            return finishRejectedOperation(operation);
+            return finishRejectedOperation(operation, token, logData);
         }
 
         setCurrentlyTransactional(bankAccountFrom, bankAccountTo, null, true);
@@ -100,7 +104,7 @@ public class TransferOperationService {
         bankAccountRepository.save(bankAccountTo);
 
         sendMoneyUpdateMessages(bankAccountFrom, bankAccountTo);
-        saveOperationWithStatus(operation, OperationStatus.SUCCESS);
+        saveOperationWithStatus(operation, OperationStatus.SUCCESS, token, logData.getTraceId());
         setCurrentlyTransactional(bankAccountFrom, bankAccountTo, null, false);
 
         monitoringLogger.logInfo(logData, "Перевод между банковскими счетами успешно выполнен");
@@ -110,6 +114,7 @@ public class TransferOperationService {
     private TransactionFinishStatus makeTransferToCreditAccount(TransferAssignmentMessage assignment,
                                                                 BankAccount bankAccountFrom,
                                                                 Operation operation,
+                                                                String token,
                                                                 TracingLog logData) {
         CreditAccount creditAccountTo = findCreditAccountByAccountNumber(assignment.getAccountNumberTo(), logData);
 
@@ -120,14 +125,14 @@ public class TransferOperationService {
 
         if (!creditAccountTo.isActive()) {
             monitoringLogger.logWarn(logData, "Погашение кредита отклонено: кредитный счёт неактивен");
-            return finishRejectedOperation(operation);
+            return finishRejectedOperation(operation, token, logData);
         }
 
         BigDecimal amount = assignment.getAmountFrom();
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             monitoringLogger.logWarn(logData, "Погашение кредита отклонено: некорректная сумма");
-            return finishRejectedOperation(operation);
+            return finishRejectedOperation(operation, token, logData);
         }
 
         setCurrentlyTransactional(bankAccountFrom, null, creditAccountTo, true);
@@ -154,7 +159,7 @@ public class TransferOperationService {
         creditAccountRepository.save(creditAccountTo);
 
         sendMoneyUpdateMessages(bankAccountFrom, creditAccountTo);
-        saveOperationWithStatus(operation, OperationStatus.SUCCESS);
+        saveOperationWithStatus(operation, OperationStatus.SUCCESS, token, logData.getTraceId());
         updateCreditOperations(creditAccountTo, amount);
         setCurrentlyTransactional(bankAccountFrom, null, creditAccountTo, false);
 
@@ -201,17 +206,28 @@ public class TransferOperationService {
         }
     }
 
-    private TransactionFinishStatus finishRejectedOperation(Operation operation) {
-        saveOperationWithStatus(operation, OperationStatus.REJECTED);
+    private TransactionFinishStatus finishRejectedOperation(Operation operation, String token, TracingLog logData) {
+        saveOperationWithStatus(operation, OperationStatus.REJECTED, token, logData.getTraceId());
         return TransactionFinishStatus.TRANSACTION_REJECTED;
     }
 
-    private void saveOperationWithStatus(Operation operation, OperationStatus status) {
+    private void saveOperationWithStatus(Operation operation, OperationStatus status, String token, String traceId) {
         operation.setStatus(status);
         operation.setUpdateTime(Instant.now());
         operationRepository.save(operation);
 
         operationWebSocketPublisher.publishOperationUpdated(operation);
+        sendNotificationIfResolved(operation, status, token, traceId);
+    }
+
+    private void sendNotificationIfResolved(Operation operation, OperationStatus status, String token, String traceId) {
+        if (status != OperationStatus.SUCCESS && status != OperationStatus.REJECTED) {
+            return;
+        }
+
+        notificationProvider.send(NotificationUtility.createSenderTransferNotification(operation), token, traceId);
+        NotificationUtility.createRecipientTransferNotification(operation)
+                .ifPresent(notification -> notificationProvider.send(notification, token, traceId));
     }
 
     private void sendMoneyUpdateMessages(BankAccount bankAccountFrom, BankAccount bankAccountTo) {

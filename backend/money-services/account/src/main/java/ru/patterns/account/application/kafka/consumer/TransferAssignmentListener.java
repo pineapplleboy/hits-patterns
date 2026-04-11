@@ -47,7 +47,7 @@ public class TransferAssignmentListener {
 
             AuthUtility.isAuthorized(token);
 
-            var transferResult = transferOperationService.makeTransfer(msg, traceId);
+            var transferResult = transferOperationService.makeTransfer(msg, token, traceId);
             if (transferResult == TransactionFinishStatus.TRANSACTION_PAUSED) {
                 transferRequestProvider.send(TransferMessageFactory.createRepeatRequest(msg), token, traceId);
             }
