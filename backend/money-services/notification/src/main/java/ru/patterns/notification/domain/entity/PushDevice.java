@@ -31,6 +31,9 @@ public class PushDevice {
     @Column(name = "active", nullable = false)
     private boolean active;
 
+    @Column(name = "notifications_enabled_until")
+    private Instant notificationsEnabledUntil;
+
     @Column(name = "created_at")
     private Instant createdAt = Instant.now();
 

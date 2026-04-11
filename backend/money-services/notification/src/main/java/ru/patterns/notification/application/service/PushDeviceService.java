@@ -29,6 +29,7 @@ public class PushDeviceService {
                 .setFcmToken(tokenModel.getToken())
                 .setUserId(authUser.userId())
                 .setUserRole(authUser.role())
+                .setNotificationsEnabledUntil(authUser.expiresAt())
                 .setUpdatedAt(Instant.now());
 
         pushDeviceRepository.save(device);
@@ -45,6 +46,7 @@ public class PushDeviceService {
         pushDeviceRepository.findByFcmToken(tokenModel.getToken())
                 .ifPresent(device -> {
                     device.setActive(false);
+                    device.setNotificationsEnabledUntil(Instant.now());
                     device.setUpdatedAt(Instant.now());
                     pushDeviceRepository.save(device);
                 });
