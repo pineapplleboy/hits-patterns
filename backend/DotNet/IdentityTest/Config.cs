@@ -19,6 +19,7 @@ namespace IdentityTest
         private static readonly string CurrencySwaggerUrl = GetEnvironmentVariable("SWAGGER_CURRENCY_URL", "http://localhost:8084");
         private static readonly string CreditSwaggerUrl = GetEnvironmentVariable("SWAGGER_CREDIT_URL", "http://localhost:8081");
         private static readonly string MonitoringSwaggerUrl = GetEnvironmentVariable("SWAGGER_MONITORING_URL", "http://localhost:8086");
+        private static readonly string NotificationSwaggerUrl = GetEnvironmentVariable("SWAGGER_NOTIFICATION_URL", "http://localhost:8087");
         private static readonly string UsersSwaggerOrigin = GetOrigin(UsersSwaggerUrl);
         private static readonly string UserSettingsSwaggerOrigin = GetOrigin(UserSettingsSwaggerUrl);
         private static readonly string AccountSwaggerOrigin = GetOrigin(AccountSwaggerUrl);
@@ -26,6 +27,7 @@ namespace IdentityTest
         private static readonly string CurrencySwaggerOrigin = GetOrigin(CurrencySwaggerUrl);
         private static readonly string CreditSwaggerOrigin = GetOrigin(CreditSwaggerUrl);
         private static readonly string MonitoringSwaggerOrigin = GetOrigin(MonitoringSwaggerUrl);
+        private static readonly string NotificationSwaggerOrigin = GetOrigin(NotificationSwaggerUrl);
 
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[]
@@ -163,8 +165,34 @@ namespace IdentityTest
                     AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
                     AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
 
-                    RedirectUris = {$"{MonitoringSwaggerUrl}/swagger-ui/oauth2-redirect.html"},
+                    RedirectUris =
+                    {
+                        $"{MonitoringSwaggerUrl}/swagger-ui/oauth2-redirect.html",
+                        $"{MonitoringSwaggerUrl}/swagger/oauth2-redirect.html"
+                    },
                     AllowedCorsOrigins = {MonitoringSwaggerOrigin},
+                    AllowedScopes = new List<string>
+                    {
+                        "SampleAPI"
+                    }
+                },
+                new Client
+                {
+                    ClientId = "api_swagger_notification",
+                    ClientName = "Swagger UI for Notification API",
+
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
+
+                    RedirectUris =
+                    {
+                        $"{NotificationSwaggerUrl}/swagger-ui/oauth2-redirect.html",
+                        $"{NotificationSwaggerUrl}/swagger/oauth2-redirect.html"
+                    },
+                    AllowedCorsOrigins = {NotificationSwaggerOrigin},
                     AllowedScopes = new List<string>
                     {
                         "SampleAPI"
