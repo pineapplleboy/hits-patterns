@@ -110,12 +110,13 @@ namespace IdentityTest
             app.UseCookiePolicy();
             app.Use(async (context, next) =>
             {
+                var requestOrigin = context.Request.Headers.Origin.ToString();
+
                 if (HttpMethods.IsOptions(context.Request.Method))
                 {
-                    var origin = context.Request.Headers.Origin.ToString();
-                    if (!string.IsNullOrWhiteSpace(origin))
+                    if (!string.IsNullOrWhiteSpace(requestOrigin))
                     {
-                        context.Response.Headers.TryAdd("Access-Control-Allow-Origin", origin);
+                        context.Response.Headers.TryAdd("Access-Control-Allow-Origin", requestOrigin);
                         context.Response.Headers.TryAdd("Vary", "Origin");
                         context.Response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
                         context.Response.Headers.TryAdd("Access-Control-Allow-Methods", "*");
@@ -124,17 +125,23 @@ namespace IdentityTest
                     }
                 }
 
-                await next();
-
-                var requestOrigin = context.Request.Headers.Origin.ToString();
-                if (!string.IsNullOrWhiteSpace(requestOrigin)
-                    && !context.Response.Headers.ContainsKey("Access-Control-Allow-Origin"))
+                if (!string.IsNullOrWhiteSpace(requestOrigin))
                 {
-                    context.Response.Headers.TryAdd("Access-Control-Allow-Origin", requestOrigin);
-                    context.Response.Headers.TryAdd("Vary", "Origin");
-                    context.Response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
-                    context.Response.Headers.TryAdd("Access-Control-Allow-Methods", "*");
+                    context.Response.OnStarting(() =>
+                    {
+                        if (!context.Response.Headers.ContainsKey("Access-Control-Allow-Origin"))
+                        {
+                            context.Response.Headers.TryAdd("Access-Control-Allow-Origin", requestOrigin);
+                            context.Response.Headers.TryAdd("Vary", "Origin");
+                            context.Response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
+                            context.Response.Headers.TryAdd("Access-Control-Allow-Methods", "*");
+                        }
+
+                        return Task.CompletedTask;
+                    });
                 }
+
+                await next();
             });
             app.Use((context, next) =>
             {
