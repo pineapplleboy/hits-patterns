@@ -93,7 +93,7 @@ public class LogService {
                 (root, query, criteriaBuilder) -> criteriaBuilder.between(root.get("logTime"), startTime, endTime),
                 equalsIfPresent("path", path),
                 equalsIfPresent("serviceId", serviceId),
-                equalsIfPresent("message", message),
+                containsIgnoreCaseIfPresent("message", message),
                 equalsIfPresent("requestUserId", requestUserId),
                 equalsIfPresent("traceId", traceId),
                 equalsIfPresent("spanId", spanId)
@@ -110,6 +110,17 @@ public class LogService {
         }
 
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get(fieldName), value);
+    }
+
+    private Specification<Log> containsIgnoreCaseIfPresent(String fieldName, String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return (root, query, criteriaBuilder) -> criteriaBuilder.like(
+                criteriaBuilder.lower(root.get(fieldName)),
+                "%" + value.toLowerCase() + "%"
+        );
     }
 
     private LogResponseModel mapToResponse(Log log, Set<LogField> selectedFields) {
