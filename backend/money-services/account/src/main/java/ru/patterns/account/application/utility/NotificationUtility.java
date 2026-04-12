@@ -41,6 +41,7 @@ public class NotificationUtility {
 
     private String formNotificationMessage(Operation operation, boolean recipientNotification) {
         AccountActionType actionType = operation.getActionType();
+        String direction = resolveDirection(recipientNotification);
 
         return switch (actionType) {
             case TRANSFER, TRANSFER_SENT, TRANSFER_RECEIVED -> recipientNotification
@@ -48,54 +49,58 @@ public class NotificationUtility {
                     : formSenderTransferMessage(operation);
             case OPEN_ACCOUNT -> resolveStatusMessage(
                     operation,
-                    "Счёт успешно открыт",
-                    "Не удалось открыть счёт. Проверьте доступность выбранной валюты"
+                    direction + ": счёт успешно открыт",
+                    direction + ": не удалось открыть счёт. Проверьте доступность выбранной валюты."
             );
             case CLOSE_ACCOUNT -> resolveStatusMessage(
                     operation,
-                    "Счёт успешно закрыт",
-                    "Не удалось закрыть счёт. Возможно, счёт не найден или уже закрыт"
+                    direction + ": счёт успешно закрыт",
+                    direction + ": не удалось закрыть счёт. Возможно, счёт не найден или уже закрыт."
             );
             case ACCOUNT_BANNED -> resolveStatusMessage(
                     operation,
-                    "Счёт заблокирован",
-                    "Не удалось заблокировать счёт"
+                    direction + ": счёт заблокирован",
+                    direction + ": не удалось заблокировать счёт."
             );
             case ACCOUNT_UNBANNED -> resolveStatusMessage(
                     operation,
-                    "Счёт разблокирован",
-                    "Не удалось разблокировать счёт."
+                    direction + ": счёт разблокирован",
+                    direction + ": не удалось разблокировать счёт."
             );
             case CREDIT_DEPT_PERCENT -> resolveStatusMessage(
                     operation,
-                    "Начисление процентов по кредиту",
-                    "Не удалось начислить проценты по кредиту"
+                    direction + ": начисление процентов по кредиту выполнено успешно",
+                    direction + ": не удалось начислить проценты по кредиту."
             );
         };
     }
 
     private String formSenderTransferMessage(Operation operation) {
         String amount = formatAmount(operation.getAmountFrom());
+        String direction = resolveDirection(false);
 
         if (operation.getTransferAccountType() == TransferAccountType.CREDIT_ACCOUNT) {
             return operation.getStatus() == OperationStatus.SUCCESS
-                    ? "Погашение кредита на сумму " + amount + " выполнено успешно"
-                    : "Погашение кредита на сумму " + amount + " не выполнено. Возможные причины: недостаточно средств, " +
-                    "счёт заблокирован, кредит не найден или неактивен, либо операция доступна только для RUB";
+                    ? direction + ": погашение кредита на сумму " + amount + " выполнено успешно"
+                    : direction + ": погашение кредита на сумму " + amount + " не выполнено. Возможные причины: недостаточно средств, счёт заблокирован, кредит не найден или неактивен, либо операция доступна только для RUB.";
         }
 
         return operation.getStatus() == OperationStatus.SUCCESS
-                ? "Перевод на сумму " + amount + " выполнен успешно"
-                : "Перевод на сумму " + amount + " не выполнен. Возможные причины: недостаточно средств, счёт заблокирован, " +
-                "счёт получателя недоступен или валюта перевода не поддерживается";
+                ? direction + ": перевод на сумму " + amount + " выполнен успешно"
+                : direction + ": перевод на сумму " + amount + " не выполнен. Возможные причины: недостаточно средств, счёт заблокирован, счёт получателя недоступен или валюта перевода не поддерживается.";
     }
 
     private String formRecipientTransferMessage(Operation operation) {
         String amount = formatAmount(operation.getAmountTo() != null ? operation.getAmountTo() : operation.getAmountFrom());
+        String direction = resolveDirection(true);
 
         return operation.getStatus() == OperationStatus.SUCCESS
-                ? "Входящий перевод на сумму " + amount + " зачислен успешно"
-                : "Входящий перевод на сумму " + amount + " не был зачислен. Операция отклонена или отменена до завершения";
+                ? direction + ": перевод на сумму " + amount + " зачислен успешно"
+                : direction + ": перевод на сумму " + amount + " не был зачислен. Операция отклонена или отменена до завершения.";
+    }
+
+    private String resolveDirection(boolean recipientNotification) {
+        return recipientNotification ? "Входящая операция" : "Исходящая операция";
     }
 
     private String resolveStatusMessage(Operation operation, String successMessage, String rejectedMessage) {
