@@ -226,8 +226,10 @@ public class TransferOperationService {
         }
 
         notificationProvider.send(NotificationUtility.createSenderTransferNotification(operation), token, traceId);
-        NotificationUtility.createRecipientTransferNotification(operation)
-                .ifPresent(notification -> notificationProvider.send(notification, token, traceId));
+        if (operation.getUserIdFrom() != null && !operation.getUserIdFrom().equals(operation.getRecipientId())) {
+            NotificationUtility.createRecipientTransferNotification(operation)
+                    .ifPresent(notification -> notificationProvider.send(notification, token, traceId));
+        }
     }
 
     private void sendMoneyUpdateMessages(BankAccount bankAccountFrom, BankAccount bankAccountTo) {
