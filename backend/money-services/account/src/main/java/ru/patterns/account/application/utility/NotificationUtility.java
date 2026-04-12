@@ -100,7 +100,7 @@ public class NotificationUtility {
     }
 
     private String resolveDirection(boolean recipientNotification) {
-        return recipientNotification ? "Входящая операция" : "Исходящая операция";
+        return recipientNotification ? "Исходящая операция" : "Входящая операция";
     }
 
     private String resolveStatusMessage(Operation operation, String successMessage, String rejectedMessage) {
