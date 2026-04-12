@@ -11,6 +11,7 @@ public class MaskUtility {
     private static final Pattern SENSITIVE_AMOUNT_OR_BALANCE_PATTERN = Pattern.compile(
             "(?i)(\"[^\"]*(?:amount|balance|access_token)[^\"]*\"\\s*:\\s*)(\"[^\"]*\"|-?\\d+(?:\\.\\d+)?)"
     );
+    private static final Pattern DIGIT_PATTERN = Pattern.compile("\\d");
 
     public String maskAuthorization(String authorization) {
         return authorization != null ? "Bearer" + " ***" : "-";
@@ -26,10 +27,31 @@ public class MaskUtility {
         }
 
         var maskedBody = SENSITIVE_AMOUNT_OR_BALANCE_PATTERN.matcher(body).replaceAll("$1\"*\"");
+        maskedBody = maskDigitsInLinesWithSum(maskedBody);
         if (maskedBody.length() <= MAX_LOG_BODY_LENGTH) {
             return maskedBody;
         }
 
-        return maskedBody.substring(0, MAX_LOG_BODY_LENGTH) + "...[truncated]";
+        return maskedBody.substring(0, MAX_LOG_BODY_LENGTH) + "...[обрезано]";
+    }
+
+    private String maskDigitsInLinesWithSum(String body) {
+        var result = new StringBuilder();
+
+        for (String line : body.split("\\R", -1)) {
+            if (line.toLowerCase().contains("сумм")) {
+                result.append(DIGIT_PATTERN.matcher(line).replaceAll("*"));
+            } else {
+                result.append(line);
+            }
+
+            result.append(System.lineSeparator());
+        }
+
+        if (!result.isEmpty()) {
+            result.setLength(result.length() - System.lineSeparator().length());
+        }
+
+        return result.toString();
     }
 }
