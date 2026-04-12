@@ -56,8 +56,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> catchUnknownException(Exception exception) {
         log.error(exception.getMessage(), exception);
 
-        return new ResponseEntity<>(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Произошла непредвиденная ошибка"),
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Ошибка сервера"),
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
-
