@@ -1,6 +1,7 @@
 package com.example.g_bankforemployees.feature.users_list.di
 
 import com.example.g_bankforemployees.common.realtime.domain.RealtimeSessionManager
+import com.example.g_bankforemployees.feature.notifications.domain.NotificationTokenSyncManager
 import com.example.g_bankforemployees.feature.users_list.data.remote.UsersApi
 import com.example.g_bankforemployees.feature.users_list.data.repository.UsersRepositoryImpl
 import com.example.g_bankforemployees.feature.users_list.domain.repository.UsersRepository
@@ -39,6 +40,7 @@ val usersListModule = module {
             tokenStorage = get(),
             authSessionCoordinator = get(),
             realtimeSessionManager = get(),
+            notificationTokenSyncManager = get<NotificationTokenSyncManager>(),
             navigatorHolder = get(),
         )
     }

@@ -1,6 +1,12 @@
 ﻿package com.example.g_bankforemployees.feature.authorization.di
 
 import android.content.Context
+import com.example.g_bankforemployees.common.network.CircuitBreakerInterceptor
+import com.example.g_bankforemployees.common.network.CircuitBreakerRegistry
+import com.example.g_bankforemployees.common.network.MonitoringInterceptor
+import com.example.g_bankforemployees.common.network.NetworkFailureClassifier
+import com.example.g_bankforemployees.common.network.NetworkResilienceConfig
+import com.example.g_bankforemployees.common.network.RetryInterceptor
 import com.example.g_bankforemployees.common.realtime.data.repository.StompRealtimeEventsRepository
 import com.example.g_bankforemployees.common.realtime.domain.repository.RealtimeEventsRepository
 import com.example.g_bankforemployees.feature.authorization.data.remote.AuthApi
@@ -13,6 +19,7 @@ import com.example.g_bankforemployees.feature.authorization.domain.repository.Au
 import com.example.g_bankforemployees.feature.authorization.domain.usecase.CreateUserUseCase
 import com.example.g_bankforemployees.feature.authorization.presentation.SsoGateViewModel
 import com.example.g_bankforemployees.feature.authorization.presentation.SsoLoginViewModel
+import com.example.g_bankforemployees.feature.notifications.domain.NotificationTokenSyncManager
 import com.example.g_bankforemployees.feature.settings.domain.usecase.SyncThemeUseCase
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -42,8 +49,49 @@ val authorizationModule = module {
         }
     }
 
+    single {
+        MonitoringInterceptor(
+            tokenStorage = get(),
+        )
+    }
+
+    single {
+        NetworkResilienceConfig()
+    }
+
+    single {
+        val config = get<NetworkResilienceConfig>()
+        NetworkFailureClassifier(config.retry)
+    }
+
+    single {
+        val config = get<NetworkResilienceConfig>()
+        CircuitBreakerRegistry(
+            config = config.circuitBreaker,
+        )
+    }
+
+    single {
+        val config = get<NetworkResilienceConfig>()
+        CircuitBreakerInterceptor(
+            circuitBreakerRegistry = get(),
+            failureClassifier = get(),
+        )
+    }
+
+    single {
+        val config = get<NetworkResilienceConfig>()
+        RetryInterceptor(
+            config = config.retry,
+            failureClassifier = get(),
+        )
+    }
+
     single(named("apiOkHttpClient")) {
         OkHttpClient.Builder()
+            .addInterceptor(get<MonitoringInterceptor>())
+            .addInterceptor(get<RetryInterceptor>())
+            .addInterceptor(get<CircuitBreakerInterceptor>())
             .addInterceptor(get<AuthInterceptor>())
             .addInterceptor(get<HttpLoggingInterceptor>(named("apiLoggingInterceptor")))
             .build()
@@ -106,6 +154,7 @@ val authorizationModule = module {
             context = context,
             authSessionCoordinator = get(),
             syncThemeUseCase = get<SyncThemeUseCase>(),
+            notificationTokenSyncManager = get<NotificationTokenSyncManager>(),
             navigatorHolder = get(),
         )
     }

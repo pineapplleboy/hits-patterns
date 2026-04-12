@@ -13,6 +13,7 @@ import com.example.g_bankforemployees.feature.authorization.domain.TokenStorage
 import com.example.g_bankforemployees.feature.authorization.domain.sso.SsoAppAuthConfiguration
 import com.example.g_bankforemployees.feature.authorization.domain.sso.SsoConfig
 import com.example.g_bankforemployees.feature.authorization.presentation.LogoutResultActivity
+import com.example.g_bankforemployees.feature.notifications.domain.NotificationTokenSyncManager
 import com.example.g_bankforemployees.feature.users_list.domain.model.User
 import com.example.g_bankforemployees.feature.users_list.domain.model.UserRole
 import com.example.g_bankforemployees.feature.users_list.domain.repository.UsersRepository
@@ -34,6 +35,7 @@ class UsersListScreenViewModel(
     private val tokenStorage: TokenStorage,
     private val authSessionCoordinator: AuthSessionCoordinator,
     private val realtimeSessionManager: RealtimeSessionManager,
+    private val notificationTokenSyncManager: NotificationTokenSyncManager,
     private val navigatorHolder: NavigatorHolder,
 ) : ViewModel() {
 
@@ -109,37 +111,40 @@ class UsersListScreenViewModel(
     }
 
     fun onLogoutClick() {
-        authSessionCoordinator.onLogoutStarted()
-        tokenStorage.clearToken()
-        realtimeSessionManager.disconnect()
-        navigatorHolder.navigator?.navigateToSsoLoginAndClearStack()
+        viewModelScope.launch {
+            authSessionCoordinator.onLogoutStarted()
+            notificationTokenSyncManager.unsubscribe()
+            tokenStorage.clearToken()
+            realtimeSessionManager.disconnect()
+            navigatorHolder.navigator?.navigateToSsoLoginAndClearStack()
 
-        try {
-            val authorizationService = AuthorizationService(context, SsoAppAuthConfiguration.build())
-            val serviceConfig = AuthorizationServiceConfiguration(
-                Uri.parse(SsoConfig.AUTHORIZATION_URL),
-                Uri.parse(SsoConfig.TOKEN_URL),
-                null,
-                Uri.parse(SsoConfig.END_SESSION_URL),
-            )
+            try {
+                val authorizationService = AuthorizationService(context, SsoAppAuthConfiguration.build())
+                val serviceConfig = AuthorizationServiceConfiguration(
+                    Uri.parse(SsoConfig.AUTHORIZATION_URL),
+                    Uri.parse(SsoConfig.TOKEN_URL),
+                    null,
+                    Uri.parse(SsoConfig.END_SESSION_URL),
+                )
 
-            val endSessionRequest = EndSessionRequest.Builder(serviceConfig)
-                .setPostLogoutRedirectUri(Uri.parse(SsoConfig.POST_LOGOUT_REDIRECT_URI))
-                .setState("logout")
-                .build()
+                val endSessionRequest = EndSessionRequest.Builder(serviceConfig)
+                    .setPostLogoutRedirectUri(Uri.parse(SsoConfig.POST_LOGOUT_REDIRECT_URI))
+                    .setState("logout")
+                    .build()
 
-            val callbackIntent = Intent(context, LogoutResultActivity::class.java)
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                endSessionRequest.hashCode(),
-                callbackIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
-            )
+                val callbackIntent = Intent(context, LogoutResultActivity::class.java)
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    endSessionRequest.hashCode(),
+                    callbackIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
+                )
 
-            authorizationService.performEndSessionRequest(endSessionRequest, pendingIntent)
-            authorizationService.dispose()
-        } catch (_: Throwable) {
-            authSessionCoordinator.onLogoutFinished()
+                authorizationService.performEndSessionRequest(endSessionRequest, pendingIntent)
+                authorizationService.dispose()
+            } catch (_: Throwable) {
+                authSessionCoordinator.onLogoutFinished()
+            }
         }
     }
 }

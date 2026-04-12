@@ -11,6 +11,7 @@ import com.example.g_bankforemployees.feature.authorization.domain.AuthSessionCo
 import com.example.g_bankforemployees.feature.authorization.domain.TokenStorage
 import com.example.g_bankforemployees.feature.authorization.domain.sso.SsoAppAuthConfiguration
 import com.example.g_bankforemployees.feature.authorization.domain.sso.SsoConfig
+import com.example.g_bankforemployees.feature.notifications.domain.NotificationTokenSyncManager
 import com.example.g_bankforemployees.feature.settings.domain.usecase.SyncThemeUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,7 @@ class SsoGateViewModel(
     private val context: Context,
     private val authSessionCoordinator: AuthSessionCoordinator,
     private val syncThemeUseCase: SyncThemeUseCase,
+    private val notificationTokenSyncManager: NotificationTokenSyncManager,
     private val navigatorHolder: NavigatorHolder,
 ) : ViewModel() {
 
@@ -98,7 +100,7 @@ class SsoGateViewModel(
                 "code",
                 Uri.parse(SsoConfig.REDIRECT_URI),
             )
-                .setScopes("openid", "profile", "SampleAPI")
+                .setScopes("SampleAPI")
                 .setAdditionalParameters(mapOf("fullAccess" to "true"))
                 .setCodeVerifier(CodeVerifierUtil.generateRandomCodeVerifier())
                 .build()
@@ -130,6 +132,8 @@ class SsoGateViewModel(
         returnedFromSso = false
         authSessionCoordinator.onAuthorized()
         _state.value = SsoGateScreenState.Loading
+
+        notificationTokenSyncManager.register()
 
         viewModelScope.launch {
             syncThemeUseCase()

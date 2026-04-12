@@ -28,7 +28,11 @@ class AuthInterceptor(
         }
 
         val response = chain.proceed(newRequest)
-        if (response.code == 401 && authSessionCoordinator.tryStartUnauthorizedRedirect()) {
+        if (
+            response.code == 401 &&
+            request.url.encodedPath.startsWith("/notification/").not() &&
+            authSessionCoordinator.tryStartUnauthorizedRedirect()
+        ) {
             tokenStorage.clearToken()
             realtimeSessionManager.disconnect()
             Handler(Looper.getMainLooper()).post {
