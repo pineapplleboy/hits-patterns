@@ -73,6 +73,9 @@ public class LogService {
     }
 
     private String buildLogsRequestedMessage(TracingLog logData) {
+        if (logData.getRequestUserId() == null) {
+            return "Получен запрос на получение логов";
+        }
         return "Получен запрос на получение логов пользователем " + logData.getRequestUserId();
     }
 
