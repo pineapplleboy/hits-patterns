@@ -1,7 +1,6 @@
 package ru.patterns.notification.application.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.patterns.shared.exception.BadRequestException;
@@ -17,6 +16,7 @@ public class PushSubscriptionService {
 
     private static final String EMPLOYEES_TOPIC = "employees";
     private static final String CLIENT_TOPIC = "client";
+    private static final String FIREBASE_UNAVAILABLE_MESSAGE = "Firebase не настроен. Операции push-уведомлений временно недоступны";
 
     private final MonitoringLogger monitoringLogger;
 
@@ -48,8 +48,8 @@ public class PushSubscriptionService {
         try {
             FirebaseMessaging.getInstance().subscribeToTopic(List.of(token), topic);
             monitoringLogger.logInfo(logData, "Токен подписан на топик = " + topic + ", token = " + token);
-        } catch (FirebaseMessagingException exception) {
-            throw new BadRequestException("Ошибка подписки на топик " + topic, logData);
+        } catch (Exception exception) {
+            throw new BadRequestException(resolveFirebaseErrorMessage("Ошибка подписки на топик " + topic, exception), logData);
         }
     }
 
@@ -57,12 +57,20 @@ public class PushSubscriptionService {
         try {
             FirebaseMessaging.getInstance().unsubscribeFromTopic(List.of(token), topic);
             monitoringLogger.logInfo(logData, "Токен отписан от топика = " + topic + ", token = " + token);
-        } catch (FirebaseMessagingException exception) {
-            throw new BadRequestException("Ошибка отписки от топика " + topic, logData);
+        } catch (Exception exception) {
+            throw new BadRequestException(resolveFirebaseErrorMessage("Ошибка отписки от топика " + topic, exception), logData);
         }
     }
 
     private String calculateClientTopic(UUID userId) {
         return CLIENT_TOPIC + "_" + userId;
+    }
+
+    private String resolveFirebaseErrorMessage(String defaultMessage, Exception exception) {
+        if (exception instanceof IllegalStateException) {
+            return FIREBASE_UNAVAILABLE_MESSAGE;
+        }
+
+        return defaultMessage;
     }
 }

@@ -7,8 +7,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
-
 @Slf4j
 @Configuration
 public class FirebaseConfig {
@@ -26,10 +24,11 @@ public class FirebaseConfig {
 
             FirebaseApp.initializeApp(options);
             log.info("FirebaseApp успешно инициализирован");
-        } catch (IOException exception) {
-            throw new IllegalStateException(
-                    "Не удалось инициализировать FirebaseApp. " +
-                            "Проверьте переменную GOOGLE_APPLICATION_CREDENTIALS и путь к service account JSON.",
+        } catch (Exception exception) {
+            log.warn(
+                    "Firebase не инициализирован. " +
+                            "Проверьте GOOGLE_APPLICATION_CREDENTIALS и наличие service account JSON. " +
+                            "FCM-операции будут временно недоступны.",
                     exception
             );
         }

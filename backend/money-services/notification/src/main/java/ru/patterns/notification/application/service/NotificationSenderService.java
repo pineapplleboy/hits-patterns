@@ -17,6 +17,7 @@ import java.time.Instant;
 public class NotificationSenderService {
 
     private static final String TITLE = "Новое уведомление";
+    private static final String FIREBASE_UNAVAILABLE_MESSAGE = "Firebase не настроен. Отправка push-уведомлений временно недоступна";
 
     private final PushSubscriptionService pushSubscriptionService;
     private final MonitoringLogger monitoringLogger;
@@ -48,6 +49,10 @@ public class NotificationSenderService {
 
             monitoringLogger.logInfo(logData, "Уведомление отправлено в топик " + topic, message, "-");
         } catch (Exception exception) {
+            if (exception instanceof IllegalStateException) {
+                throw new BadRequestException(FIREBASE_UNAVAILABLE_MESSAGE, logData);
+            }
+
             throw new BadRequestException("Ошибка отправки уведомления в топик " + topic, logData);
         }
     }
