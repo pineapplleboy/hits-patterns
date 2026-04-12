@@ -1,4 +1,5 @@
 ﻿using ClassLibrary;
+using ClassLibrary.BaseSetup;
 using IdentityTest.Data;
 using IdentityTest.Models;
 using IdentityTest.Pages.Account.Register;
@@ -89,6 +90,7 @@ namespace IdentityTest.Pages.Account.Create
                     UserRole = Input.UserRole,
                     Ban = false,
                 });
+                await LogSender.SendLogAsync(ServiceId.AUTH_SERVICE, LogStatusEnum.INFO, $"Создан пользователь{user.Id}");
             }
             catch (Exception ex)
             {

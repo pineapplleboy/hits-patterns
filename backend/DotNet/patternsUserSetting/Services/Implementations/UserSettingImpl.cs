@@ -1,4 +1,5 @@
 ﻿using ClassLibrary;
+using ClassLibrary.BaseSetup;
 using Microsoft.EntityFrameworkCore;
 using patternsUserSetting.UserSettingSetup;
 
@@ -25,6 +26,7 @@ namespace patternsUserSetting.Services.Implementations
                 _context.hiddenAccounts.Remove(account);
             }
             await _context.SaveChangesAsync();
+            await LogSender.SendLogAsync(ServiceId.USER_SETTING_SERVICE, LogStatusEnum.INFO, $"Изменена видимость счета {accountId}");
         }
 
         public async Task<List<Guid>> GetUserHiddenAccounts(Guid userId)
@@ -38,7 +40,7 @@ namespace patternsUserSetting.Services.Implementations
             var userSetting = await GetOrCreateGetUserSetting(userId);
             userSetting.IsDarkMode = !userSetting.IsDarkMode;
             await _context.SaveChangesAsync();
-
+            await LogSender.SendLogAsync(ServiceId.USER_SETTING_SERVICE, LogStatusEnum.INFO, $"Изменена тема пользоватлея {userId}");
             return new UserSettingsDTO { IsDarkMode = userSetting.IsDarkMode };
         }
 
@@ -57,6 +59,7 @@ namespace patternsUserSetting.Services.Implementations
                 var newUserSetting = new UserSettingDB { UserId = userId, IsDarkMode = false };
                 await _context.userSettings.AddAsync(newUserSetting);
                 await _context.SaveChangesAsync();
+                await LogSender.SendLogAsync(ServiceId.USER_SETTING_SERVICE, LogStatusEnum.INFO, $"Созданы настройки пользователя {userId}");
                 return newUserSetting;
             }
             return userSetting;

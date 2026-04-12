@@ -1,4 +1,5 @@
 ﻿using ClassLibrary;
+using ClassLibrary.BaseSetup;
 using IdentityTest.Data;
 using IdentityTest.Models;
 using Microsoft.AspNetCore.Identity;
@@ -80,6 +81,7 @@ namespace IdentityTest.Pages.Account.Register
                     UserRole = UserRole.CLIENT,
                     Ban = false,
                 });
+                await LogSender.SendLogAsync(ServiceId.AUTH_SERVICE, LogStatusEnum.INFO, $"Зарегестировался пользователь{user.Id}");
             }
             catch (Exception ex)
             {
