@@ -1,6 +1,7 @@
 package ru.patterns.account.application.utility;
 
 import lombok.experimental.UtilityClass;
+import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.domain.entity.Operation;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.enums.TransferAccountType;
@@ -31,30 +32,74 @@ public class NotificationUtility {
     }
 
     public String formSenderTransferNotificationMessage(Operation operation) {
-        String operationType = resolveOperationType(operation.getTransferAccountType());
-        String statusText = resolveStatusText(operation.getStatus());
-        String amount = formatAmount(operation.getAmountFrom());
-
-        return operationType + " на сумму " + amount + " " + statusText;
+        return formNotificationMessage(operation, false);
     }
 
     public String formRecipientTransferNotificationMessage(Operation operation) {
-        String amount = formatAmount(operation.getAmountTo());
-        String statusText = resolveStatusText(operation.getStatus());
-
-        return "Перевод на сумму " + amount + " " + statusText;
+        return formNotificationMessage(operation, true);
     }
 
-    private String resolveOperationType(TransferAccountType transferAccountType) {
-        return transferAccountType == TransferAccountType.CREDIT_ACCOUNT
-                ? "Погашение кредита"
-                : "Перевод";
+    private String formNotificationMessage(Operation operation, boolean recipientNotification) {
+        AccountActionType actionType = operation.getActionType();
+
+        return switch (actionType) {
+            case TRANSFER, TRANSFER_SENT, TRANSFER_RECEIVED -> recipientNotification
+                    ? formRecipientTransferMessage(operation)
+                    : formSenderTransferMessage(operation);
+            case OPEN_ACCOUNT -> resolveStatusMessage(
+                    operation,
+                    "Счёт успешно открыт",
+                    "Не удалось открыть счёт. Проверьте доступность выбранной валюты"
+            );
+            case CLOSE_ACCOUNT -> resolveStatusMessage(
+                    operation,
+                    "Счёт успешно закрыт",
+                    "Не удалось закрыть счёт. Возможно, счёт не найден или уже закрыт"
+            );
+            case ACCOUNT_BANNED -> resolveStatusMessage(
+                    operation,
+                    "Счёт заблокирован",
+                    "Не удалось заблокировать счёт"
+            );
+            case ACCOUNT_UNBANNED -> resolveStatusMessage(
+                    operation,
+                    "Счёт разблокирован",
+                    "Не удалось разблокировать счёт."
+            );
+            case CREDIT_DEPT_PERCENT -> resolveStatusMessage(
+                    operation,
+                    "Начисление процентов по кредиту",
+                    "Не удалось начислить проценты по кредиту"
+            );
+        };
     }
 
-    private String resolveStatusText(OperationStatus status) {
-        return status == OperationStatus.SUCCESS
-                ? "выполнен успешно"
-                : "не выполнен";
+    private String formSenderTransferMessage(Operation operation) {
+        String amount = formatAmount(operation.getAmountFrom());
+
+        if (operation.getTransferAccountType() == TransferAccountType.CREDIT_ACCOUNT) {
+            return operation.getStatus() == OperationStatus.SUCCESS
+                    ? "Погашение кредита на сумму " + amount + " выполнено успешно"
+                    : "Погашение кредита на сумму " + amount + " не выполнено. Возможные причины: недостаточно средств, " +
+                    "счёт заблокирован, кредит не найден или неактивен, либо операция доступна только для RUB";
+        }
+
+        return operation.getStatus() == OperationStatus.SUCCESS
+                ? "Перевод на сумму " + amount + " выполнен успешно"
+                : "Перевод на сумму " + amount + " не выполнен. Возможные причины: недостаточно средств, счёт заблокирован, " +
+                "счёт получателя недоступен или валюта перевода не поддерживается";
+    }
+
+    private String formRecipientTransferMessage(Operation operation) {
+        String amount = formatAmount(operation.getAmountTo() != null ? operation.getAmountTo() : operation.getAmountFrom());
+
+        return operation.getStatus() == OperationStatus.SUCCESS
+                ? "Входящий перевод на сумму " + amount + " зачислен успешно"
+                : "Входящий перевод на сумму " + amount + " не был зачислен. Операция отклонена или отменена до завершения";
+    }
+
+    private String resolveStatusMessage(Operation operation, String successMessage, String rejectedMessage) {
+        return operation.getStatus() == OperationStatus.SUCCESS ? successMessage : rejectedMessage;
     }
 
     private String formatAmount(BigDecimal amount) {
