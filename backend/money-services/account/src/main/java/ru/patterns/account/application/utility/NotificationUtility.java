@@ -9,6 +9,7 @@ import ru.patterns.shared.model.notification.NotificationModel;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.UUID;
 
 @UtilityClass
 public class NotificationUtility {
@@ -16,7 +17,7 @@ public class NotificationUtility {
     public NotificationModel createSenderTransferNotification(Operation operation) {
         return new NotificationModel()
                 .setUserId(operation.getUserIdFrom())
-                .setMessage(formSenderTransferNotificationMessage(operation));
+                .setMessage(formNotificationMessage(operation, operation.getUserIdFrom()));
     }
 
     public Optional<NotificationModel> createRecipientTransferNotification(Operation operation) {
@@ -26,27 +27,19 @@ public class NotificationUtility {
 
         NotificationModel notificationModel = new NotificationModel()
                 .setUserId(operation.getRecipientId())
-                .setMessage(formRecipientTransferNotificationMessage(operation));
+                .setMessage(formNotificationMessage(operation, operation.getRecipientId()));
 
         return Optional.of(notificationModel);
     }
 
-    public String formSenderTransferNotificationMessage(Operation operation) {
-        return formNotificationMessage(operation, false);
-    }
-
-    public String formRecipientTransferNotificationMessage(Operation operation) {
-        return formNotificationMessage(operation, true);
-    }
-
-    private String formNotificationMessage(Operation operation, boolean recipientNotification) {
+    private String formNotificationMessage(Operation operation, UUID targetUserId) {
         AccountActionType actionType = operation.getActionType();
-        String direction = resolveDirection(recipientNotification);
+        String direction = resolveDirection(operation, targetUserId);
 
         return switch (actionType) {
-            case TRANSFER, TRANSFER_SENT, TRANSFER_RECEIVED -> recipientNotification
-                    ? formRecipientTransferMessage(operation)
-                    : formSenderTransferMessage(operation);
+            case TRANSFER, TRANSFER_SENT, TRANSFER_RECEIVED -> isIncomingForUser(operation, targetUserId)
+                    ? formIncomingTransferMessage(operation, direction)
+                    : formOutgoingTransferMessage(operation, direction);
             case OPEN_ACCOUNT -> resolveStatusMessage(
                     operation,
                     direction + ": счёт успешно открыт",
@@ -75,9 +68,8 @@ public class NotificationUtility {
         };
     }
 
-    private String formSenderTransferMessage(Operation operation) {
+    private String formOutgoingTransferMessage(Operation operation, String direction) {
         String amount = formatAmount(operation.getAmountFrom());
-        String direction = resolveDirection(false);
 
         if (operation.getTransferAccountType() == TransferAccountType.CREDIT_ACCOUNT) {
             return operation.getStatus() == OperationStatus.SUCCESS
@@ -90,17 +82,22 @@ public class NotificationUtility {
                 : direction + ": перевод на сумму " + amount + " не выполнен. Возможные причины: недостаточно средств, счёт заблокирован, счёт получателя недоступен или валюта перевода не поддерживается.";
     }
 
-    private String formRecipientTransferMessage(Operation operation) {
+    private String formIncomingTransferMessage(Operation operation, String direction) {
         String amount = formatAmount(operation.getAmountTo() != null ? operation.getAmountTo() : operation.getAmountFrom());
-        String direction = resolveDirection(true);
 
         return operation.getStatus() == OperationStatus.SUCCESS
                 ? direction + ": перевод на сумму " + amount + " зачислен успешно"
                 : direction + ": перевод на сумму " + amount + " не был зачислен. Операция отклонена или отменена до завершения.";
     }
 
-    private String resolveDirection(boolean recipientNotification) {
-        return recipientNotification ? "Исходящая операция" : "Входящая операция";
+    private String resolveDirection(Operation operation, UUID targetUserId) {
+        return isIncomingForUser(operation, targetUserId) ? "Входящая операция" : "Исходящая операция";
+    }
+
+    private boolean isIncomingForUser(Operation operation, UUID targetUserId) {
+        return targetUserId != null
+                && targetUserId.equals(operation.getRecipientId())
+                && !targetUserId.equals(operation.getUserIdFrom());
     }
 
     private String resolveStatusMessage(Operation operation, String successMessage, String rejectedMessage) {
