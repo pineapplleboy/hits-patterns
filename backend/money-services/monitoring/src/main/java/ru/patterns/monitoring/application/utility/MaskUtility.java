@@ -13,7 +13,7 @@ public class MaskUtility {
     );
 
     public String maskAuthorization(String authorization) {
-        return authorization != null ? authorization.split(" ")[0] + " ***" : "-";
+        return authorization != null ? "Bearer" + " ***" : "-";
     }
 
     public String maskBody(String path, String body) {
