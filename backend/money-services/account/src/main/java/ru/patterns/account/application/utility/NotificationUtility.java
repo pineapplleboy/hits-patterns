@@ -34,64 +34,59 @@ public class NotificationUtility {
 
     private String formNotificationMessage(Operation operation, UUID targetUserId) {
         AccountActionType actionType = operation.getActionType();
-        String direction = resolveDirection(operation, targetUserId);
 
         return switch (actionType) {
             case TRANSFER, TRANSFER_SENT, TRANSFER_RECEIVED -> isIncomingForUser(operation, targetUserId)
-                    ? formIncomingTransferMessage(operation, direction)
-                    : formOutgoingTransferMessage(operation, direction);
+                    ? formIncomingTransferMessage(operation)
+                    : formOutgoingTransferMessage(operation);
             case OPEN_ACCOUNT -> resolveStatusMessage(
                     operation,
-                    direction + ": счёт успешно открыт",
-                    direction + ": не удалось открыть счёт. Проверьте доступность выбранной валюты."
+                    "Счёт успешно открыт",
+                    "Не удалось открыть счёт. Проверьте доступность выбранной валюты."
             );
             case CLOSE_ACCOUNT -> resolveStatusMessage(
                     operation,
-                    direction + ": счёт успешно закрыт",
-                    direction + ": не удалось закрыть счёт. Возможно, счёт не найден или уже закрыт."
+                    "Счёт успешно закрыт",
+                    "Не удалось закрыть счёт. Возможно, счёт не найден или уже закрыт."
             );
             case ACCOUNT_BANNED -> resolveStatusMessage(
                     operation,
-                    direction + ": счёт заблокирован",
-                    direction + ": не удалось заблокировать счёт."
+                    "Счёт заблокирован",
+                    "Не удалось заблокировать счёт."
             );
             case ACCOUNT_UNBANNED -> resolveStatusMessage(
                     operation,
-                    direction + ": счёт разблокирован",
-                    direction + ": не удалось разблокировать счёт."
+                    "Счёт разблокирован",
+                    "Не удалось разблокировать счёт."
             );
             case CREDIT_DEPT_PERCENT -> resolveStatusMessage(
                     operation,
-                    direction + ": начисление процентов по кредиту выполнено успешно",
-                    direction + ": не удалось начислить проценты по кредиту."
+                    "Начисление процентов по кредиту выполнено успешно",
+                    "Не удалось начислить проценты по кредиту."
             );
         };
     }
 
-    private String formOutgoingTransferMessage(Operation operation, String direction) {
+    private String formOutgoingTransferMessage(Operation operation) {
         String amount = formatAmount(operation.getAmountFrom());
 
         if (operation.getTransferAccountType() == TransferAccountType.CREDIT_ACCOUNT) {
             return operation.getStatus() == OperationStatus.SUCCESS
-                    ? direction + ": погашение кредита на сумму " + amount + " выполнено успешно"
-                    : direction + ": погашение кредита на сумму " + amount + " не выполнено. Возможные причины: недостаточно средств, счёт заблокирован, кредит не найден или неактивен, либо операция доступна только для RUB.";
+                    ? "Погашение кредита на сумму " + amount + " выполнено успешно"
+                    : "Погашение кредита на сумму " + amount + " не выполнено. Возможные причины: недостаточно средств, счёт заблокирован, кредит не найден или неактивен, либо операция доступна только для RUB.";
         }
 
         return operation.getStatus() == OperationStatus.SUCCESS
-                ? direction + ": перевод на сумму " + amount + " выполнен успешно"
-                : direction + ": перевод на сумму " + amount + " не выполнен. Возможные причины: недостаточно средств, счёт заблокирован, счёт получателя недоступен или валюта перевода не поддерживается.";
+                ? "Перевод на сумму " + amount + " выполнен успешно"
+                : "Перевод на сумму " + amount + " не выполнен. Возможные причины: недостаточно средств, счёт заблокирован, счёт получателя недоступен или валюта перевода не поддерживается.";
     }
 
-    private String formIncomingTransferMessage(Operation operation, String direction) {
+    private String formIncomingTransferMessage(Operation operation) {
         String amount = formatAmount(operation.getAmountTo() != null ? operation.getAmountTo() : operation.getAmountFrom());
 
         return operation.getStatus() == OperationStatus.SUCCESS
-                ? direction + ": перевод на сумму " + amount + " зачислен успешно"
-                : direction + ": перевод на сумму " + amount + " не был зачислен. Операция отклонена или отменена до завершения.";
-    }
-
-    private String resolveDirection(Operation operation, UUID targetUserId) {
-        return isIncomingForUser(operation, targetUserId) ? "Входящая операция" : "Исходящая операция";
+                ? "Перевод на сумму " + amount + " зачислен успешно"
+                : "Перевод на сумму " + amount + " не был зачислен. Операция отклонена или отменена до завершения.";
     }
 
     private boolean isIncomingForUser(Operation operation, UUID targetUserId) {
