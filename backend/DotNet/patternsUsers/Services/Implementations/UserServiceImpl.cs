@@ -26,7 +26,7 @@ namespace patternsUsers.Services.Implementations
             userToBun.Ban = true;
 
             await SendBunMessage(new UserBanDTO { Id = userToBun.Id, Ban = true }, token);
-
+            await LogSender.SendLogAsync(ServiceId.USER_SERVICE, LogStatusEnum.INFO, $"Отправлен бан {userIdToBan} от {userId}");
             await _context.SaveChangesAsync();
         }
 
@@ -36,8 +36,10 @@ namespace patternsUsers.Services.Implementations
             if (user.Ban == false) { throw new BadRequestException(ErrorMessages.USER_HAS_NO_BAN); }
             user.Ban = false;
 
+
             await SendBunMessage(new UserBanDTO { Id = userId, Ban = false }, token);
             await _context.SaveChangesAsync();
+            await LogSender.SendLogAsync(ServiceId.USER_SERVICE, LogStatusEnum.INFO, $"Разбанен {userId}");
         }
 
         public async Task<UserDB> GetUserById(Guid id)

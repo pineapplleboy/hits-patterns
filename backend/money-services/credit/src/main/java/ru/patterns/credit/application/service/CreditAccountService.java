@@ -11,7 +11,9 @@ import ru.patterns.shared.exception.ForbiddenException;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.OperationStatus;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
+import ru.patterns.shared.model.log.TracingLog;
 import ru.patterns.shared.model.response.OperationStatusResponseModel;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -23,25 +25,32 @@ public class CreditAccountService {
     private final CreditRatingService creditRatingService;
     private final CreditProvider creditProvider;
     private final CreditRateRepository creditRateRepository;
+    private final MonitoringLogger monitoringLogger;
 
     private final static int MIN_ALLOWED_CREDIT_RATING = 235;
     private final static BigDecimal MAX_CREDIT_AMOUNT = BigDecimal.valueOf(500000);
 
-    public OperationStatusResponseModel takeCredit(UUID userId, UUID rateId, BigDecimal sum, String bankAccountNum, String token) {
+    public OperationStatusResponseModel takeCredit(UUID userId, UUID rateId, BigDecimal sum, String bankAccountNum, String token, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на оформление кредита");
+
         if (MAX_CREDIT_AMOUNT.compareTo(sum) <= 0) {
-            throw new BadRequestException(ErrorMessages.INVALID_CREDIT_SUM);
+            monitoringLogger.logWarn(logData, "Попытка оформить кредит на слишком большую сумму");
+            throw new BadRequestException(ErrorMessages.INVALID_CREDIT_SUM, logData);
         }
 
-        var userCreditRating = creditRatingService.getUserCreditRating(userId, token);
+        var userCreditRating = creditRatingService.getUserCreditRating(userId, token, logData);
 
         if (userCreditRating.getRating() < MIN_ALLOWED_CREDIT_RATING) {
-            throw new ForbiddenException(ErrorMessages.CREDIT_RATING_TOO_LOW);
+            monitoringLogger.logWarn(logData, "Попытка оформить кредит с недостаточным кредитным рейтингом");
+            throw new ForbiddenException(ErrorMessages.CREDIT_RATING_TOO_LOW, logData);
         }
 
         CreditRate creditRate = creditRateRepository.findById(rateId)
-                .orElseThrow(() -> new NotFoundException(ErrorMessages.CREDIT_RATE_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.CREDIT_RATE_NOT_FOUND, logData));
 
-        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum, bankAccountNum), token);
+        creditProvider.send(createTakeCreditMessage(userId, creditRate, sum, bankAccountNum), token, logData.getTraceId());
+
+        monitoringLogger.logInfo(logData, "Заявка на оформление кредита успешно отправлена в обработку");
 
         return new OperationStatusResponseModel(OperationStatus.SUCCESS);
     }

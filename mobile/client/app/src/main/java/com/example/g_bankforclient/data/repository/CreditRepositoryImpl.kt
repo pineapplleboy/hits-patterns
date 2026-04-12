@@ -8,6 +8,8 @@ import com.example.g_bankforclient.data.network.model.MoneyAmountRequestModel
 import com.example.g_bankforclient.data.network.model.TransferAccountType
 import com.example.g_bankforclient.domain.models.Credit
 import com.example.g_bankforclient.domain.models.CreditRate
+import com.example.g_bankforclient.domain.models.CreditRating
+import com.example.g_bankforclient.domain.models.CreditRatingLevel
 import com.example.g_bankforclient.domain.models.Transaction
 import com.example.g_bankforclient.domain.repository.CreditRepository
 import java.util.UUID
@@ -69,7 +71,7 @@ class CreditRepositoryImpl @Inject constructor(
         )
 
         if (response.status.name != "SUCCESS") {
-            throw Exception("Операция оплаты кредита в работе")
+            throw com.example.g_bankforclient.domain.models.OperationPendingException("Платёж принят и выполняется")
         }
     }
     
@@ -84,5 +86,24 @@ class CreditRepositoryImpl @Inject constructor(
     override suspend fun takeCredit(userId: UUID, rateId: UUID, sum: Double, bankAccountNum: String): Boolean {
         val response = apiService.takeCredit(userId, rateId, sum, bankAccountNum)
         return response.status.name == "SUCCESS"
+    }
+
+    override suspend fun getCreditRating(): CreditRating {
+        val response = apiService.getUserCreditRating(currentUserId)
+        val score = response.rating.coerceIn(1, 999).toInt()
+        val level = when {
+            score >= 750 -> CreditRatingLevel.EXCELLENT
+            score >= 500 -> CreditRatingLevel.GOOD
+            score >= 250 -> CreditRatingLevel.FAIR
+            else -> CreditRatingLevel.POOR
+        }
+        return CreditRating(
+            score = score,
+            level = level,
+            totalCredits = response.totalCreditCounter,
+            closedCredits = response.closedCreditCounter,
+            activeCredits = response.activeCreditAmount,
+            missedPayments = response.expiredOperationsAmount
+        )
     }
 }

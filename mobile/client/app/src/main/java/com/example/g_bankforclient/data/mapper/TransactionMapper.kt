@@ -7,26 +7,45 @@ import com.example.g_bankforclient.domain.models.Transaction
 import com.example.g_bankforclient.domain.models.TransactionStatus
 import com.example.g_bankforclient.domain.models.TransactionType
 
+private fun parseMoney(raw: String): Double {
+    val normalized = raw
+        .trim()
+        .replace(" ", "")
+        .replace(',', '.')
+    val cleaned = normalized.filter { it.isDigit() || it == '.' || it == '-' }
+    return cleaned.toDoubleOrNull() ?: 0.0
+}
+
+private fun extractSymbol(raw: String): String? {
+    val symbol =
+        raw.filter { !it.isDigit() && it != '.' && it != '-' && it != ' ' && it != ',' }.trim()
+    return symbol.ifEmpty { null }
+}
+
 fun OperationModel.toDomain(fallbackAccountId: String = ""): Transaction = Transaction(
     id = operationId.toString(),
     accountId = accountNumberFrom ?: fallbackAccountId,
     type = when (actionType) {
         AccountActionType.OPEN_ACCOUNT -> TransactionType.DEPOSIT
         AccountActionType.CLOSE_ACCOUNT -> TransactionType.WITHDRAWAL
+        AccountActionType.TRANSFER -> TransactionType.WITHDRAWAL
         AccountActionType.TRANSFER_RECEIVED -> TransactionType.DEPOSIT
         AccountActionType.TRANSFER_SENT -> TransactionType.WITHDRAWAL
         AccountActionType.ACCOUNT_BANNED -> TransactionType.INFO
         AccountActionType.ACCOUNT_UNBANNED -> TransactionType.INFO
+        AccountActionType.CREDIT_DEPT_PERCENT -> TransactionType.INFO
     },
-    amount = amount,
+    amount = parseMoney(amount),
     date = createTime,
     description = when (actionType) {
         AccountActionType.OPEN_ACCOUNT -> "Открытие счёта"
         AccountActionType.CLOSE_ACCOUNT -> "Закрытие счёта"
+        AccountActionType.TRANSFER -> "Перевод"
         AccountActionType.TRANSFER_RECEIVED -> "Входящий перевод"
         AccountActionType.TRANSFER_SENT -> "Исходящий перевод"
         AccountActionType.ACCOUNT_BANNED -> "Счёт заблокирован"
         AccountActionType.ACCOUNT_UNBANNED -> "Счёт разблокирован"
+        AccountActionType.CREDIT_DEPT_PERCENT -> "Начисление процентов"
     },
     status = when (status) {
         OperationStatus.CREATED -> TransactionStatus.CREATED
@@ -35,7 +54,8 @@ fun OperationModel.toDomain(fallbackAccountId: String = ""): Transaction = Trans
         OperationStatus.REJECTED -> TransactionStatus.REJECTED
     },
     fromAccount = if (actionType == AccountActionType.TRANSFER_RECEIVED) accountNumberFrom else null,
-    toAccount = if (actionType == AccountActionType.TRANSFER_SENT) recipientAccountNumber else null
+    toAccount = if (actionType == AccountActionType.TRANSFER_SENT || actionType == AccountActionType.TRANSFER) recipientAccountNumber else null,
+    currencySymbol = extractSymbol(amount)
 )
 
 fun OperationModel.toCreditDomain(fallbackAccountId: String = ""): Transaction = Transaction(
@@ -44,20 +64,24 @@ fun OperationModel.toCreditDomain(fallbackAccountId: String = ""): Transaction =
     type = when (actionType) {
         AccountActionType.OPEN_ACCOUNT -> TransactionType.CREDIT_TAKEN
         AccountActionType.CLOSE_ACCOUNT -> TransactionType.CREDIT_PAYMENT
+        AccountActionType.TRANSFER -> TransactionType.CREDIT_PAYMENT
         AccountActionType.TRANSFER_RECEIVED -> TransactionType.DEPOSIT
         AccountActionType.TRANSFER_SENT -> TransactionType.CREDIT_PAYMENT
         AccountActionType.ACCOUNT_BANNED -> TransactionType.INFO
         AccountActionType.ACCOUNT_UNBANNED -> TransactionType.INFO
+        AccountActionType.CREDIT_DEPT_PERCENT -> TransactionType.CREDIT_PAYMENT
     },
-    amount = amount,
+    amount = parseMoney(amount),
     date = createTime,
     description = when (actionType) {
         AccountActionType.OPEN_ACCOUNT -> "Оформление кредита"
         AccountActionType.CLOSE_ACCOUNT -> "Закрытие кредита"
+        AccountActionType.TRANSFER -> "Перевод"
         AccountActionType.TRANSFER_RECEIVED -> "Входящий перевод"
         AccountActionType.TRANSFER_SENT -> "Платеж по кредиту"
         AccountActionType.ACCOUNT_BANNED -> "Кредит заблокирован"
         AccountActionType.ACCOUNT_UNBANNED -> "Кредит разблокирован"
+        AccountActionType.CREDIT_DEPT_PERCENT -> "Начисление процентов"
     },
     status = when (status) {
         OperationStatus.CREATED -> TransactionStatus.CREATED
@@ -66,5 +90,6 @@ fun OperationModel.toCreditDomain(fallbackAccountId: String = ""): Transaction =
         OperationStatus.REJECTED -> TransactionStatus.REJECTED
     },
     fromAccount = if (actionType == AccountActionType.TRANSFER_RECEIVED) accountNumberFrom else null,
-    toAccount = if (actionType == AccountActionType.TRANSFER_SENT) recipientAccountNumber else null
+    toAccount = if (actionType == AccountActionType.TRANSFER_SENT || actionType == AccountActionType.TRANSFER) recipientAccountNumber else null,
+    currencySymbol = extractSymbol(amount)
 )

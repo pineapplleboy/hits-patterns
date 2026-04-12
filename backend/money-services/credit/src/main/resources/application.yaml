@@ -41,3 +41,6 @@ app:
       token-url: ${SWAGGER_TOKEN_URL:https://localhost:5001/connect/token}
       scope: ${SWAGGER_OAUTH_SCOPE:SampleAPI}
       scope-description: ${SWAGGER_OAUTH_SCOPE_DESCRIPTION:Sample API - full access}
+
+service:
+  name: patterns-credit-service

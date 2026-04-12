@@ -1,6 +1,7 @@
 ﻿using ClassLibrary;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json.Serialization;
 
@@ -46,7 +47,11 @@ namespace ClassLibrary.BaseSetup
                 return next();
             });
 
-            app.UseHttpsRedirection();
+            var useHttpsRedirection = app.Configuration.GetValue<bool>("App:HttpsRedirection:Enabled");
+            if (useHttpsRedirection)
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.MapControllers().RequireAuthorization("ApiScope"); ;
         }

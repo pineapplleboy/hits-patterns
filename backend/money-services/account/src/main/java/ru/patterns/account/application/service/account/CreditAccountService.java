@@ -2,6 +2,7 @@ package ru.patterns.account.application.service.account;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.patterns.account.application.common.enums.AccountActionType;
 import ru.patterns.account.application.common.model.credit.CreditAccountFullModel;
@@ -20,6 +21,8 @@ import ru.patterns.shared.constants.ErrorMessages;
 import ru.patterns.shared.exception.NotFoundException;
 import ru.patterns.shared.model.enums.TransferAccountType;
 import ru.patterns.shared.model.kafka.TakeCreditMessage;
+import ru.patterns.shared.model.log.TracingLog;
+import ru.patterns.shared.monitoring.logger.MonitoringLogger;
 
 import java.util.Comparator;
 import java.util.List;
@@ -38,12 +41,17 @@ public class CreditAccountService {
     private final OperationService operationService;
     private final OperationHistoryService operationHistoryService;
     private final TransferService transferService;
+    private final MonitoringLogger monitoringLogger;
+
+    @Value("${service.name}")
+    private String serviceName;
 
     public void takeCredit(TakeCreditMessage takeCreditMessage, String token) {
-        Optional<BankAccount> bankAccount = bankAccountRepository.
-                getBankAccountByAccountNumberAndActiveAndUserId(takeCreditMessage.getBankAccountNumber(), true, takeCreditMessage.getUserId());
+        Optional<BankAccount> bankAccount = bankAccountRepository
+                .getBankAccountByAccountNumberAndActiveAndUserId(takeCreditMessage.getBankAccountNumber(), true, takeCreditMessage.getUserId());
 
         if (bankAccount.isEmpty()) {
+            monitoringLogger.logError("Не найден банковский счёт для выдачи кредита", serviceName);
             return;
         }
 
@@ -53,8 +61,12 @@ public class CreditAccountService {
 
         operationHistoryService.createAndSaveOperationAboutAccountCornerOperation(creditAccount, AccountActionType.OPEN_ACCOUNT);
 
-        transferService.replenishMoney(takeCreditMessage.getUserId(), takeCreditMessage.getBankAccountNumber(),
-                new MoneyAmountRequestModel(takeCreditMessage.getCreditAmount()), token);
+        transferService.replenishMoney(
+                takeCreditMessage.getUserId(),
+                takeCreditMessage.getBankAccountNumber(),
+                new MoneyAmountRequestModel(takeCreditMessage.getCreditAmount()),
+                token
+        );
     }
 
     public List<CreditAccountFullModel> getUsersAllCreditHistory(UUID userId) {
@@ -75,6 +87,12 @@ public class CreditAccountService {
                 .toList();
     }
 
+    public List<CreditAccountFullModel> getUsersAllCreditHistory(UUID userId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение полной кредитной истории пользователя");
+
+        return getUsersAllCreditHistory(userId);
+    }
+
     public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId) {
         return creditAccountRepository.getCreditAccountsByUserIdAndClosedIsFalse(userId)
                 .stream()
@@ -83,9 +101,29 @@ public class CreditAccountService {
                 .toList();
     }
 
+    public List<CreditAccountShortModel> getUsersCreditsHistory(UUID userId, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение активных кредитов пользователя");
+
+        return getUsersCreditsHistory(userId);
+    }
+
     public CreditAccountFullModel getUserCreditFullInfo(UUID userId, String accountNumber) {
         var account = creditAccountRepository.getByAccountNumberAndUserId(accountNumber, userId)
-                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND, null));
+
+        var accountFullModel = account.toFullModel();
+        var operations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);
+
+        accountFullModel.setOperations(operations);
+
+        return accountFullModel;
+    }
+
+    public CreditAccountFullModel getUserCreditFullInfo(UUID userId, String accountNumber, TracingLog logData) {
+        monitoringLogger.logInfo(logData, "Получен запрос на получение детальной информации о кредите");
+
+        var account = creditAccountRepository.getByAccountNumberAndUserId(accountNumber, userId)
+                .orElseThrow(() -> new NotFoundException(ErrorMessages.ACCOUNT_NOT_FOUND, logData));
 
         var accountFullModel = account.toFullModel();
         var operations = operationService.getAccountOperations(accountNumber, TransferAccountType.CREDIT_ACCOUNT);

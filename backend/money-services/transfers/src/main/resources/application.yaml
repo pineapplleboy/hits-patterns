@@ -42,3 +42,6 @@ kafka:
 
 accounts:
   master-account-number: 0000-0000-0000-0000
+
+service:
+  name: patterns-transfers-service

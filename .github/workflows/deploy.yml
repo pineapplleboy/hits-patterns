@@ -1,4 +1,4 @@
-﻿name: Build & Deploy to VPS
+name: Build & Deploy to VPS
 
 on:
   push:
@@ -20,6 +20,7 @@ jobs:
       has_builds: ${{ steps.matrix.outputs.has_builds }}
       service_names: ${{ steps.matrix.outputs.service_names }}
       deploy_all: ${{ steps.matrix.outputs.deploy_all }}
+      reload_nginx: ${{ steps.matrix.outputs.reload_nginx }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,6 +52,7 @@ jobs:
           matrix='{"include":[]}'
           has_builds=false
           deploy_all=false
+          reload_nginx=false
           declare -a services=()
 
           add_service() {
@@ -74,8 +76,12 @@ jobs:
             has_builds=true
           }
 
-          if has_change '^backend/(docker-compose\.yml|docker/)'; then
+          if has_change '^backend/docker-compose\.yml$' || has_change '^backend/docker/postgres/init/'; then
             deploy_all=true
+          fi
+
+          if has_change '^backend/docker/nginx/'; then
+            reload_nginx=true
           fi
 
           if has_change '^backend/DotNet/(IdentityTest|ClassLibrary)/'; then
@@ -106,12 +112,25 @@ jobs:
             add_service 'currency-service' 'hits-patterns-currency-service' './backend/money-services' './backend/money-services/Dockerfile' 'currency-service' 'SERVICE_NAME=currency'
           fi
 
+          if has_change '^backend/money-services/(monitoring|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'monitoring-service' 'hits-patterns-monitoring-service' './backend/money-services' './backend/money-services/Dockerfile' 'monitoring-service' 'SERVICE_NAME=monitoring'
+          fi
+
+          if has_change '^backend/money-services/(notification|shared|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'notification-service' 'hits-patterns-notification-service' './backend/money-services' './backend/money-services/Dockerfile' 'notification-service' 'SERVICE_NAME=notification'
+          fi
+
+          if has_change '^backend/money-services/(patterns-gateway|build.gradle|settings.gradle|gradlew|gradlew.bat|Dockerfile|gradle/)'; then
+            add_service 'patterns-gateway' 'hits-patterns-patterns-gateway' './backend/money-services' './backend/money-services/Dockerfile' 'patterns-gateway' 'SERVICE_NAME=patterns-gateway'
+          fi
+
           service_names="${services[*]}"
 
           echo "build_matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "has_builds=$has_builds" >> "$GITHUB_OUTPUT"
           echo "service_names=$service_names" >> "$GITHUB_OUTPUT"
           echo "deploy_all=$deploy_all" >> "$GITHUB_OUTPUT"
+          echo "reload_nginx=$reload_nginx" >> "$GITHUB_OUTPUT"
 
   build_and_push:
     runs-on: ubuntu-latest
@@ -167,29 +186,62 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SUDO_PASSWORD: ${{ secrets.VPS_SUDO_PASSWORD }}
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HAS_BUILDS: ${{ needs.detect_changes.outputs.has_builds }}
           SERVICE_NAMES: ${{ needs.detect_changes.outputs.service_names }}
           DEPLOY_ALL: ${{ needs.detect_changes.outputs.deploy_all }}
+          RELOAD_NGINX: ${{ needs.detect_changes.outputs.reload_nginx }}
         run: |
-          ssh "$VPS_USER@$VPS_HOST" <<EOF
+          ssh "$VPS_USER@$VPS_HOST" \
+            "GHCR_USERNAME='$GHCR_USERNAME' GHCR_TOKEN='$GHCR_TOKEN' VPS_SUDO_PASSWORD='$VPS_SUDO_PASSWORD' HAS_BUILDS='$HAS_BUILDS' SERVICE_NAMES='$SERVICE_NAMES' DEPLOY_ALL='$DEPLOY_ALL' RELOAD_NGINX='$RELOAD_NGINX' bash -s" <<'EOF'
+          set -e
+          flock -n -E 42 /tmp/deploy.lock bash -lc '
             set -e
-            flock -n /tmp/deploy.lock bash -lc '
-              set -e
-              cd /home/deploy/patterns/hits-patterns
-              git pull origin main
-              cd backend
+            cd /home/deploy/patterns/hits-patterns
+            git pull origin main
+            cd backend
 
-              if [ "$DEPLOY_ALL" = "true" ]; then
-                echo "Deploying full stack"
-                docker compose pull
-                docker compose up -d --remove-orphans
-              elif [ -n "$SERVICE_NAMES" ]; then
-                echo "Deploying services: $SERVICE_NAMES"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+
+            if docker ps --format "{{.Names}}" | grep -qx "patterns-postgres"; then
+              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = \$\$patterns_monitoring\$\$" | grep -q 1 \
+                || docker exec patterns-postgres psql -U postgres -c "CREATE DATABASE \"patterns_monitoring\";"
+              docker exec patterns-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = \$\$patterns_notification\$\$" | grep -q 1 \
+                || docker exec patterns-postgres psql -U postgres -c "CREATE DATABASE \"patterns_notification\";"
+            fi
+
+            if [ "$DEPLOY_ALL" = "true" ]; then
+              echo "Reconciling full stack"
+              if [ "$HAS_BUILDS" = "true" ] && [ -n "$SERVICE_NAMES" ]; then
                 docker compose pull $SERVICE_NAMES
-                docker compose up -d --remove-orphans $SERVICE_NAMES
-              else
-                echo "No backend service changes detected. Skipping docker compose pull/up."
               fi
-            ' || { echo "Another deploy is already running (lock /tmp/deploy.lock)."; exit 1; }
+              docker compose up -d --remove-orphans
+            elif [ -n "$SERVICE_NAMES" ]; then
+              echo "Deploying services: $SERVICE_NAMES"
+              docker compose pull $SERVICE_NAMES
+              docker compose up -d --remove-orphans $SERVICE_NAMES
+            else
+              echo "No backend service changes detected. Skipping docker compose pull/up."
+            fi
+
+            if [ "$RELOAD_NGINX" = "true" ]; then
+              echo "Reloading nginx config"
+              if [ -n "$VPS_SUDO_PASSWORD" ]; then
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k nginx -t
+                printf "%s\n" "$VPS_SUDO_PASSWORD" | sudo -S -k systemctl reload nginx
+              else
+                sudo -n install -m 644 docker/nginx/patterns-gateway.conf /etc/nginx/conf.d/patterns-gateway.conf
+                sudo -n nginx -t
+                sudo -n systemctl reload nginx
+              fi
+            fi
+          '
+          status=$?
+          if [ "$status" -eq 42 ]; then
+            echo "Another deploy is already running (lock /tmp/deploy.lock)."
+          fi
+          exit "$status"
           EOF
-
-

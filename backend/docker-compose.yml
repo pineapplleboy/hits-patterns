@@ -98,12 +98,17 @@ services:
       ASPNETCORE_URLS: http://+:5001
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=testIdentity;Username=postgres;Password=postgres
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DataProtection__KeysPath: /var/app/data-protection-keys
       SWAGGER_USERS_URL: http://91.227.18.176/users
       SWAGGER_USER_SETTINGS_URL: http://91.227.18.176/settings
       SWAGGER_ACCOUNT_URL: http://91.227.18.176/core
       SWAGGER_TRANSFERS_URL: http://91.227.18.176/transfers
       SWAGGER_CURRENCY_URL: http://91.227.18.176/currency
       SWAGGER_CREDIT_URL: http://91.227.18.176/credit
+      SWAGGER_MONITORING_URL: http://91.227.18.176/monitoring
+      SWAGGER_NOTIFICATION_URL: http://91.227.18.176/notification
+    volumes:
+      - identity-data-protection:/var/app/data-protection-keys
     ports:
       - "127.0.0.1:5001:5001"
     restart: unless-stopped
@@ -286,5 +291,117 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  monitoring-service:
+    image: ghcr.io/pineapplleboy/hits-patterns-monitoring-service:latest
+    container_name: monitoring-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_monitoring
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      KAFKA_URL: kafka:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
+      SWAGGER_CLIENT_ID: api_swagger_monitoring
+      SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
+      SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/monitoring/swagger-ui/oauth2-redirect.html
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
+    ports:
+      - "127.0.0.1:8086:8086"
+    restart: unless-stopped
+    mem_limit: 350m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  notification-service:
+    image: ghcr.io/pineapplleboy/hits-patterns-notification-service:latest
+    container_name: notification-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_notification
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      KAFKA_URL: kafka:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/firebase/service-account.json
+      SWAGGER_CLIENT_ID: api_swagger_notification
+      SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
+      SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
+      SWAGGER_OAUTH2_REDIRECT_URL: http://91.227.18.176/notification/swagger-ui/oauth2-redirect.html
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
+    volumes:
+      - ./docker/firebase/service-account.json:/opt/firebase/service-account.json:ro
+    ports:
+      - "127.0.0.1:8087:8087"
+    restart: unless-stopped
+    mem_limit: 350m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  patterns-gateway:
+    image: ghcr.io/pineapplleboy/hits-patterns-patterns-gateway:latest
+    container_name: patterns-gateway
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity-server:
+        condition: service_started
+      patterns-users:
+        condition: service_started
+      patterns-user-setting:
+        condition: service_started
+      account-service:
+        condition: service_started
+      credit-service:
+        condition: service_started
+      transfers-service:
+        condition: service_started
+      currency-service:
+        condition: service_started
+      monitoring-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    environment:
+      SERVICES_IDENTITY_SERVER_URL: http://identity-server:5001
+      SERVICES_PATTERNS_USERS_URL: http://patterns-users:8080
+      SERVICES_PATTERNS_USER_SETTING_URL: http://patterns-user-setting:8080
+      SERVICES_ACCOUNT_SERVICE_URL: http://account-service:8082
+      SERVICES_CREDIT_SERVICE_URL: http://credit-service:8081
+      SERVICES_TRANSFERS_SERVICE_URL: http://transfers-service:8083
+      SERVICES_CURRENCY_SERVICE_URL: http://currency-service:8084
+      SERVICES_MONITORING_SERVICE_URL: http://monitoring-service:8086
+      SERVICES_NOTIFICATION_SERVICE_URL: http://notification-service:8087
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patterns_gateway
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
+    ports:
+      - "127.0.0.1:8085:8085"
+    restart: unless-stopped
+    mem_limit: 320m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres-data:
+  identity-data-protection:

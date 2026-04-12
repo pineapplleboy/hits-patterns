@@ -1,5 +1,13 @@
 package com.example.g_bankforclient.presentation.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +29,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -30,12 +42,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,7 +62,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,10 +73,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.g_bankforclient.domain.models.Account
 import com.example.g_bankforclient.domain.models.Credit
 import com.example.g_bankforclient.domain.models.CreditRate
+import com.example.g_bankforclient.domain.models.CreditRating
+import com.example.g_bankforclient.domain.models.CreditRatingLevel
 import com.example.g_bankforclient.presentation.state.CreditsScreenState
 import com.example.g_bankforclient.presentation.ui.components.CreditCard
+import com.example.g_bankforclient.presentation.ui.components.ErrorDialog
 import com.example.g_bankforclient.presentation.ui.utils.formatMoney
 import com.example.g_bankforclient.presentation.viewmodel.CreditsViewModel
 import com.example.g_bankforclient.ui.theme.BankColors
@@ -72,12 +90,11 @@ import java.util.UUID
 @Composable
 fun CreditsScreen(
     onCreditClick: (String) -> Unit,
-    onCreateCredit: () -> Unit
+    onCreateCredit: () -> Unit,
+    onMissedPayments: () -> Unit = {}
 ) {
     val viewModel: CreditsViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -89,52 +106,83 @@ fun CreditsScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    LaunchedEffect(screenState) {
-        if (screenState is CreditsScreenState.Default && (screenState as CreditsScreenState.Default).errorMessage != null) {
-            snackbarHostState.showSnackbar(
-                (screenState as CreditsScreenState.Default).errorMessage ?: "Ошибка"
-            )
-            viewModel.clearError()
-        }
+    DisposableEffect(Unit) {
+        onDispose { viewModel.dismissRatingDialog() }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    val defaultState = screenState as? CreditsScreenState.Default
+    if (defaultState?.errorMessage != null) {
+        ErrorDialog(
+            message = defaultState.errorMessage,
+            onDismiss = { viewModel.clearError() }
+        )
+    }
+
+    val errorState = screenState as? CreditsScreenState.Error
+    if (errorState != null) {
+        ErrorDialog(
+            message = errorState.message,
+            onDismiss = { viewModel.loadCreditsAndRates() },
+            onRetry = { viewModel.loadCreditsAndRates() }
+        )
+    }
+
+    val rubAccounts = viewModel.rubAccounts
+
+    Scaffold { paddingValues ->
         when (val state = screenState) {
             is CreditsScreenState.Default -> DefaultCreditsScreen(
                 credits = state.credits,
                 creditRates = state.creditRates,
+                rubAccounts = rubAccounts,
+                creditRating = state.creditRating,
+                showRatingDialog = state.showRatingDialog,
+                isRatingLoading = state.isRatingLoading,
                 isLoading = state.isLoading,
                 onCreditClick = onCreditClick,
                 onCreateCredit = onCreateCredit,
                 onTakeCredit = { rateId, sum, bankAccountNum ->
-                    viewModel.takeCredit(
-                        rateId,
-                        sum,
-                        bankAccountNum
-                    )
+                    viewModel.takeCredit(rateId, sum, bankAccountNum)
                 },
+                onShowRating = { viewModel.loadCreditRating() },
+                onDismissRating = { viewModel.dismissRatingDialog() },
+                onMissedPayments = onMissedPayments,
                 modifier = Modifier.padding(paddingValues)
             )
 
             CreditsScreenState.Loading -> DefaultCreditsScreen(
                 credits = emptyList(),
                 creditRates = emptyList(),
+                rubAccounts = rubAccounts,
+                creditRating = null,
+                showRatingDialog = false,
+                isRatingLoading = false,
                 isLoading = true,
                 onCreditClick = onCreditClick,
                 onCreateCredit = onCreateCredit,
-                onTakeCredit = { rateId, sum, bankAccountNum ->
-                    viewModel.takeCredit(
-                        rateId,
-                        sum,
-                        bankAccountNum
-                    )
-                },
+                onTakeCredit = { _, _, _ -> },
+                onShowRating = {},
+                onDismissRating = {},
+                onMissedPayments = onMissedPayments,
                 modifier = Modifier.padding(paddingValues)
             )
 
-            is CreditsScreenState.Error -> ErrorCreditsScreen(state.message)
+            is CreditsScreenState.Error -> DefaultCreditsScreen(
+                credits = emptyList(),
+                creditRates = emptyList(),
+                rubAccounts = rubAccounts,
+                creditRating = null,
+                showRatingDialog = false,
+                isRatingLoading = false,
+                isLoading = false,
+                onCreditClick = {},
+                onCreateCredit = {},
+                onTakeCredit = { _, _, _ -> },
+                onShowRating = {},
+                onDismissRating = {},
+                onMissedPayments = {},
+                modifier = Modifier.padding(paddingValues)
+            )
         }
     }
 }
@@ -143,15 +191,29 @@ fun CreditsScreen(
 private fun DefaultCreditsScreen(
     credits: List<Credit>,
     creditRates: List<CreditRate>,
+    rubAccounts: List<Account>,
+    creditRating: CreditRating?,
+    showRatingDialog: Boolean,
+    isRatingLoading: Boolean,
     isLoading: Boolean,
     onCreditClick: (String) -> Unit,
     onCreateCredit: () -> Unit,
     onTakeCredit: (UUID, Double, String) -> Unit,
+    onShowRating: () -> Unit,
+    onDismissRating: () -> Unit,
+    onMissedPayments: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val totalDebt = credits.sumOf { it.debt }
     val listState = rememberLazyListState()
     var scrollToRates by remember { mutableStateOf(false) }
+
+    if (showRatingDialog && creditRating != null) {
+        CreditRatingDialog(
+            rating = creditRating,
+            onDismiss = onDismissRating
+        )
+    }
 
     LaunchedEffect(scrollToRates) {
         if (scrollToRates && creditRates.isNotEmpty()) {
@@ -174,10 +236,47 @@ private fun DefaultCreditsScreen(
         }
 
         item {
-            Text(
-                text = "Кредиты",
-                style = MaterialTheme.typography.headlineMedium
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Кредиты",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Row {
+                    IconButton(onClick = onMissedPayments) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Просроченные платежи",
+                            tint = BankColors.ErrorRed
+                        )
+                    }
+                    IconButton(
+                        onClick = { onShowRating() }
+                    ) {
+                        if (isRatingLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Кредитный рейтинг",
+                                tint = when (creditRating?.level) {
+                                    CreditRatingLevel.EXCELLENT -> Color(0xFF4CAF50)
+                                    CreditRatingLevel.GOOD -> Color(0xFF8BC34A)
+                                    CreditRatingLevel.FAIR -> Color(0xFFFF9800)
+                                    CreditRatingLevel.POOR -> BankColors.ErrorRed
+                                    null -> BankColors.MediumGray
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         item {
@@ -310,6 +409,7 @@ private fun DefaultCreditsScreen(
             items(creditRates) { rate ->
                 CreditRateItem(
                     rate = rate,
+                    rubAccounts = rubAccounts,
                     onTakeCredit = onTakeCredit
                 )
             }
@@ -415,18 +515,29 @@ private fun CreditCardShimmer() {
 @Composable
 private fun CreditRateItem(
     rate: CreditRate,
+    rubAccounts: List<Account>,
     onTakeCredit: (UUID, Double, String) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var amount by remember { mutableStateOf("") }
-    var bankAccountNum by remember { mutableStateOf("") }
-    
+    var selectedAccountId by remember { mutableStateOf(rubAccounts.firstOrNull()?.id ?: "") }
+
+    LaunchedEffect(rubAccounts) {
+        if (selectedAccountId.isEmpty() && rubAccounts.isNotEmpty()) {
+            selectedAccountId = rubAccounts.first().id
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { showDialog = true },
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant
+        )
     ) {
         Column(
             modifier = Modifier
@@ -470,59 +581,290 @@ private fun CreditRateItem(
             }
         }
     }
-    
+
     if (showDialog) {
+        val selectedAccount = rubAccounts.find { it.id == selectedAccountId }
+        var isAccountsExpanded by remember { mutableStateOf(false) }
+
         AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(text = "Оформить кредит") },
+            onDismissRequest = {
+                showDialog = false
+                amount = ""
+                isAccountsExpanded = false
+            },
+            title = { Text(text = rate.name) },
             text = {
-                Column {
-                    Text(text = "Введите сумму кредита:")
-                    Spacer(modifier = Modifier.height(8.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column {
+                        Text(
+                            text = "Зачислить на счёт",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = BankColors.SecondaryText
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        if (rubAccounts.isEmpty()) {
+                            Text(
+                                text = "Нет доступных рублёвых счетов",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        } else {
+                            selectedAccount?.let { account ->
+                                Surface(
+                                    onClick = {
+                                        if (rubAccounts.size > 1) {
+                                            isAccountsExpanded = !isAccountsExpanded
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${account.name} — ${
+                                                account.balance.formatMoney(
+                                                    "₽"
+                                                )
+                                            }",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        if (rubAccounts.size > 1) {
+                                            Icon(
+                                                imageVector = if (isAccountsExpanded)
+                                                    Icons.Default.ArrowDropUp
+                                                else
+                                                    Icons.Default.ArrowDropDown,
+                                                contentDescription = null,
+                                                tint = BankColors.SecondaryText
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            if (rubAccounts.size > 1) {
+                                AnimatedVisibility(
+                                    visible = isAccountsExpanded,
+                                    enter = expandVertically() + fadeIn(),
+                                    exit = shrinkVertically() + fadeOut()
+                                ) {
+                                    Column {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        rubAccounts
+                                            .filter { it.id != selectedAccountId }
+                                            .forEach { account ->
+                                                Surface(
+                                                    onClick = {
+                                                        selectedAccountId = account.id
+                                                        isAccountsExpanded = false
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    color = BankColors.LightGray
+                                                ) {
+                                                    Text(
+                                                        text = "${account.name} — ${
+                                                            account.balance.formatMoney(
+                                                                "₽"
+                                                            )
+                                                        }",
+                                                        modifier = Modifier.padding(12.dp),
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                            }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     OutlinedTextField(
                         value = amount,
                         onValueChange = { amount = it },
-                        label = { Text("Сумма") },
-                        keyboardOptions = KeyboardOptions.Default
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Введите номер банковского счета:")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = bankAccountNum,
-                        onValueChange = { bankAccountNum = it },
-                        label = { Text("Номер счета") },
-                        keyboardOptions = KeyboardOptions.Default
+                        label = { Text("Сумма кредита (₽)") },
+                        placeholder = { Text("0") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        if (amount.isNotBlank() && bankAccountNum.isNotBlank()) {
-                            val amountValue = amount.toDoubleOrNull()
-                            if (amountValue != null) {
-                                onTakeCredit(rate.rateId, amountValue, bankAccountNum)
-                                showDialog = false
-                                amount = ""
-                                bankAccountNum = ""
-                            }
+                        val amountValue = amount.toDoubleOrNull()
+                        if (amountValue != null && amountValue > 0 && selectedAccountId.isNotBlank()) {
+                            onTakeCredit(rate.rateId, amountValue, selectedAccountId)
+                            showDialog = false
+                            amount = ""
+                            isAccountsExpanded = false
                         }
                     },
-                    enabled = amount.isNotBlank() && bankAccountNum.isNotBlank()
+                    enabled = amount.toDoubleOrNull().let { it != null && it > 0 }
+                            && selectedAccountId.isNotBlank()
+                            && rubAccounts.isNotEmpty()
                 ) {
                     Text("Оформить")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { 
+                TextButton(onClick = {
                     showDialog = false
                     amount = ""
-                    bankAccountNum = ""
+                    isAccountsExpanded = false
                 }) {
                     Text("Отмена")
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun CreditRatingDialog(
+    rating: CreditRating,
+    onDismiss: () -> Unit
+) {
+    val (levelLabel, levelColor) = when (rating.level) {
+        CreditRatingLevel.EXCELLENT -> "Отличный" to Color(0xFF4CAF50)
+        CreditRatingLevel.GOOD -> "Хороший" to Color(0xFF8BC34A)
+        CreditRatingLevel.FAIR -> "Удовлетворительный" to Color(0xFFFF9800)
+        CreditRatingLevel.POOR -> "Низкий" to Color(0xFFF44336)
+    }
+
+    val scoreProgress = ((rating.score - 1f) / (999f - 1f)).coerceIn(0f, 1f)
+    val animatedProgress by animateFloatAsState(
+        targetValue = scoreProgress,
+        animationSpec = tween(durationMillis = 1000),
+        label = "scoreArc"
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Кредитный рейтинг",
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier.size(160.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val strokeWidth = 16.dp.toPx()
+                        val startAngle = 180f
+                        val sweepAngle = 180f
+
+                        drawArc(
+                            color = Color.LightGray.copy(alpha = 0.3f),
+                            startAngle = startAngle,
+                            sweepAngle = sweepAngle,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                        )
+                        drawArc(
+                            color = levelColor,
+                            startAngle = startAngle,
+                            sweepAngle = sweepAngle * animatedProgress,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                        )
+                    }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(top = 32.dp)
+                    ) {
+                        Text(
+                            text = "${rating.score}",
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = levelColor
+                        )
+                        Text(
+                            text = levelLabel,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = levelColor
+                        )
+                        Text(
+                            text = "из 999",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = BankColors.SecondaryText
+                        )
+                    }
+                }
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        RatingStatRow("Всего кредитов", "${rating.totalCredits}")
+                        RatingStatRow(
+                            "Закрытых кредитов",
+                            "${rating.closedCredits}",
+                            Color(0xFF4CAF50)
+                        )
+                        RatingStatRow("Активных кредитов", "${rating.activeCredits}")
+                        RatingStatRow(
+                            label = "Просроченных платежей",
+                            value = "${rating.missedPayments}",
+                            valueColor = if (rating.missedPayments > 0) Color(0xFFF44336) else Color(
+                                0xFF4CAF50
+                            )
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Закрыть")
+            }
+        }
+    )
+}
+
+@Composable
+private fun RatingStatRow(
+    label: String,
+    value: String,
+    valueColor: Color = Color.Unspecified
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = BankColors.SecondaryText
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = valueColor
         )
     }
 }
@@ -585,9 +927,17 @@ fun CreditsScreenPreview() {
                     writeOffPeriod = "P120M"
                 )
             ),
+            rubAccounts = listOf(
+                Account(id = "ACC-001", name = "Текущий счёт", balance = 50000.0)
+            ),
             onCreditClick = { },
             onCreateCredit = { },
             onTakeCredit = { _, _, _ -> },
+            onShowRating = {},
+            onDismissRating = {},
+            creditRating = null,
+            showRatingDialog = false,
+            isRatingLoading = false,
             isLoading = false,
         )
     }

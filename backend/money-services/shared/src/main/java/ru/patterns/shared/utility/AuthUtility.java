@@ -15,27 +15,27 @@ public class AuthUtility {
         AuthUser authUser = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader);
 
         if (authUser.role() == null || authUser.userId() == null) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
+            throw new ForbiddenException(ErrorMessages.FORBIDDEN, null);
         }
     }
 
     public void checkUserRights(AuthUser authUser, UUID userId) {
         if (!(authUser.role() == Role.EMPLOYEE || authUser.userId().equals(userId))) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
+            throw new ForbiddenException(ErrorMessages.FORBIDDEN, null);
         }
     }
 
     public void checkUserIdEquality(String authorizationHeader, UUID userId) {
         AuthUser authUser = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader);
         if (!authUser.userId().equals(userId)) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
+            throw new ForbiddenException(ErrorMessages.FORBIDDEN, null);
         }
     }
 
     public void checkUserIfEmployee(String authorizationHeader) {
         AuthUser authUser = JwtAuthUtility.parseAuthorizationHeader(authorizationHeader);
         if (authUser.role() != Role.EMPLOYEE) {
-            throw new ForbiddenException(ErrorMessages.FORBIDDEN);
+            throw new ForbiddenException(ErrorMessages.FORBIDDEN, null);
         }
     }
 

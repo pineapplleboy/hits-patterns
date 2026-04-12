@@ -1,3 +1,8 @@
 spring:
   application:
     name: shared
+
+kafka:
+  provider:
+    log-topic: 00_logs
+    request-topic: 00_requests

@@ -53,12 +53,13 @@ public class JwtAuthUtility {
                     .parseSignedClaims(jwt);
 
             Claims claims = jws.getPayload();
-            validateExpiration(claims);
+            Instant expiresAt = extractExpiration(claims);
+            validateExpiration(expiresAt);
 
             UUID userId = UUID.fromString(getClaim(claims, NAME_ID_CLAIM));
             Role role = mapRole(getClaim(claims, ROLE_CLAIM));
 
-            return new AuthUser(userId, role);
+            return new AuthUser(userId, role, expiresAt);
         } catch (Exception exception) {
             throw unauthorizedException();
         }
@@ -171,8 +172,11 @@ public class JwtAuthUtility {
         }
     }
 
-    private void validateExpiration(Claims claims) {
-        Instant expiresTime = claims.getExpiration() != null ? claims.getExpiration().toInstant() : null;
+    private Instant extractExpiration(Claims claims) {
+        return claims.getExpiration() != null ? claims.getExpiration().toInstant() : null;
+    }
+
+    private void validateExpiration(Instant expiresTime) {
         if (expiresTime == null || expiresTime.isBefore(Instant.now())) {
             throw unauthorizedException();
         }
@@ -222,6 +226,6 @@ public class JwtAuthUtility {
     }
 
     private UnauthorizedException unauthorizedException() {
-        return new UnauthorizedException(ErrorMessages.UNAUTHORIZED);
+        return new UnauthorizedException(ErrorMessages.UNAUTHORIZED, null);
     }
 }

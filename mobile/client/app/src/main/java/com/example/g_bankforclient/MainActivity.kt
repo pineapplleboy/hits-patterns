@@ -4,17 +4,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.g_bankforclient.common.navigation.BankNavigation
 import com.example.g_bankforclient.common.navigation.Screen
 import com.example.g_bankforclient.presentation.ui.components.BankBottomNavigation
+import com.example.g_bankforclient.presentation.viewmodel.AppThemeViewModel
+import com.example.g_bankforclient.presentation.viewmodel.SessionViewModel
 import com.example.g_bankforclient.ui.theme.GbankForClientTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -24,20 +31,50 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            GbankForClientTheme {
-                BankApp()
-            }
+            BankRoot()
         }
     }
 }
 
 @Composable
-fun BankApp() {
+fun BankRoot() {
+    val appThemeViewModel: AppThemeViewModel = hiltViewModel()
+    val isDarkTheme by appThemeViewModel.isDarkTheme.collectAsStateWithLifecycle()
+    val darkTheme = isDarkTheme ?: isSystemInDarkTheme()
+
+    GbankForClientTheme(darkTheme = darkTheme) {
+        BankApp(
+            isDarkTheme = darkTheme,
+            onThemeChange = { appThemeViewModel.setDarkTheme(it) },
+            onEnterMainApp = { appThemeViewModel.loadTheme() }
+        )
+    }
+}
+
+@Composable
+fun BankApp(
+    isDarkTheme: Boolean = false,
+    onThemeChange: (Boolean) -> Unit = {},
+    onEnterMainApp: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomNav = currentRoute == Screen.Home.route || currentRoute == Screen.Credits.route
+    val sessionViewModel: SessionViewModel = hiltViewModel()
+    val isUnauthorized by sessionViewModel.isUnauthorized.collectAsStateWithLifecycle()
+    LaunchedEffect(isUnauthorized) {
+        if (isUnauthorized) {
+            sessionViewModel.resetUnauthorized()
+            navController.navigate(Screen.Authorization.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    val showBottomNav = currentRoute == Screen.Home.route ||
+            currentRoute == Screen.Credits.route ||
+            currentRoute == Screen.Profile.route
 
     Scaffold(
         bottomBar = {
@@ -60,7 +97,12 @@ fun BankApp() {
     ) { paddingValues ->
         BankNavigation(
             navController = navController,
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues),
+            isDarkTheme = isDarkTheme,
+            onThemeChange = onThemeChange,
+            onEnterMainApp = onEnterMainApp
         )
     }
 }

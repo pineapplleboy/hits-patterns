@@ -1,0 +1,36 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="001-create-request" author="aleksey.z">
+        <createTable tableName="request">
+            <column name="request_id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="path" type="VARCHAR(1024)"/>
+
+            <column name="service_id" type="VARCHAR(255)"/>
+
+            <column name="response_time" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="request_time" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="request" indexName="idx_request_service_id">
+            <column name="service_id"/>
+        </createIndex>
+
+        <createIndex tableName="request" indexName="idx_request_request_time">
+            <column name="request_time"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

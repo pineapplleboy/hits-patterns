@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: monitoring
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+server:
+  port: 8086
+  forward-headers-strategy: framework
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+  api-docs:
+    path: /v3/api-docs
+  cache:
+    disabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+kafka:
+  url: ${KAFKA_URL:localhost:29092}
+  group: "monitoring-service"
+
+  consumer:
+    log-topic: 00_logs
+    request-topic: 00_requests
+
+service:
+  name: patterns-monitoring-service

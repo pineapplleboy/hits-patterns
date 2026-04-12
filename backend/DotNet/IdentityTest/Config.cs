@@ -18,12 +18,16 @@ namespace IdentityTest
         private static readonly string TransfersSwaggerUrl = GetEnvironmentVariable("SWAGGER_TRANSFERS_URL", "http://localhost:8083");
         private static readonly string CurrencySwaggerUrl = GetEnvironmentVariable("SWAGGER_CURRENCY_URL", "http://localhost:8084");
         private static readonly string CreditSwaggerUrl = GetEnvironmentVariable("SWAGGER_CREDIT_URL", "http://localhost:8081");
+        private static readonly string MonitoringSwaggerUrl = GetEnvironmentVariable("SWAGGER_MONITORING_URL", "http://localhost:8086");
+        private static readonly string NotificationSwaggerUrl = GetEnvironmentVariable("SWAGGER_NOTIFICATION_URL", "http://localhost:8087");
         private static readonly string UsersSwaggerOrigin = GetOrigin(UsersSwaggerUrl);
         private static readonly string UserSettingsSwaggerOrigin = GetOrigin(UserSettingsSwaggerUrl);
         private static readonly string AccountSwaggerOrigin = GetOrigin(AccountSwaggerUrl);
         private static readonly string TransfersSwaggerOrigin = GetOrigin(TransfersSwaggerUrl);
         private static readonly string CurrencySwaggerOrigin = GetOrigin(CurrencySwaggerUrl);
         private static readonly string CreditSwaggerOrigin = GetOrigin(CreditSwaggerUrl);
+        private static readonly string MonitoringSwaggerOrigin = GetOrigin(MonitoringSwaggerUrl);
+        private static readonly string NotificationSwaggerOrigin = GetOrigin(NotificationSwaggerUrl);
 
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[]
@@ -152,6 +156,50 @@ namespace IdentityTest
                 },
                 new Client
                 {
+                    ClientId = "api_swagger_monitoring",
+                    ClientName = "Swagger UI for Monitoring API",
+
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
+
+                    RedirectUris =
+                    {
+                        $"{MonitoringSwaggerUrl}/swagger-ui/oauth2-redirect.html",
+                        $"{MonitoringSwaggerUrl}/swagger/oauth2-redirect.html"
+                    },
+                    AllowedCorsOrigins = {MonitoringSwaggerOrigin},
+                    AllowedScopes = new List<string>
+                    {
+                        "SampleAPI"
+                    }
+                },
+                new Client
+                {
+                    ClientId = "api_swagger_notification",
+                    ClientName = "Swagger UI for Notification API",
+
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
+                    AccessTokenLifetime = SwaggerAccessTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
+
+                    RedirectUris =
+                    {
+                        $"{NotificationSwaggerUrl}/swagger-ui/oauth2-redirect.html",
+                        $"{NotificationSwaggerUrl}/swagger/oauth2-redirect.html"
+                    },
+                    AllowedCorsOrigins = {NotificationSwaggerOrigin},
+                    AllowedScopes = new List<string>
+                    {
+                        "SampleAPI"
+                    }
+                },
+                new Client
+                {
                     ClientId = "android_client_app",
                     ClientName = "Mobile client app",
                     RedirectUris = { "com.client.android:/callback"},
@@ -186,6 +234,37 @@ namespace IdentityTest
                     RedirectUris = { "com.employee.android:/callback"},
                     PostLogoutRedirectUris = { "com.employee.android:/logout" },
 
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    RequireClientSecret = false,
+                    AllowAccessTokensViaBrowser = true,
+                    RequireConsent = false,
+                    AccessTokenLifetime = MobileAccessTokenLifetimeSeconds,
+                    IdentityTokenLifetime = MobileIdentityTokenLifetimeSeconds,
+                    AuthorizationCodeLifetime = AuthorizationCodeLifetimeSeconds,
+
+                    AllowOfflineAccess = true,
+                    RefreshTokenUsage = TokenUsage.ReUse,
+                    RefreshTokenExpiration = TokenExpiration.Sliding,
+                    SlidingRefreshTokenLifetime = SlidingRefreshTokenLifetimeSeconds,
+                    AbsoluteRefreshTokenLifetime = AbsoluteRefreshTokenLifetimeSeconds,
+                    UpdateAccessTokenClaimsOnRefresh = true,
+
+                    AllowedScopes = {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "SampleAPI"
+                    }
+                },
+                new Client {
+                    ClientId = "monitoring-app",
+                    ClientName = "Monitoring app",
+
+                    RedirectUris = { "http://localhost:3000/callback"},
+                    PostLogoutRedirectUris = {  "http://localhost:3000"},
+                                AllowedCorsOrigins = {
+                "http://localhost:3000"
+            },
                     AllowedGrantTypes = GrantTypes.Code,
                     RequirePkce = true,
                     RequireClientSecret = false,

@@ -2,12 +2,14 @@ using Duende.IdentityServer;
 using IdentityTest.Data;
 using IdentityTest.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.IO;
 
 namespace IdentityTest
 {
@@ -28,6 +30,13 @@ namespace IdentityTest
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            string dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"]
+                                            ?? "/var/app/data-protection-keys";
+
+            builder.Services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+                .SetApplicationName("patterns-identity-server");
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

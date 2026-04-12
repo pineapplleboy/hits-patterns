@@ -1,11 +1,20 @@
 package com.example.g_bankforclient.data.network
 
+import com.example.g_bankforclient.domain.AuthStateStorage
 import com.example.g_bankforclient.domain.TokenStorage
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
+import net.openid.appauth.AuthState
+import net.openid.appauth.AuthorizationService
 import okhttp3.Interceptor
 import okhttp3.Response
+import kotlin.coroutines.resume
 
 class AuthInterceptor(
+    private val authStateStorage: AuthStateStorage,
+    private val authorizationService: AuthorizationService,
     private val tokenStorage: TokenStorage,
+    private val authEventBus: AuthEventBus,
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -16,15 +25,65 @@ class AuthInterceptor(
             return chain.proceed(request)
         }
 
-        val token = tokenStorage.getToken()
-        val newRequest = if (token != null) {
-            request.newBuilder()
-                .addHeader("Authorization", "Bearer $token")
-                .build()
-        } else {
-            request
+        val authState: AuthState? = authStateStorage.getAuthState()
+        if (authState == null) {
+            // Fallback for legacy / transitional cases: use access token if auth state isn't available.
+            val token = tokenStorage.getToken()
+            if (token != null) {
+                val newRequest = request.newBuilder()
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+                val response = chain.proceed(newRequest)
+                if (response.code == 401) handleUnauthorized()
+                return response
+            }
+            return chain.proceed(request)
         }
 
-        return chain.proceed(newRequest)
+        val freshAccessToken = runBlocking {
+            suspendCancellableCoroutine<String?> { continuation ->
+                authState.performActionWithFreshTokens(authorizationService) { accessToken, _, ex ->
+                    if (ex != null || accessToken.isNullOrBlank()) {
+                        continuation.resume(null)
+                    } else {
+                        continuation.resume(accessToken)
+                    }
+                }
+            }
+        }
+
+        // Keep legacy TokenStorage in sync for endpoints that still rely on it.
+        if (!freshAccessToken.isNullOrBlank()) {
+            tokenStorage.setToken(freshAccessToken)
+            authStateStorage.setAuthState(authState)
+            val newRequest = request.newBuilder()
+                .addHeader("Authorization", "Bearer $freshAccessToken")
+                .build()
+            val response = chain.proceed(newRequest)
+            if (response.code == 401) handleUnauthorized()
+            return response
+        }
+
+        // Fallback: if AppAuth state cannot produce a fresh token for this request,
+        // still try last persisted access token.
+        val persistedToken = tokenStorage.getToken()
+        if (!persistedToken.isNullOrBlank()) {
+            val newRequest = request.newBuilder()
+                .addHeader("Authorization", "Bearer $persistedToken")
+                .build()
+            val response = chain.proceed(newRequest)
+            if (response.code == 401) handleUnauthorized()
+            return response
+        }
+
+        val response = chain.proceed(request)
+        if (response.code == 401) handleUnauthorized()
+        return response
+    }
+
+    private fun handleUnauthorized() {
+        tokenStorage.clearToken()
+        authStateStorage.clearAuthState()
+        authEventBus.emitUnauthorized()
     }
 }

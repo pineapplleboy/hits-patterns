@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.scheduling.annotation.EnableScheduling;
 import ru.patterns.currency.application.config.CurrencyConfig;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "ru.patterns")
 @EnableScheduling
 @EnableConfigurationProperties(CurrencyConfig.class)
 public class CurrencyApplication {

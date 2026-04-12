@@ -129,7 +129,7 @@ fun TransactionItem(transaction: Transaction) {
             }
 
             Text(
-                text = "$sign${transaction.amount.formatMoney().replace(" ₽", "")} ₽",
+                text = "$sign${transaction.amount.formatMoney(transaction.currencySymbol ?: "₽")}",
                 style = MaterialTheme.typography.titleMedium,
                 color = amountColor
             )

@@ -1,6 +1,7 @@
 package com.example.g_bankforclient.data.network
 
 import com.example.g_bankforclient.data.network.model.CreditRateModel
+import com.example.g_bankforclient.data.network.model.CreditRatingNetworkModel
 import com.example.g_bankforclient.data.network.model.OperationStatusResponseModel
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -25,4 +26,9 @@ interface ApiService {
     suspend fun getAvailableCreditPlanById(
         @Path("id") id: UUID
     ): CreditRateModel
+
+    @GET("patterns/api/v1/credit-account/rating/{userId}")
+    suspend fun getUserCreditRating(
+        @Path("userId") userId: UUID
+    ): CreditRatingNetworkModel
 }
