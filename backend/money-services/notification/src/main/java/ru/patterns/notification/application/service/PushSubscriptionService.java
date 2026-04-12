@@ -47,8 +47,8 @@ public class PushSubscriptionService {
     private void subscribe(String token, String topic, TracingLog logData) {
         try {
             FirebaseMessaging.getInstance().subscribeToTopic(List.of(token), topic);
-            monitoringLogger.logInfo(logData, "Tокен подписан на топик = " + topic + ", token = " + token);
-        } catch (FirebaseMessagingException e) {
+            monitoringLogger.logInfo(logData, "Токен подписан на топик = " + topic + ", token = " + token);
+        } catch (FirebaseMessagingException exception) {
             throw new BadRequestException("Ошибка подписки на топик " + topic, logData);
         }
     }
@@ -56,13 +56,13 @@ public class PushSubscriptionService {
     private void unsubscribe(String token, String topic, TracingLog logData) {
         try {
             FirebaseMessaging.getInstance().unsubscribeFromTopic(List.of(token), topic);
-            monitoringLogger.logInfo(logData, "Tокен отписан от топика = " + topic + ", token = " + token);
-        } catch (FirebaseMessagingException e) {
-            throw new BadRequestException("Ошибка отписки от топика топик " + topic, logData);
+            monitoringLogger.logInfo(logData, "Токен отписан от топика = " + topic + ", token = " + token);
+        } catch (FirebaseMessagingException exception) {
+            throw new BadRequestException("Ошибка отписки от топика " + topic, logData);
         }
     }
 
     private String calculateClientTopic(UUID userId) {
-        return CLIENT_TOPIC + "_" + userId.toString();
+        return CLIENT_TOPIC + "_" + userId;
     }
 }

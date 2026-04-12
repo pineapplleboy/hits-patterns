@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.patterns.monitoring.application.common.LogResponseModel;
 import ru.patterns.monitoring.application.service.LogService;
+import ru.patterns.monitoring.application.utility.RequestTimeParser;
 import ru.patterns.shared.utility.TraceLogUtility;
 
 import java.time.Instant;
@@ -30,8 +30,8 @@ public class LogController {
 
     @GetMapping
     public Page<LogResponseModel> getLogs(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
+            @RequestParam String startTime,
+            @RequestParam String endTime,
             @RequestParam(required = false) String path,
             @RequestParam(required = false) String serviceId,
             @RequestParam(required = false) String message,
@@ -51,10 +51,12 @@ public class LogController {
                 request.getRequestURI(),
                 null
         );
+        var parsedStartTime = RequestTimeParser.parse(startTime, "startTime", logData);
+        var parsedEndTime = RequestTimeParser.parse(endTime, "endTime", logData);
 
         return logService.getLogs(
-                startTime,
-                endTime,
+                parsedStartTime,
+                parsedEndTime,
                 path,
                 serviceId,
                 message,

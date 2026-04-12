@@ -170,7 +170,7 @@ management:
         enabled: true
 
 unstable:
-  enabled: true
+  enabled: false
 
 resilience4j:
   circuitbreaker:

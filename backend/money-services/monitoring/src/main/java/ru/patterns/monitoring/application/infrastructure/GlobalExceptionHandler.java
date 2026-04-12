@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import ru.patterns.shared.exception.BadRequestException;
 import ru.patterns.shared.exception.ForbiddenException;
@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> catchUnknownException(Exception exception) {
         log.error(exception.getMessage(), exception);
 
-        return new ResponseEntity<>(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Произошла непредвиденная ошибка"),
+        return new ResponseEntity<>(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Ошибка сервера"),
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

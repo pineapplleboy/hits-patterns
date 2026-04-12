@@ -3,7 +3,6 @@ package ru.patterns.monitoring.application.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +13,7 @@ import ru.patterns.monitoring.application.common.ServiceAverageResponseTimeModel
 import ru.patterns.monitoring.application.common.ServiceRequestResultPercentModel;
 import ru.patterns.monitoring.application.common.ServiceRequestsPerSecondModel;
 import ru.patterns.monitoring.application.service.RequestService;
+import ru.patterns.monitoring.application.utility.RequestTimeParser;
 import ru.patterns.shared.utility.TraceLogUtility;
 
 import java.time.Instant;
@@ -31,49 +31,57 @@ public class RequestController {
 
     @GetMapping
     public List<RequestResponseModel> getRequests(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
+            @RequestParam String startTime,
+            @RequestParam String endTime,
             @RequestHeader(value = "traceId", required = false) String traceId,
             HttpServletRequest request
     ) {
         var logData = TraceLogUtility.createDataForLogs(traceId, null, serviceName, request.getRequestURI(), null);
+        var parsedStartTime = RequestTimeParser.parse(startTime, "startTime", logData);
+        var parsedEndTime = RequestTimeParser.parse(endTime, "endTime", logData);
 
-        return requestService.getRequests(startTime, endTime, logData);
+        return requestService.getRequests(parsedStartTime, parsedEndTime, logData);
     }
 
     @GetMapping("/average-response-time")
     public List<ServiceAverageResponseTimeModel> getAverageResponseTimeByService(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
+            @RequestParam String startTime,
+            @RequestParam String endTime,
             @RequestHeader(value = "traceId", required = false) String traceId,
             HttpServletRequest request
     ) {
         var logData = TraceLogUtility.createDataForLogs(traceId, null, serviceName, request.getRequestURI(), null);
+        var parsedStartTime = RequestTimeParser.parse(startTime, "startTime", logData);
+        var parsedEndTime = RequestTimeParser.parse(endTime, "endTime", logData);
 
-        return requestService.getAverageResponseTimeByServices(startTime, endTime, logData);
+        return requestService.getAverageResponseTimeByServices(parsedStartTime, parsedEndTime, logData);
     }
 
     @GetMapping("/result-percents")
     public List<ServiceRequestResultPercentModel> getRequestResultPercentsByService(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
+            @RequestParam String startTime,
+            @RequestParam String endTime,
             @RequestHeader(value = "traceId", required = false) String traceId,
             HttpServletRequest request
     ) {
         var logData = TraceLogUtility.createDataForLogs(traceId, null, serviceName, request.getRequestURI(), null);
+        var parsedStartTime = RequestTimeParser.parse(startTime, "startTime", logData);
+        var parsedEndTime = RequestTimeParser.parse(endTime, "endTime", logData);
 
-        return requestService.getRequestResultPercentsByServices(startTime, endTime, logData);
+        return requestService.getRequestResultPercentsByServices(parsedStartTime, parsedEndTime, logData);
     }
 
     @GetMapping("/requests-per-second")
     public List<ServiceRequestsPerSecondModel> getRequestsPerSecondByService(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
+            @RequestParam String startTime,
+            @RequestParam String endTime,
             @RequestHeader(value = "traceId", required = false) String traceId,
             HttpServletRequest request
     ) {
         var logData = TraceLogUtility.createDataForLogs(traceId, null, serviceName, request.getRequestURI(), null);
+        var parsedStartTime = RequestTimeParser.parse(startTime, "startTime", logData);
+        var parsedEndTime = RequestTimeParser.parse(endTime, "endTime", logData);
 
-        return requestService.getRequestsPerSecondByServices(startTime, endTime, logData);
+        return requestService.getRequestsPerSecondByServices(parsedStartTime, parsedEndTime, logData);
     }
 }
