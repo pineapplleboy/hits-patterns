@@ -333,6 +333,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       KAFKA_URL: kafka:9092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_JWKS_URL: http://identity-server:5001/.well-known/openid-configuration/jwks
       SWAGGER_CLIENT_ID: api_swagger_notification
       SWAGGER_AUTHORIZATION_URL: http://91.227.18.176/identity/connect/authorize
       SWAGGER_TOKEN_URL: http://91.227.18.176/identity/connect/token
