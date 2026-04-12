@@ -164,7 +164,7 @@ public class MonitoringDataFilter implements GlobalFilter, Ordered {
     }
 
     private static void captureStatus(HttpStatusCode statusCode, AtomicInteger responseStatusReference) {
-        responseStatusReference.set(statusCode != null ? statusCode.value() : -1);
+        responseStatusReference.set(statusCode != null ? statusCode.value() : 200);
     }
 
     private Optional<UUID> extractUserId(String authorizationHeader) {
