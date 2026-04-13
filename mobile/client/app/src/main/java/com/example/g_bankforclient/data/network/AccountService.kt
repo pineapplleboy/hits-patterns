@@ -15,6 +15,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Tag
 import java.util.UUID
 
 interface AccountService {
@@ -22,7 +23,8 @@ interface AccountService {
     @POST("patterns/api/v2/users/{userId}/bank-accounts")
     suspend fun createBankAccount(
         @Path("userId") userId: UUID,
-        @Query("currencyId") currencyId: Int
+        @Query("currencyId") currencyId: Int,
+        @Tag metadata: RequestMetadata
     ): AccountNumberResponseModel
 
     @GET("patterns/api/v2/users/{userId}/bank-accounts")
@@ -40,7 +42,8 @@ interface AccountService {
     @DELETE("patterns/api/v2/users/{userId}/bank-accounts/{accountNumber}")
     suspend fun closeBankAccount(
         @Path("userId") userId: UUID,
-        @Path("accountNumber") accountNumber: String
+        @Path("accountNumber") accountNumber: String,
+        @Tag metadata: RequestMetadata
     )
 
     @GET("patterns/api/v2/users/{userId}/credit-accounts")
@@ -85,14 +88,16 @@ interface AccountService {
     suspend fun replenishBankAccount(
         @Path("userId") userId: UUID,
         @Path("bankAccountNumber") bankAccountNumber: String,
-        @Body request: MoneyAmountRequestModel
+        @Body request: MoneyAmountRequestModel,
+        @Tag metadata: RequestMetadata
     ): OperationStatusResponseModel
 
     @POST("patterns/api/v2/users/{userId}/transfers/bank-account/{bankAccountNumber}/withdraw")
     suspend fun withdrawFromBankAccount(
         @Path("userId") userId: UUID,
         @Path("bankAccountNumber") bankAccountNumber: String,
-        @Body request: MoneyAmountRequestModel
+        @Body request: MoneyAmountRequestModel,
+        @Tag metadata: RequestMetadata
     ): OperationStatusResponseModel
 
     @POST("patterns/api/v2/users/{userId}/transfers/bank-account/{bankAccountNumber}/bankAccountTo/{bankAccountTo}")
@@ -100,7 +105,8 @@ interface AccountService {
         @Path("userId") userId: UUID,
         @Path("bankAccountNumber") bankAccountNumber: String,
         @Path("bankAccountTo") bankAccountTo: String,
-        @Body request: MoneyAmountRequestModel
+        @Body request: MoneyAmountRequestModel,
+        @Tag metadata: RequestMetadata
     ): OperationStatusResponseModel
 
     @POST("patterns/api/v2/users/{userId}/transfers/bank-account/{bankAccountNumber}/credit-payments/{creditAccountNumber}")
@@ -108,6 +114,7 @@ interface AccountService {
         @Path("userId") userId: UUID,
         @Path("bankAccountNumber") bankAccountNumber: String,
         @Path("creditAccountNumber") creditAccountNumber: String,
-        @Body request: MoneyAmountRequestModel
+        @Body request: MoneyAmountRequestModel,
+        @Tag metadata: RequestMetadata
     ): OperationStatusResponseModel
 }

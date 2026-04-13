@@ -4,6 +4,7 @@ import com.example.g_bankforclient.data.mapper.toCreditDomain
 import com.example.g_bankforclient.data.mapper.toDomain
 import com.example.g_bankforclient.data.network.AccountService
 import com.example.g_bankforclient.data.network.ApiService
+import com.example.g_bankforclient.data.network.RequestMetadataFactory
 import com.example.g_bankforclient.data.network.model.MoneyAmountRequestModel
 import com.example.g_bankforclient.data.network.model.TransferAccountType
 import com.example.g_bankforclient.domain.models.Credit
@@ -20,7 +21,8 @@ import javax.inject.Singleton
 class CreditRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
     private val accountService: AccountService,
-    private val tokenStorage: com.example.g_bankforclient.domain.TokenStorage
+    private val tokenStorage: com.example.g_bankforclient.domain.TokenStorage,
+    private val requestMetadataFactory: RequestMetadataFactory
 ) : CreditRepository {
 
     private val currentUserId: UUID
@@ -32,15 +34,11 @@ class CreditRepositoryImpl @Inject constructor(
         val creditAccounts = accountService.getUserCreditAccounts(currentUserId)
 
         return creditAccounts.map { creditAccount ->
-            val creditOperations = try {
-                accountService.getAccountOperations(
-                    userId = currentUserId,
-                    accountNumber = creditAccount.accountNumber,
-                    transferType = TransferAccountType.CREDIT_ACCOUNT
-                ).map { it.toCreditDomain(fallbackAccountId = creditAccount.accountNumber) }
-            } catch (e: Exception) {
-                emptyList()
-            }
+            val creditOperations = accountService.getAccountOperations(
+                userId = currentUserId,
+                accountNumber = creditAccount.accountNumber,
+                transferType = TransferAccountType.CREDIT_ACCOUNT
+            ).map { it.toCreditDomain(fallbackAccountId = creditAccount.accountNumber) }
 
             creditAccount.toDomain(creditOperations)
         }
@@ -67,7 +65,8 @@ class CreditRepositoryImpl @Inject constructor(
             userId = currentUserId,
             bankAccountNumber = accountId,
             creditAccountNumber = creditId,
-            request = MoneyAmountRequestModel(amount = amount)
+            request = MoneyAmountRequestModel(amount = amount),
+            metadata = requestMetadataFactory.createMutation()
         )
 
         if (response.status.name != "SUCCESS") {
@@ -84,7 +83,13 @@ class CreditRepositoryImpl @Inject constructor(
     }
     
     override suspend fun takeCredit(userId: UUID, rateId: UUID, sum: Double, bankAccountNum: String): Boolean {
-        val response = apiService.takeCredit(userId, rateId, sum, bankAccountNum)
+        val response = apiService.takeCredit(
+            userId = userId,
+            rateId = rateId,
+            sum = sum,
+            bankAccountNum = bankAccountNum,
+            metadata = requestMetadataFactory.createMutation()
+        )
         return response.status.name == "SUCCESS"
     }
 
