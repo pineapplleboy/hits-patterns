@@ -224,6 +224,17 @@ object NetworkModule {
     fun provideUserSettingsService(@Named("settingsRetrofit") retrofit: Retrofit): UserSettingsService {
         return retrofit.create(UserSettingsService::class.java)
     }
+
+    @Provides
+    @Singleton
+    @Named("notificationRetrofit")
+    fun provideNotificationRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("http://91.227.18.176/notification/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
     
     @Provides
     @Singleton

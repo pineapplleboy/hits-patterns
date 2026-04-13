@@ -7,6 +7,7 @@ import com.example.g_bankforclient.data.network.UserService
 import com.example.g_bankforclient.data.sso.SsoAuthResultDispatcher
 import com.example.g_bankforclient.domain.AuthStateStorage
 import com.example.g_bankforclient.domain.TokenStorage
+import com.example.g_bankforclient.feature.notifications.domain.NotificationTokenSyncManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,6 +35,9 @@ class SsoAuthCallbackActivity : ComponentActivity() {
 
     @Inject
     lateinit var authorizationService: AuthorizationService
+
+    @Inject
+    lateinit var notificationTokenSyncManager: NotificationTokenSyncManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,6 +96,7 @@ class SsoAuthCallbackActivity : ComponentActivity() {
                 if (authState != null) {
                     authStateStorage.setAuthState(authState)
                 }
+                notificationTokenSyncManager.register()
                 true
             }.getOrDefault(false)
 

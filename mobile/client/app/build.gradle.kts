@@ -6,6 +6,10 @@ plugins {
     id("kotlin-kapt")
 }
 
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.example.g_bankforclient"
     compileSdk = 36
@@ -76,6 +80,8 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     // OAuth2/OIDC SSO (IdentityServer4) via AppAuth
     implementation("net.openid:appauth:0.11.1")

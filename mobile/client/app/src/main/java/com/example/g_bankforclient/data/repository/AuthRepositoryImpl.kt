@@ -9,6 +9,7 @@ import com.example.g_bankforclient.domain.AuthStateStorage
 import com.example.g_bankforclient.domain.TokenStorage
 import com.example.g_bankforclient.domain.models.UserCredentials
 import com.example.g_bankforclient.domain.repository.AuthRepository
+import com.example.g_bankforclient.feature.notifications.domain.NotificationTokenSyncManager
 import com.example.g_bankforclient.presentation.auth.SsoAuthCallbackActivity
 import com.example.g_bankforclient.presentation.auth.SsoLogoutCallbackActivity
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -27,7 +28,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val tokenStorage: TokenStorage,
     private val authStateStorage: AuthStateStorage,
     private val ssoAuthResultDispatcher: SsoAuthResultDispatcher,
-    private val authorizationService: AuthorizationService
+    private val authorizationService: AuthorizationService,
+    private val notificationTokenSyncManager: NotificationTokenSyncManager,
 ) : AuthRepository {
 
     override suspend fun login(credentials: UserCredentials): Boolean {
@@ -90,6 +92,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
+        runCatching {
+            notificationTokenSyncManager.unsubscribe()
+        }
+
         // Clear local state immediately so UI treats user as logged out.
         val authState = authStateStorage.getAuthState()
         val idTokenHint = authState?.idToken
