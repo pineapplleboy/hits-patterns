@@ -1,9 +1,11 @@
 package com.example.g_bankforclient.data.network
 
-import android.util.Log
 import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,17 +22,10 @@ class RetryCircuitBreakerInterceptor @Inject constructor(
             return chain.proceed(request)
         }
 
-        val traceId = request.header(RequestHeadersInterceptor.TRACE_ID_HEADER)
-            ?: request.tag(RequestMetadata::class.java)?.traceId
-            ?: "unknown-trace"
         val breaker = circuitBreakerRegistry.get(serviceName)
         val permit = breaker.beforeRequest()
         if (permit is ServiceCircuitBreaker.Permit.Denied) {
-            Log.w(
-                LOG_TAG,
-                "traceId=$traceId service=$serviceName breaker=open errorPercent=${permit.errorPercent}"
-            )
-            throw CircuitBreakerOpenException(serviceName, permit.retryAfterMillis)
+            return request.buildCircuitOpenResponse(serviceName, permit.retryAfterMillis)
         }
 
         val maxAttempts = if (request.isRetryable()) 3 else 1
@@ -39,27 +34,14 @@ class RetryCircuitBreakerInterceptor @Inject constructor(
 
         while (attempt < maxAttempts) {
             attempt++
-            val startedAt = System.nanoTime()
             try {
                 val response = chain.proceed(request)
-                val durationMs = (System.nanoTime() - startedAt) / 1_000_000
                 val isFailure = response.code >= 500
-                val snapshot = if (isFailure) {
+                if (isFailure) {
                     breaker.recordFailure()
                 } else {
                     breaker.recordSuccess()
                 }
-
-                logTrace(
-                    serviceName = serviceName,
-                    traceId = traceId,
-                    attempt = attempt,
-                    method = request.method,
-                    path = request.url.encodedPath,
-                    code = response.code,
-                    durationMs = durationMs,
-                    snapshot = snapshot
-                )
 
                 if (!isFailure || attempt >= maxAttempts) {
                     return response
@@ -69,14 +51,7 @@ class RetryCircuitBreakerInterceptor @Inject constructor(
                 sleepBeforeRetry(attempt)
             } catch (exception: IOException) {
                 lastException = exception
-                val durationMs = (System.nanoTime() - startedAt) / 1_000_000
-                val snapshot = breaker.recordFailure()
-                Log.w(
-                    LOG_TAG,
-                    "traceId=$traceId service=$serviceName attempt=$attempt method=${request.method} " +
-                            "path=${request.url.encodedPath} durationMs=$durationMs errorPercent=${snapshot.errorPercent} " +
-                            "state=${snapshot.state} error=${exception.message}"
-                )
+                breaker.recordFailure()
 
                 if (attempt >= maxAttempts) {
                     throw exception
@@ -108,27 +83,25 @@ class RetryCircuitBreakerInterceptor @Inject constructor(
         }
     }
 
-    private fun logTrace(
-        serviceName: String,
-        traceId: String,
-        attempt: Int,
-        method: String,
-        path: String,
-        code: Int,
-        durationMs: Long,
-        snapshot: ServiceCircuitBreaker.Snapshot,
-    ) {
-        val priority = if (code >= 500) Log.WARN else Log.INFO
-        Log.println(
-            priority,
-            LOG_TAG,
-            "traceId=$traceId service=$serviceName attempt=$attempt method=$method path=$path " +
-                    "code=$code durationMs=$durationMs errorPercent=${snapshot.errorPercent} state=${snapshot.state}"
-        )
-    }
-
     companion object {
         private const val INTERNAL_HOST = "91.227.18.176"
-        private const val LOG_TAG = "NetworkTrace"
+        private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
+    }
+
+    private fun Request.buildCircuitOpenResponse(
+        serviceName: String,
+        retryAfterMillis: Long,
+    ): Response {
+        val seconds = retryAfterMillis / 1000 + 1
+        val message = "Сервис $serviceName временно недоступен. Повторите через $seconds сек."
+        val body = """{"code":503,"message":"$message"}"""
+
+        return Response.Builder()
+            .request(this)
+            .protocol(Protocol.HTTP_1_1)
+            .code(503)
+            .message("Service Unavailable")
+            .body(body.toResponseBody(JSON_MEDIA_TYPE))
+            .build()
     }
 }

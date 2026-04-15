@@ -5,7 +5,7 @@ import kotlin.math.roundToInt
 class ServiceCircuitBreaker(
     private val windowSize: Int = 10,
     private val errorThreshold: Double = 0.7,
-    private val openDurationMs: Long = 30_000L,
+    private val openDurationMs: Long = 15_000L,
 ) {
     private val outcomes = ArrayDeque<Boolean>()
     private var state: State = State.CLOSED
